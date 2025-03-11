@@ -2,19 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Default light mode variables */
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-rgb: 255, 255, 255;
+  --foreground-rgb: 15, 23, 42;  /* dark gray for text */
+  --background-rgb: 255, 255, 255;  /* white for background */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-rgb: 15, 23, 42;
-  }
+/* Dark mode variables - these will be applied when .dark class is on html */
+.dark {
+  --foreground-rgb: 255, 255, 255;  /* white for text */
+  --background-rgb: 15, 23, 42;  /* dark gray for background */
 }
 
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
+  transition: background-color 0.3s ease, color 0.3s ease;
 }

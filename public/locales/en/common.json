@@ -7,5 +7,10 @@
   "forgotPassword": "Forgot Password?",
   "resetPassword": "Reset Password",
   "submit": "Submit",
-  "language": "Language"
+  "language": "Language",
+  "account": "Account",
+  "settings": "Settings",
+  "darkMode": "Switch to Dark Mode",
+  "lightMode": "Switch to Light Mode",
+  "theme": "Theme"
 }

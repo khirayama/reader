@@ -12,5 +12,6 @@
   "settings": "Settings",
   "darkMode": "Switch to Dark Mode",
   "lightMode": "Switch to Light Mode",
-  "theme": "Theme"
+  "theme": "Theme",
+  "viewFeeds": "View Feeds"
 }

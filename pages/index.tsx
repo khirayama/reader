@@ -81,7 +81,7 @@ export default function Home() {
                   href="/feeds"
                   className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
                 >
-                  フィードを見る
+                  {t("viewFeeds")}
                 </Link>
                 <Link
                   href="/settings"

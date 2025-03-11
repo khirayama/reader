@@ -12,5 +12,6 @@
   "settings": "設定",
   "darkMode": "ダークモードに切り替え",
   "lightMode": "ライトモードに切り替え",
-  "theme": "テーマ"
+  "theme": "テーマ",
+  "viewFeeds": "フィードを見る"
 }

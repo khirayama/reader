@@ -1,0 +1,11 @@
+{
+  "welcome": "RSSリーダーへようこそ",
+  "signin": "ログイン",
+  "signup": "新規登録",
+  "email": "メールアドレス",
+  "password": "パスワード",
+  "forgotPassword": "パスワードをお忘れですか？",
+  "resetPassword": "パスワードリセット",
+  "submit": "送信",
+  "language": "言語"
+}

@@ -4,17 +4,28 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
 import { z } from "zod";
+import { useTranslation } from "next-i18next";
+import { serverSideTranslations } from "next-i18next/serverSideTranslations";
+import { GetStaticProps } from "next";
 
-// フォームのバリデーションスキーマ
-const formSchema = z.object({
-  email: z.string().email("有効なメールアドレスを入力してください"),
-  password: z.string().min(8, "パスワードは8文字以上である必要があります"),
-});
+// Form validation schema with i18n
+function getValidationSchema(t: (key: string) => string) {
+  return z.object({
+    email: z.string().email(t("emailValidation")),
+    password: z.string().min(8, t("passwordValidation")),
+  });
+}
 
-type FormData = z.infer<typeof formSchema>;
+// FormData interface
+interface FormData {
+  email: string;
+  password: string;
+}
 
 export default function SignIn() {
   const router = useRouter();
+  const { t } = useTranslation("auth");
+  const validationSchema = getValidationSchema(t);
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
@@ -26,7 +37,7 @@ export default function SignIn() {
 
   const validateForm = () => {
     try {
-      formSchema.parse(formData);
+      validationSchema.parse(formData);
       setErrors({});
       return true;
     } catch (error) {
@@ -66,7 +77,7 @@ export default function SignIn() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || "ユーザー登録に失敗しました");
+          throw new Error(data.message || t("signupError"));
         }
 
         // 登録成功後、自動ログイン
@@ -82,7 +93,7 @@ export default function SignIn() {
 
         router.push("/feeds");
       } catch (error) {
-        setAuthError(error instanceof Error ? error.message : "ユーザー登録に失敗しました");
+        setAuthError(error instanceof Error ? error.message : t("signupError"));
         setIsLoading(false);
       }
     } else {
@@ -94,7 +105,7 @@ export default function SignIn() {
       });
 
       if (result?.error) {
-        setAuthError("メールアドレスまたはパスワードが正しくありません");
+        setAuthError(t("signinError"));
         setIsLoading(false);
         return;
       }
@@ -106,23 +117,21 @@ export default function SignIn() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center">
       <Head>
-        <title>{isSignUp ? "ユーザー登録" : "ログイン"} | RSS Reader</title>
+        <title>{isSignUp ? t("titleSignUp") : t("title")}</title>
       </Head>
 
       <div className="max-w-md w-full mx-auto">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">
-            {isSignUp ? "アカウント作成" : "アカウントにログイン"}
+            {isSignUp ? t("createAccount") : t("login")}
           </h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            {isSignUp
-              ? "すでにアカウントをお持ちの方は "
-              : "アカウントをお持ちでない方は "}
+            {isSignUp ? t("alreadyHaveAccount") : t("dontHaveAccount")}
             <button
               onClick={() => setIsSignUp(!isSignUp)}
               className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
             >
-              {isSignUp ? "ログイン" : "登録"}
+              {isSignUp ? t("signIn") : t("signUp")}
             </button>
           </p>
         </div>
@@ -140,7 +149,7 @@ export default function SignIn() {
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                メールアドレス
+                {t("email")}
               </label>
               <div className="mt-1">
                 <input
@@ -168,7 +177,7 @@ export default function SignIn() {
                 htmlFor="password"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                パスワード
+                {t("password")}
               </label>
               <div className="mt-1">
                 <input
@@ -198,7 +207,7 @@ export default function SignIn() {
                     href="/auth/forgot-password"
                     className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
                   >
-                    パスワードをお忘れですか？
+                    {t("forgotPassword")}
                   </Link>
                 </div>
               </div>
@@ -211,11 +220,11 @@ export default function SignIn() {
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
-                  <span>処理中...</span>
+                  <span>{t("processing")}</span>
                 ) : isSignUp ? (
-                  "登録する"
+                  t("register")
                 ) : (
-                  "ログイン"
+                  t("signIn")
                 )}
               </button>
             </div>
@@ -224,4 +233,12 @@ export default function SignIn() {
       </div>
     </div>
   );
+}
+
+export const getStaticProps: GetStaticProps = async ({ locale }) => {
+  return {
+    props: {
+      ...(await serverSideTranslations(locale || 'en', ['auth'])),
+    },
+  };
 }

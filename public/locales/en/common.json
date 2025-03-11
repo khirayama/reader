@@ -1,0 +1,11 @@
+{
+  "welcome": "Welcome to RSS Reader",
+  "signin": "Sign In",
+  "signup": "Sign Up",
+  "email": "Email",
+  "password": "Password",
+  "forgotPassword": "Forgot Password?",
+  "resetPassword": "Reset Password",
+  "submit": "Submit",
+  "language": "Language"
+}

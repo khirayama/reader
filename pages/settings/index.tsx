@@ -17,14 +17,16 @@ function getProfileSchema(t: (key: string) => string) {
 }
 
 function getPasswordSchema(t: (key: string) => string) {
-  return z.object({
-    currentPassword: z.string().min(1, t("passwordRequired")),
-    newPassword: z.string().min(8, t("passwordMinLength")),
-    confirmPassword: z.string().min(8, t("passwordConfirmRequired")),
-  }).refine((data) => data.newPassword === data.confirmPassword, {
-    message: t("passwordMismatch"),
-    path: ["confirmPassword"],
-  });
+  return z
+    .object({
+      currentPassword: z.string().min(1, t("passwordRequired")),
+      newPassword: z.string().min(8, t("passwordMinLength")),
+      confirmPassword: z.string().min(8, t("passwordConfirmRequired")),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t("passwordMismatch"),
+      path: ["confirmPassword"],
+    });
 }
 
 export default function Settings() {
@@ -33,7 +35,7 @@ export default function Settings() {
   const { t } = useTranslation("settings");
   const { t: commonT } = useTranslation("common");
   const { theme, setTheme, resolvedTheme } = useTheme();
-  
+
   const [profileFormData, setProfileFormData] = useState({
     email: "",
   });
@@ -42,7 +44,7 @@ export default function Settings() {
     newPassword: "",
     confirmPassword: "",
   });
-  
+
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState("");
@@ -50,9 +52,9 @@ export default function Settings() {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
-  
+
   const [selectedLanguage, setSelectedLanguage] = useState(router.locale || "en");
-  
+
   // Load user data when session is available
   useEffect(() => {
     if (session?.user) {
@@ -61,7 +63,7 @@ export default function Settings() {
       });
     }
   }, [session]);
-  
+
   // Validate profile form
   const validateProfileForm = () => {
     try {
@@ -82,7 +84,7 @@ export default function Settings() {
       return false;
     }
   };
-  
+
   // Validate password form
   const validatePasswordForm = () => {
     try {
@@ -103,17 +105,17 @@ export default function Settings() {
       return false;
     }
   };
-  
+
   // Handle profile form submission
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setProfileSuccess(false);
     setGeneralError("");
-    
+
     if (!validateProfileForm()) return;
-    
+
     setIsProfileLoading(true);
-    
+
     try {
       const response = await fetch("/api/user/profile", {
         method: "PUT",
@@ -122,15 +124,15 @@ export default function Settings() {
         },
         body: JSON.stringify(profileFormData),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || t("updateError"));
       }
-      
+
       setProfileSuccess(true);
-      
+
       // Update session if name was changed
       if (session && session.user && profileFormData.name !== session.user.name) {
         router.reload();
@@ -141,17 +143,17 @@ export default function Settings() {
       setIsProfileLoading(false);
     }
   };
-  
+
   // Handle password form submission
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordSuccess(false);
     setGeneralError("");
-    
+
     if (!validatePasswordForm()) return;
-    
+
     setIsPasswordLoading(true);
-    
+
     try {
       const response = await fetch("/api/user/password", {
         method: "PUT",
@@ -163,13 +165,13 @@ export default function Settings() {
           newPassword: passwordFormData.newPassword,
         }),
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || t("passwordError"));
       }
-      
+
       setPasswordSuccess(true);
       setPasswordFormData({
         currentPassword: "",
@@ -182,81 +184,81 @@ export default function Settings() {
       setIsPasswordLoading(false);
     }
   };
-  
+
   // Handle language change
   const handleLanguageChange = (language: string) => {
     setSelectedLanguage(language);
     router.push(router.pathname, router.asPath, { locale: language });
   };
-  
+
   // Handle theme change
-  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+  const handleThemeChange = (newTheme: "light" | "dark" | "system") => {
     setTheme(newTheme);
   };
-  
+
   // Handle logout
   const handleLogout = () => {
-    signOut({ callbackUrl: '/' });
+    signOut({ callbackUrl: "/" });
   };
-  
+
   // Handle account deletion
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  
+
   const handleDeleteAccount = async () => {
     if (!confirm(t("deleteAccountConfirmation"))) {
       return;
     }
-    
+
     setIsDeletingAccount(true);
-    
+
     try {
       const response = await fetch("/api/user/delete", {
         method: "DELETE",
       });
-      
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.message || t("deleteAccountError"));
       }
-      
+
       // Logout and redirect to home
-      signOut({ callbackUrl: '/' });
+      signOut({ callbackUrl: "/" });
     } catch (error) {
       setGeneralError(error instanceof Error ? error.message : t("deleteAccountError"));
       setIsDeletingAccount(false);
     }
   };
-  
+
   if (status === "loading") {
     return <div>Loading...</div>;
   }
-  
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Head>
         <title>{t("title")}</title>
       </Head>
-      
+
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t("pageTitle")}</h1>
           <div className="mt-4">
-            <Link 
-              href="/" 
+            <Link
+              href="/feeds"
               className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
             >
-              ← {commonT("welcome")}
+              ← {t("backToFeeds")}
             </Link>
           </div>
         </div>
-        
+
         {generalError && (
           <div className="mb-6 p-4 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 rounded-md">
             {generalError}
           </div>
         )}
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Sidebar */}
           <div className="md:col-span-1">
@@ -278,7 +280,7 @@ export default function Settings() {
               </ul>
             </div>
           </div>
-          
+
           {/* Main content */}
           <div className="md:col-span-2 space-y-8">
             {/* Account actions section */}
@@ -286,7 +288,7 @@ export default function Settings() {
               <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-6">
                 {t("accountActions")}
               </h2>
-              
+
               <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
                 <button
                   onClick={handleLogout}
@@ -294,7 +296,7 @@ export default function Settings() {
                 >
                   {t("logout")}
                 </button>
-                
+
                 <button
                   onClick={() => setShowDeleteConfirmation(true)}
                   className="px-4 py-2 border border-red-300 rounded-md text-red-700 dark:text-red-400 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30"
@@ -302,12 +304,10 @@ export default function Settings() {
                   {t("deleteAccount")}
                 </button>
               </div>
-              
+
               {showDeleteConfirmation && (
                 <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-800 rounded-md">
-                  <p className="text-red-700 dark:text-red-400 mb-4">
-                    {t("deleteAccountWarning")}
-                  </p>
+                  <p className="text-red-700 dark:text-red-400 mb-4">{t("deleteAccountWarning")}</p>
                   <div className="flex space-x-4">
                     <button
                       onClick={handleDeleteAccount}
@@ -326,23 +326,23 @@ export default function Settings() {
                 </div>
               )}
             </section>
-            
+
             {/* Profile settings section */}
             <section id="profile" className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
               <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-6">
                 {t("profileSettings")}
               </h2>
-              
+
               {profileSuccess && (
                 <div className="mb-6 p-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-md">
                   {t("updateSuccess")}
                 </div>
               )}
-              
+
               <form onSubmit={handleProfileSubmit} className="space-y-6">
                 <div>
-                  <label 
-                    htmlFor="email" 
+                  <label
+                    htmlFor="email"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     {t("email")}
@@ -353,18 +353,22 @@ export default function Settings() {
                       name="email"
                       type="email"
                       value={profileFormData.email}
-                      onChange={(e) => setProfileFormData({...profileFormData, email: e.target.value})}
+                      onChange={(e) =>
+                        setProfileFormData({ ...profileFormData, email: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
                     {profileErrors.email && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{profileErrors.email}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {profileErrors.email}
+                      </p>
                     )}
                   </div>
                 </div>
-                
+
                 <div>
-                  <label 
-                    htmlFor="language" 
+                  <label
+                    htmlFor="language"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     {t("language")}
@@ -382,10 +386,10 @@ export default function Settings() {
                     </select>
                   </div>
                 </div>
-                
+
                 <div>
-                  <label 
-                    htmlFor="theme" 
+                  <label
+                    htmlFor="theme"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     {t("theme")}
@@ -395,7 +399,9 @@ export default function Settings() {
                       id="theme"
                       name="theme"
                       value={theme}
-                      onChange={(e) => handleThemeChange(e.target.value as 'light' | 'dark' | 'system')}
+                      onChange={(e) =>
+                        handleThemeChange(e.target.value as "light" | "dark" | "system")
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     >
                       <option value="light">{t("light")}</option>
@@ -404,10 +410,10 @@ export default function Settings() {
                     </select>
                   </div>
                   <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    {t("currentTheme")}: {resolvedTheme === 'light' ? t("light") : t("dark")}
+                    {t("currentTheme")}: {resolvedTheme === "light" ? t("light") : t("dark")}
                   </p>
                 </div>
-                
+
                 <div className="flex justify-end">
                   <button
                     type="submit"
@@ -419,23 +425,23 @@ export default function Settings() {
                 </div>
               </form>
             </section>
-            
+
             {/* Change password section */}
             <section id="password" className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
               <h2 className="text-xl font-medium text-gray-900 dark:text-white mb-6">
                 {t("changePassword")}
               </h2>
-              
+
               {passwordSuccess && (
                 <div className="mb-6 p-4 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-md">
                   {t("passwordSuccess")}
                 </div>
               )}
-              
+
               <form onSubmit={handlePasswordSubmit} className="space-y-6">
                 <div>
-                  <label 
-                    htmlFor="currentPassword" 
+                  <label
+                    htmlFor="currentPassword"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     {t("currentPassword")}
@@ -446,18 +452,25 @@ export default function Settings() {
                       name="currentPassword"
                       type="password"
                       value={passwordFormData.currentPassword}
-                      onChange={(e) => setPasswordFormData({...passwordFormData, currentPassword: e.target.value})}
+                      onChange={(e) =>
+                        setPasswordFormData({
+                          ...passwordFormData,
+                          currentPassword: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
                     {passwordErrors.currentPassword && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{passwordErrors.currentPassword}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {passwordErrors.currentPassword}
+                      </p>
                     )}
                   </div>
                 </div>
-                
+
                 <div>
-                  <label 
-                    htmlFor="newPassword" 
+                  <label
+                    htmlFor="newPassword"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     {t("newPassword")}
@@ -468,18 +481,22 @@ export default function Settings() {
                       name="newPassword"
                       type="password"
                       value={passwordFormData.newPassword}
-                      onChange={(e) => setPasswordFormData({...passwordFormData, newPassword: e.target.value})}
+                      onChange={(e) =>
+                        setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
                     {passwordErrors.newPassword && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{passwordErrors.newPassword}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {passwordErrors.newPassword}
+                      </p>
                     )}
                   </div>
                 </div>
-                
+
                 <div>
-                  <label 
-                    htmlFor="confirmPassword" 
+                  <label
+                    htmlFor="confirmPassword"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     {t("confirmPassword")}
@@ -490,15 +507,22 @@ export default function Settings() {
                       name="confirmPassword"
                       type="password"
                       value={passwordFormData.confirmPassword}
-                      onChange={(e) => setPasswordFormData({...passwordFormData, confirmPassword: e.target.value})}
+                      onChange={(e) =>
+                        setPasswordFormData({
+                          ...passwordFormData,
+                          confirmPassword: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
                     {passwordErrors.confirmPassword && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{passwordErrors.confirmPassword}</p>
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {passwordErrors.confirmPassword}
+                      </p>
                     )}
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end">
                   <button
                     type="submit"
@@ -520,7 +544,7 @@ export default function Settings() {
 export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
   return {
     props: {
-      ...(await serverSideTranslations(locale || 'en', ['settings', 'common'])),
+      ...(await serverSideTranslations(locale || "en", ["settings", "common"])),
     },
   };
 };

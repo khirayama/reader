@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
 import { randomBytes } from "crypto";
 import { prisma } from "../../../lib/prisma";
+import { sendPasswordResetEmail } from "../../../lib/email";
 
 // 入力バリデーションスキーマ
 const emailSchema = z.object({
@@ -44,10 +45,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
-    // 本番環境ではここでメール送信処理を行う
-    // sendPasswordResetEmail(user.email, token);
-    console.log(`Password reset token for ${email}: ${token}`);
-    console.log(`Reset link: http://localhost:3000/auth/reset-password?token=${token}`);
+    // メール送信処理
+    if (process.env.NODE_ENV === 'production') {
+      await sendPasswordResetEmail(user.email, token);
+    } else {
+      // 開発環境ではコンソールにリンクを表示
+      console.log(`Password reset token for ${email}: ${token}`);
+      console.log(`Reset link: http://localhost:3000/auth/reset-password?token=${token}`);
+    }
 
     return res.status(200).json({ message: "パスワードリセットリンクが送信されました" });
     

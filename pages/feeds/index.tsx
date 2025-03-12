@@ -30,10 +30,6 @@ interface Article {
     id: string;
     title: string;
   };
-  reads: Array<{
-    id: string;
-    createdAt: string;
-  }>;
 }
 
 interface Pagination {
@@ -192,36 +188,14 @@ function FeedItem({ feed, onRemove }: { feed: Feed; onRemove: (id: string) => Pr
 // Component for displaying a single article item
 function ArticleItem({ article }: { article: Article }) {
   const { t } = useTranslation('feeds');
-  const isRead = article.reads.length > 0;
   const [imageError, setImageError] = useState(false);
   
-  const markAsRead = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    
-    if (!isRead) {
-      try {
-        await fetch('/api/reads', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ articleId: article.id }),
-        });
-      } catch (error) {
-        console.error('Failed to mark article as read:', error);
-      }
-    }
-    
-    // Open the article in a new tab
-    window.open(article.url, '_blank');
-  };
-  
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow p-3 mb-2 ${isRead ? 'opacity-70' : ''}`}>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 mb-2">
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center">
           <img 
-            src={imageError ? 'https://www.google.com/s2/favicons?domain=rss.com&sz=32' : getFaviconUrl(article.feed.url)} 
+            src={imageError ? 'https://www.google.com/s2/favicons?domain=rss.com&sz=32' : 'https://www.google.com/s2/favicons?domain=rss.com&sz=32'} 
             alt=""
             width="16" 
             height="16"
@@ -231,11 +205,6 @@ function ArticleItem({ article }: { article: Article }) {
           <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
             {article.feed.title}
           </span>
-          {isRead && (
-            <span className="ml-2 text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded">
-              {t('markAsRead')}
-            </span>
-          )}
         </div>
         <span className="text-xs text-gray-500 dark:text-gray-500 flex-shrink-0 ml-2">
           {new Date(article.publishedAt).toLocaleDateString()}
@@ -244,7 +213,6 @@ function ArticleItem({ article }: { article: Article }) {
       <h3 className="text-md font-medium text-gray-900 dark:text-white mt-1">
         <a 
           href={article.url} 
-          onClick={markAsRead}
           className="hover:underline"
           target="_blank"
           rel="noopener noreferrer"
@@ -258,7 +226,6 @@ function ArticleItem({ article }: { article: Article }) {
         </span>
         <a 
           href={article.url} 
-          onClick={markAsRead}
           className="text-blue-600 dark:text-blue-400 hover:underline flex-shrink-0 ml-2"
           target="_blank"
           rel="noopener noreferrer"
@@ -286,7 +253,6 @@ export default function FeedsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedFeed, setSelectedFeed] = useState<string | null>(null);
-  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   
   // References for scroll containers
@@ -310,7 +276,7 @@ export default function FeedsPage() {
   };
 
   // Fetch articles with infinite scroll
-  const fetchArticles = async (page = 1, feedId?: string | null, unread = false, append = false) => {
+  const fetchArticles = async (page = 1, feedId?: string | null, append = false) => {
     // Only check loading state for appending during infinite scroll
     if (isLoading && append) return;
     
@@ -320,10 +286,6 @@ export default function FeedsPage() {
       
       if (feedId) {
         url += `&feedId=${feedId}`;
-      }
-      
-      if (unread) {
-        url += '&unread=true';
       }
       
       const response = await fetch(url);
@@ -356,7 +318,7 @@ export default function FeedsPage() {
   // Load more articles for infinite scroll
   const loadMoreArticles = () => {
     if (!isLoading && pagination.page < pagination.pages) {
-      fetchArticles(pagination.page + 1, selectedFeed, showUnreadOnly, true);
+      fetchArticles(pagination.page + 1, selectedFeed, true);
     }
   };
 
@@ -377,7 +339,7 @@ export default function FeedsPage() {
       }
       
       await fetchFeeds();
-      await fetchArticles(1, selectedFeed, showUnreadOnly);
+      await fetchArticles(1, selectedFeed);
       
       return Promise.resolve();
     } catch (error) {
@@ -402,9 +364,9 @@ export default function FeedsPage() {
       // If the removed feed was selected, reset to show all
       if (selectedFeed === id) {
         setSelectedFeed(null);
-        await fetchArticles(1, null, showUnreadOnly);
+        await fetchArticles(1, null);
       } else {
-        await fetchArticles(1, selectedFeed, showUnreadOnly);
+        await fetchArticles(1, selectedFeed);
       }
       
       return Promise.resolve();
@@ -417,13 +379,7 @@ export default function FeedsPage() {
   // Handle feed selection
   const handleFeedSelect = async (feedId: string | null) => {
     setSelectedFeed(feedId);
-    await fetchArticles(1, feedId, showUnreadOnly);
-  };
-
-  // Handle unread filter toggle
-  const handleUnreadToggle = async (unread: boolean) => {
-    setShowUnreadOnly(unread);
-    await fetchArticles(1, selectedFeed, unread);
+    await fetchArticles(1, feedId);
   };
 
   // Set up Intersection Observer for infinite scrolling
@@ -585,23 +541,6 @@ export default function FeedsPage() {
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                <div className="flex items-center mb-2">
-                  <input
-                    id="unread-toggle"
-                    type="checkbox"
-                    checked={showUnreadOnly}
-                    onChange={(e) => handleUnreadToggle(e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label
-                    htmlFor="unread-toggle"
-                    className="ml-2 block text-sm text-gray-900 dark:text-white"
-                  >
-                    {t('unread')}
-                  </label>
-                </div>
-              </div>
             </div>
           </div>
 

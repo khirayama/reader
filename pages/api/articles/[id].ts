@@ -25,11 +25,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         include: {
           feed: true,
-          reads: {
-            where: {
-              userId: session.user.id as string,
-            },
-          },
         },
       });
 

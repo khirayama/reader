@@ -22,7 +22,6 @@ model User {
   accounts      Account[]
   sessions      Session[]
   feeds         Feed[]
-  reads         Read[]
   settings      Settings?
 }
 
@@ -84,19 +83,8 @@ model Article {
   updatedAt   DateTime @updatedAt
   feedId      String
   feed        Feed     @relation(fields: [feedId], references: [id], onDelete: Cascade)
-  reads       Read[]
 }
 
-model Read {
-  id        String   @id @default(cuid())
-  userId    String
-  articleId String
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, articleId])
-}
 
 model Settings {
   id        String   @id @default(cuid())

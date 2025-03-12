@@ -27,38 +27,16 @@ interface Article {
   publishedAt: string;
   createdAt: string;
   updatedAt: string;
-  reads: Array<{
-    id: string;
-    createdAt: string;
-  }>;
 }
 
 // Component for displaying a single article item
-function ArticleItem({ article, onToggleRead }: { 
+function ArticleItem({ article }: { 
   article: Article; 
-  onToggleRead: (id: string, isRead: boolean) => Promise<void>;
 }) {
   const { t } = useTranslation('feeds');
-  const [isRead, setIsRead] = useState(article.reads.length > 0);
-  const [isProcessing, setIsProcessing] = useState(false);
-  
-  const handleToggleRead = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    
-    setIsProcessing(true);
-    try {
-      await onToggleRead(article.id, isRead);
-      setIsRead(!isRead);
-    } catch (error) {
-      console.error('Error toggling read status:', error);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
   
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-3 ${isRead ? 'opacity-70' : ''}`}>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-3">
       <h3 className="text-lg font-medium text-gray-900 dark:text-white">
         <Link href={`/articles/${article.id}`} className="hover:underline">
           {article.title}
@@ -73,14 +51,7 @@ function ArticleItem({ article, onToggleRead }: {
         <span>
           {new Date(article.publishedAt).toLocaleDateString()}
         </span>
-        <div className="flex space-x-3">
-          <button
-            onClick={handleToggleRead}
-            disabled={isProcessing}
-            className="text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
-          >
-            {isProcessing ? t('processing') : isRead ? t('markAsUnread') : t('markAsRead')}
-          </button>
+        <div>
           <Link 
             href={`/articles/${article.id}`} 
             className="text-blue-600 dark:text-blue-400 hover:underline"
@@ -147,39 +118,6 @@ export default function FeedDetailPage() {
     }
   };
 
-  // Toggle read status
-  const toggleReadStatus = async (articleId: string, isRead: boolean) => {
-    try {
-      if (isRead) {
-        // Mark as unread
-        const response = await fetch(`/api/reads?articleId=${articleId}`, {
-          method: 'DELETE',
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-      } else {
-        // Mark as read
-        const response = await fetch('/api/reads', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ articleId }),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-      }
-      
-      return Promise.resolve();
-    } catch (error) {
-      console.error('Failed to toggle read status:', error);
-      return Promise.reject(error);
-    }
-  };
 
   // Load feed on initial load
   useEffect(() => {
@@ -256,7 +194,6 @@ export default function FeedDetailPage() {
                       <ArticleItem 
                         key={article.id} 
                         article={article} 
-                        onToggleRead={toggleReadStatus} 
                       />
                     ))}
                 </div>

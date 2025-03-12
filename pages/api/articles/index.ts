@@ -17,7 +17,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const page = Number(req.query.page) || 1;
       const skip = (page - 1) * limit;
       const feedId = req.query.feedId as string | undefined;
-      const unreadOnly = req.query.unread === 'true';
       const search = req.query.search as string | undefined;
 
       // 検索条件の構築
@@ -32,14 +31,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         where.feedId = feedId;
       }
 
-      // 未読の記事のみ取得
-      if (unreadOnly) {
-        where.reads = {
-          none: {
-            userId: session.user.id as string,
-          },
-        };
-      }
 
       // 検索クエリがある場合
       if (search) {
@@ -61,15 +52,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               id: true,
               title: true,
               url: true,
-            },
-          },
-          reads: {
-            where: {
-              userId: session.user.id as string,
-            },
-            select: {
-              id: true,
-              createdAt: true,
             },
           },
         },

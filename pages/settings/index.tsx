@@ -136,8 +136,8 @@ export default function Settings() {
 
       setProfileSuccess(true);
 
-      // Update session if name was changed
-      if (session && session.user && profileFormData.name !== session.user.name) {
+      // Update session if email was changed
+      if (session && session.user && profileFormData.email !== session.user.email) {
         router.reload();
       }
     } catch (error) {

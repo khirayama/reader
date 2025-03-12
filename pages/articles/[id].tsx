@@ -22,10 +22,6 @@ interface Article {
     title: string;
     url: string;
   };
-  reads: Array<{
-    id: string;
-    createdAt: string;
-  }>;
 }
 
 export default function ArticleDetailPage() {
@@ -37,8 +33,6 @@ export default function ArticleDetailPage() {
   const [article, setArticle] = useState<Article | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isRead, setIsRead] = useState(false);
-  const [isMarkingRead, setIsMarkingRead] = useState(false);
 
   // Fetch article details
   const fetchArticle = async () => {
@@ -52,12 +46,6 @@ export default function ArticleDetailPage() {
       }
       const data = await response.json();
       setArticle(data);
-      setIsRead(data.reads.length > 0);
-      
-      // If not read, mark as read automatically
-      if (data.reads.length === 0) {
-        markAsRead(data.id);
-      }
     } catch (error) {
       console.error('Failed to fetch article:', error);
       setError((error as Error).message);
@@ -66,69 +54,6 @@ export default function ArticleDetailPage() {
     }
   };
 
-  // Mark article as read
-  const markAsRead = async (articleId: string) => {
-    setIsMarkingRead(true);
-    try {
-      const response = await fetch('/api/reads', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ articleId }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      
-      setIsRead(true);
-    } catch (error) {
-      console.error('Failed to mark article as read:', error);
-    } finally {
-      setIsMarkingRead(false);
-    }
-  };
-
-  // Toggle read status
-  const toggleReadStatus = async () => {
-    if (!article) return;
-    
-    setIsMarkingRead(true);
-    try {
-      if (isRead) {
-        // Mark as unread
-        const response = await fetch(`/api/reads?articleId=${article.id}`, {
-          method: 'DELETE',
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-        
-        setIsRead(false);
-      } else {
-        // Mark as read
-        const response = await fetch('/api/reads', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ articleId: article.id }),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-        
-        setIsRead(true);
-      }
-    } catch (error) {
-      console.error('Failed to toggle read status:', error);
-    } finally {
-      setIsMarkingRead(false);
-    }
-  };
 
   // Load article on initial load
   useEffect(() => {
@@ -181,15 +106,7 @@ export default function ArticleDetailPage() {
               {article.title}
             </h1>
             
-            <div className="flex justify-between mb-6">
-              <button
-                onClick={toggleReadStatus}
-                disabled={isMarkingRead}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
-              >
-                {isMarkingRead ? t('processing') : isRead ? t('markAsUnread') : t('markAsRead')}
-              </button>
-              
+            <div className="flex justify-end mb-6">
               <a
                 href={article.url}
                 target="_blank"

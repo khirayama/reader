@@ -1,6 +1,6 @@
 # RSS Reader アプリケーションのデプロイ手順
 
-このドキュメントでは、RSS Readerアプリケーションを[Vercel](https://vercel.com)にデプロイし、メール送信に[Resend](https://resend.com)を使用する方法を説明します。
+このドキュメントでは、RSS Readerアプリケーションを[Vercel](https://vercel.com)にデプロイし、メール送信に[Resend](https://resend.com)を使用する方法を説明します。PostgreSQLデータベースは[Supabase](https://supabase.com)を利用します。
 
 ## 前提条件
 
@@ -8,7 +8,7 @@
 
 - [Vercel](https://vercel.com) アカウント
 - [Resend](https://resend.com) アカウント
-- PostgreSQLデータベース（[Supabase](https://supabase.com)、[Railway](https://railway.app)、[Neon](https://neon.tech)などのサービスが利用可能）
+- [Supabase](https://supabase.com) アカウント（PostgreSQLデータベース用）
 
 ## 環境変数の設定
 
@@ -16,11 +16,12 @@
 
 | 環境変数 | 説明 | 例 |
 |----------|------|-----|
-| `DATABASE_URL` | PostgreSQLデータベースの接続文字列 | `postgresql://username:password@host:port/database` |
+| `DATABASE_URL` | Supabase PostgreSQLデータベースの接続文字列 | `postgresql://postgres:[YOUR-PASSWORD]@db.xxxxxxxxxxx.supabase.co:5432/postgres` |
 | `NEXTAUTH_URL` | アプリケーションのURL | `https://your-app.vercel.app` |
 | `NEXTAUTH_SECRET` | NextAuthセッションの暗号化キー（32文字以上） | ランダムな文字列 |
 | `RESEND_API_KEY` | ResendのAPIキー | `re_123456789` |
 | `EMAIL_FROM` | 送信元メールアドレス | `noreply@yourdomain.com` |
+| `CRON_SECRET` | Cronジョブ用の認証シークレット | ランダムな文字列 |
 
 ## Vercelへのデプロイ手順
 
@@ -46,7 +47,7 @@ git push origin main
 
 Vercelのプロジェクト設定で、以下の環境変数を追加します：
 
-1. `DATABASE_URL` - PostgreSQLデータベースの接続文字列
+1. `DATABASE_URL` - Supabaseから取得したPostgreSQLデータベース接続文字列
 2. `NEXTAUTH_URL` - デプロイ後のアプリケーションURL（例：`https://your-app.vercel.app`）
 3. `NEXTAUTH_SECRET` - 安全なランダム文字列（32文字以上）
    ```bash
@@ -55,12 +56,33 @@ Vercelのプロジェクト設定で、以下の環境変数を追加します�
    ```
 4. `RESEND_API_KEY` - ResendのAPIキー
 5. `EMAIL_FROM` - システムメールの送信元アドレス
+6. `CRON_SECRET` - Cronジョブ用の認証シークレット（ランダム文字列）
+   ```bash
+   # ランダム文字列の生成例
+   openssl rand -base64 24
+   ```
 
 ### 4. デプロイの実行
 
 「Deploy」ボタンをクリックして、デプロイを開始します。デプロイが完了すると、アプリケーションのURLが表示されます。
 
-### 5. データベースのマイグレーション
+## Supabaseの設定
+
+### 1. Supabaseプロジェクトの作成
+
+1. [Supabase](https://supabase.com)にサインアップまたはログインします
+2. 「New Project」をクリックして新しいプロジェクトを作成します
+3. プロジェクト名、パスワード、リージョンを設定します
+4. 「Create new project」をクリックします
+
+### 2. データベース接続文字列の取得
+
+1. Supabaseダッシュボードで「Project Settings」 > 「Database」に移動します
+2. 「Connection String」セクションで「URI」を選択します
+3. 表示された接続文字列をコピーします。これが`DATABASE_URL`として使用するものです
+4. 接続文字列の`[YOUR-PASSWORD]`部分を、プロジェクト作成時に設定したパスワードに置き換えます
+
+### 3. データベースのマイグレーション
 
 初回デプロイ後、データベースのマイグレーションを実行します：
 
@@ -224,7 +246,13 @@ export default async function handler(
 
 ## トラブルシューティング
 
-- **データベース接続エラー**: `DATABASE_URL` が正しく設定されているか確認してください
+- **データベース接続エラー**: 
+  - `DATABASE_URL` が正しく設定されているか確認してください
+  - Supabaseダッシュボードで「Project Settings」>「Database」から接続文字列を再確認してください
+  - Supabaseプロジェクトのネットワーク設定で「Port 5432」が有効になっているか確認してください
 - **メール送信エラー**: Resendのダッシュボードでエラーを確認してください
 - **デプロイエラー**: Vercelのビルドログを確認してください
 - **API機能が動作しない**: ログを確認し、環境変数が正しく設定されているか確認してください
+- **マイグレーションエラー**: 
+  - Supabaseのコンソールから直接SQLエディタを使用して確認することもできます
+  - Prismaマイグレーションの履歴が問題を起こしている場合は、`_prisma_migrations`テーブルを確認してください

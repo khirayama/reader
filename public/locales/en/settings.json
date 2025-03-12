@@ -25,7 +25,6 @@
   "updateProfile": "Update Profile",
   "changePassword": "Change Password",
   "saveChanges": "Save Changes",
-  "cancel": "Cancel",
   "updateSuccess": "Settings updated successfully",
   "updateError": "Failed to update settings",
   "passwordSuccess": "Password changed successfully",
@@ -38,5 +37,12 @@
   "emailInvalid": "Please enter a valid email address",
   "passwordRequired": "Password is required",
   "passwordMinLength": "Password must be at least 8 characters",
-  "passwordConfirmRequired": "Please confirm your new password"
+  "passwordConfirmRequired": "Please confirm your new password",
+  "opmlManagement": "OPML Management",
+  "exportOpml": "Export OPML",
+  "importOpml": "Import OPML",
+  "importing": "Importing...",
+  "opmlImportError": "Failed to import OPML file",
+  "fileReadError": "Failed to read the selected file",
+  "backToFeeds": "Back to Feeds"
 }

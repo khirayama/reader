@@ -8,10 +8,14 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+    # 開発環境ではローカルDBまたはSupabaseを選択可能
+    # Supabaseを使用する場合は depends_on を削除し、
+    # 環境変数のDATABASE_URLを.envファイルで設定してください
     depends_on:
       - db
     environment:
       - NODE_ENV=development
+      # ローカルDB用の設定（Supabaseを使用する場合は.envファイルを使用）
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/reader?schema=public
       - NEXTAUTH_URL=http://localhost:3000
       - NEXTAUTH_SECRET=your-development-secret-do-not-use-in-production
@@ -19,6 +23,8 @@ services:
     entrypoint: ["/app/docker-entrypoint.sh"]
     command: ["npm", "run", "dev"]
 
+  # ローカル開発用のPostgreSQL
+  # Supabaseを使用する場合でも、ローカルでテストする際に役立ちます
   db:
     image: postgres:15-alpine
     environment:
@@ -33,3 +39,7 @@ services:
 
 volumes:
   postgres_data:
+
+# Supabaseを使用する場合:
+# 1. .envファイルのDATABASE_URL環境変数をSupabaseの接続文字列に更新
+# 2. web サービスの depends_on 行をコメントアウト

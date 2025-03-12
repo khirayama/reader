@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import Head from "next/head";
@@ -54,6 +54,9 @@ export default function Settings() {
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
 
   const [selectedLanguage, setSelectedLanguage] = useState(router.locale || "en");
+  const [isImportingOpml, setIsImportingOpml] = useState(false);
+  const [opmlImportResult, setOpmlImportResult] = useState<{ success?: boolean; message?: string }>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load user data when session is available
   useEffect(() => {
@@ -201,6 +204,72 @@ export default function Settings() {
     signOut({ callbackUrl: "/" });
   };
 
+  // OPML関連の処理
+  const handleExportOpml = () => {
+    window.location.href = '/api/feeds/export-opml';
+  };
+
+  const handleImportOpmlClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleImportOpml = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImportingOpml(true);
+    setOpmlImportResult({});
+
+    try {
+      // ファイルをテキストとして読み込む
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const opmlContent = event.target?.result;
+        
+        if (typeof opmlContent === 'string') {
+          // APIにOPMLコンテンツを送信
+          const response = await fetch('/api/feeds/import-opml', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ opmlContent }),
+          });
+
+          const result = await response.json();
+          
+          if (response.ok) {
+            setOpmlImportResult({
+              success: true,
+              message: result.message,
+            });
+          } else {
+            throw new Error(result.error || t('opmlImportError'));
+          }
+        }
+      };
+      
+      reader.onerror = () => {
+        throw new Error(t('fileReadError'));
+      };
+      
+      reader.readAsText(file);
+    } catch (error) {
+      setOpmlImportResult({
+        success: false,
+        message: error instanceof Error ? error.message : t('opmlImportError'),
+      });
+    } finally {
+      setIsImportingOpml(false);
+      // ファイル入力をリセット
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   // Handle account deletion
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
@@ -289,7 +358,7 @@ export default function Settings() {
                 {t("accountActions")}
               </h2>
 
-              <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
+              <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4 mb-6">
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -303,6 +372,47 @@ export default function Settings() {
                 >
                   {t("deleteAccount")}
                 </button>
+              </div>
+              
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                {t("opmlManagement")}
+              </h3>
+              
+              {opmlImportResult.message && (
+                <div 
+                  className={`mb-4 p-3 rounded ${
+                    opmlImportResult.success 
+                      ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300" 
+                      : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400"
+                  }`}
+                >
+                  {opmlImportResult.message}
+                </div>
+              )}
+              
+              <div className="flex flex-col space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4">
+                <button
+                  onClick={handleExportOpml}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  {t("exportOpml")}
+                </button>
+                
+                <button
+                  onClick={handleImportOpmlClick}
+                  disabled={isImportingOpml}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isImportingOpml ? t("importing") : t("importOpml")}
+                </button>
+                
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".opml,.xml"
+                  onChange={handleImportOpml}
+                  className="hidden"
+                />
               </div>
 
               {showDeleteConfirmation && (

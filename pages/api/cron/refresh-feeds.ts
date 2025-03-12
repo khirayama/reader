@@ -45,17 +45,17 @@ export default async function handler(
         for (const item of rssFeed.items) {
           // 記事が既に存在するか確認
           const existingArticle = await prisma.article.findUnique({
-            where: { url: item.link }
+            where: { url: item.url }
           });
 
           if (!existingArticle) {
             await prisma.article.create({
               data: {
                 title: item.title,
-                url: item.link,
+                url: item.url,
                 description: item.description || null,
                 content: item.content || null,
-                publishedAt: item.pubDate ? new Date(item.pubDate) : new Date(),
+                publishedAt: item.publishedAt,
                 feedId: feed.id
               }
             });

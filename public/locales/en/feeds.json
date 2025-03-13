@@ -15,7 +15,8 @@
   "removeFeedConfirm": "Are you sure you want to remove this feed?",
   "removeFeedError": "Failed to remove feed",
   "articles": "Articles",
-  "noArticles": "No articles found",
+  "noArticles": "No articles found. Click refresh to fetch the latest content.",
+  "noArticlesForFeed": "No articles found for this feed. Try refreshing to fetch the latest content.",
   "readMore": "Read more",
   "markAsRead": "Mark as read",
   "markAsUnread": "Mark as unread",
@@ -26,6 +27,9 @@
   "lastUpdated": "Last updated:",
   "loading": "Loading...",
   "refresh": "Refresh",
+  "refreshFeed": "Refresh Feed",
+  "refreshAllFeeds": "Refresh All Feeds",
+  "refreshNow": "Refresh Now",
   "refreshing": "Refreshing...",
   "viewArticle": "View article",
   "viewOriginal": "View original",
@@ -33,5 +37,6 @@
   "author": "Author:",
   "category": "Category:",
   "goBack": "Back to feeds",
-  "processing": "Processing..."
+  "processing": "Processing...",
+  "settings": "Settings"
 }

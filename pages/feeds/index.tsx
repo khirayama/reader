@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
@@ -110,9 +110,25 @@ function AddFeedForm({ onAddFeed }: { onAddFeed: (url: string) => Promise<void> 
 // Get favicon for a domain
 function getFaviconUrl(url: string): string {
   try {
-    const domain = new URL(url).hostname;
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+    if (!url || typeof url !== 'string') {
+      return 'https://www.google.com/s2/favicons?domain=rss.com&sz=32';
+    }
+    
+    // URLが正しい形式であることを確認
+    let domain;
+    try {
+      const parsedUrl = new URL(url);
+      domain = parsedUrl.hostname;
+    } catch (e) {
+      // URLではない場合、そのまま使用
+      domain = url;
+    }
+    
+    // クエリパラメータをエンコード
+    const encodedDomain = encodeURIComponent(domain);
+    return `https://www.google.com/s2/favicons?domain=${encodedDomain}&sz=32`;
   } catch (error) {
+    console.error("Error getting favicon:", error);
     // Fallback to default icon if URL is invalid
     return 'https://www.google.com/s2/favicons?domain=rss.com&sz=32';
   }
@@ -190,12 +206,21 @@ function ArticleItem({ article }: { article: Article }) {
   const { t } = useTranslation('feeds');
   const [imageError, setImageError] = useState(false);
   
+  // 記事URLからfavicon URLを生成
+  const faviconUrl = useMemo(() => {
+    try {
+      return getFaviconUrl(article.url);
+    } catch (e) {
+      return 'https://www.google.com/s2/favicons?domain=rss.com&sz=32';
+    }
+  }, [article.url]);
+  
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 mb-2">
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center">
           <img 
-            src={imageError ? 'https://www.google.com/s2/favicons?domain=rss.com&sz=32' : 'https://www.google.com/s2/favicons?domain=rss.com&sz=32'} 
+            src={imageError ? 'https://www.google.com/s2/favicons?domain=rss.com&sz=32' : faviconUrl} 
             alt=""
             width="16" 
             height="16"
@@ -254,16 +279,18 @@ export default function FeedsPage() {
   const [error, setError] = useState('');
   const [selectedFeed, setSelectedFeed] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // References for scroll containers
   const contentContainerRef = useRef<HTMLDivElement>(null);
   const sidebarContainerRef = useRef<HTMLDivElement>(null);
   const infiniteScrollTriggerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch feeds
-  const fetchFeeds = async () => {
+  // Fetch feeds with optional force refresh
+  const fetchFeeds = async (forceRefresh = false) => {
     try {
-      const response = await fetch('/api/feeds');
+      const url = forceRefresh ? '/api/feeds?forceRefresh=true' : '/api/feeds';
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
@@ -280,6 +307,8 @@ export default function FeedsPage() {
     // Only check loading state for appending during infinite scroll
     if (isLoading && append) return;
     
+    console.log(`Fetching articles: page=${page}, feedId=${feedId}, append=${append}`);
+    
     setIsLoading(true);
     try {
       let url = `/api/articles?page=${page}&limit=${pagination.limit}`;
@@ -288,12 +317,15 @@ export default function FeedsPage() {
         url += `&feedId=${feedId}`;
       }
       
+      console.log(`Request URL: ${url}`);
+      
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
       
       const data = await response.json();
+      console.log(`Received ${data.articles.length} articles, total: ${data.pagination.total}`);
       
       if (append) {
         setArticles(prev => [...prev, ...data.articles]);
@@ -378,8 +410,16 @@ export default function FeedsPage() {
 
   // Handle feed selection
   const handleFeedSelect = async (feedId: string | null) => {
+    console.log(`Selecting feed: ${feedId}`);
     setSelectedFeed(feedId);
-    await fetchArticles(1, feedId);
+    
+    try {
+      // 初回ページの記事を取得（追加ではなく置換）
+      await fetchArticles(1, feedId, false);
+    } catch (error) {
+      console.error('Error while selecting feed:', error);
+      setError(`Failed to load articles for selected feed: ${(error as Error).message}`);
+    }
   };
 
   // Set up Intersection Observer for infinite scrolling
@@ -445,11 +485,63 @@ export default function FeedsPage() {
     };
   }, []);
 
+  // フィードの自動更新を行う関数
+  const refreshOldestFeeds = async (specificFeedId?: string) => {
+    try {
+      setIsRefreshing(true);
+      
+      // URLを構築 - 特定のフィードIDが指定されていればそれを更新、そうでなければ最も古いフィードを更新
+      let url = '/api/cron/refresh-feeds?userId=current&partial=true';
+      
+      if (specificFeedId) {
+        url += `&specificFeedId=${specificFeedId}`;
+      }
+      
+      // 最も古いフィードを更新するエンドポイントを呼び出す
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        console.error('Failed to refresh feeds:', response.status);
+        setIsRefreshing(false);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('Auto-refresh status:', data.message);
+      
+      // 一定時間後に最新のフィードとニュースを取得
+      setTimeout(() => {
+        fetchFeeds();
+        
+        // 特定のフィードが選択されている場合はそのフィードの記事のみを再取得
+        if (selectedFeed || specificFeedId) {
+          fetchArticles(1, selectedFeed || specificFeedId, false);
+        } else {
+          fetchArticles(1, null, false);
+        }
+        
+        setIsRefreshing(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Error refreshing feeds:', error);
+      setIsRefreshing(false);
+    }
+  };
+
   // Load feeds and articles on initial load
   useEffect(() => {
     if (status === 'authenticated') {
-      fetchFeeds();
+      // 初回ロード時は強制更新フラグ付きでフィードを取得
+      fetchFeeds(true);
       fetchArticles();
+      
+      // 自動的にフィードの更新も実行
+      refreshOldestFeeds();
     }
   }, [status]);
 
@@ -465,9 +557,16 @@ export default function FeedsPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {t('pageTitle')}
-          </h1>
+          <div className="flex items-center">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {t('pageTitle')}
+            </h1>
+            {isRefreshing && (
+              <span className="ml-3 text-sm bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded-full animate-pulse">
+                {t('refreshing')}
+              </span>
+            )}
+          </div>
           <Link
             href="/settings"
             className="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
@@ -489,9 +588,22 @@ export default function FeedsPage() {
               <AddFeedForm onAddFeed={addFeed} />
               
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4 sticky top-0 bg-white dark:bg-gray-800 z-10 py-1">
-                  {t('filterByFeed')}
-                </h2>
+                <div className="flex justify-between items-center mb-4 sticky top-0 bg-white dark:bg-gray-800 z-10 py-1">
+                  <h2 className="text-lg font-medium text-gray-900 dark:text-white">
+                    {t('filterByFeed')}
+                  </h2>
+                  <button 
+                    onClick={() => refreshOldestFeeds()}
+                    disabled={isRefreshing}
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={t('refreshAllFeeds')}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>{isRefreshing ? t('refreshing') : t('refreshAllFeeds')}</span>
+                  </button>
+                </div>
                 
                 <div className="space-y-1 max-h-60 overflow-y-auto">
                   <button
@@ -534,7 +646,34 @@ export default function FeedsPage() {
                             (e.target as HTMLImageElement).src = 'https://www.google.com/s2/favicons?domain=rss.com&sz=32';
                           }}
                         />
-                        <span className="truncate">{feed.title}</span>
+                        <span className="truncate flex-grow">{feed.title}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); // 親ボタンのクリックイベントを止める
+                            refreshOldestFeeds(feed.id);
+                          }}
+                          disabled={isRefreshing}
+                          className="ml-1 p-1 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+                          title={t('refreshFeed')}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); // 親ボタンのクリックイベントを止める
+                            if (window.confirm(t('removeFeedConfirm'))) {
+                              removeFeed(feed.id);
+                            }
+                          }}
+                          className="ml-1 p-1 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                          title={t('removeFeed')}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
                       </button>
                     ))
                   )}
@@ -548,25 +687,62 @@ export default function FeedsPage() {
           <div className="md:col-span-2 h-full overflow-hidden">
             <div className="h-full overflow-y-auto pb-4 pr-2" id="content-container" ref={contentContainerRef}>
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4 sticky top-0">
-                  {t('articles')}
-                  {selectedFeed && feeds.find(f => f.id === selectedFeed) && (
-                    <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
-                      - {feeds.find(f => f.id === selectedFeed)?.title}
-                    </span>
+                <div className="flex justify-between items-center mb-4 sticky top-0 bg-white dark:bg-gray-800 z-10 py-1">
+                  <h2 className="text-lg font-medium text-gray-900 dark:text-white flex items-center">
+                    {t('articles')}
+                    {selectedFeed && feeds.find(f => f.id === selectedFeed) && (
+                      <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
+                        - {feeds.find(f => f.id === selectedFeed)?.title}
+                      </span>
+                    )}
+                  </h2>
+                  {selectedFeed && (
+                    <button
+                      onClick={() => refreshOldestFeeds(selectedFeed)}
+                      disabled={isRefreshing}
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={t('refreshFeed')}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span>{isRefreshing ? t('refreshing') : t('refreshFeed')}</span>
+                    </button>
                   )}
-                </h2>
+                </div>
 
-                {articles.length === 0 && !isLoading ? (
+                {isLoading && pagination.page === 1 ? (
+                  <div className="text-center py-10">{t('loading')}</div>
+                ) : articles.length === 0 ? (
                   <div className="text-center py-10 text-gray-500 dark:text-gray-400">
-                    {t('noArticles')}
+                    {selectedFeed ? (
+                      <>
+                        <p className="mb-2">{t('noArticlesForFeed')}</p>
+                        <button
+                          onClick={() => selectedFeed ? refreshOldestFeeds(selectedFeed) : refreshOldestFeeds()}
+                          disabled={isRefreshing}
+                          className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isRefreshing ? t('refreshing') : t('refreshNow')}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <p className="mb-2">{t('noArticles')}</p>
+                        {feeds.length > 0 && (
+                          <button
+                            onClick={() => refreshOldestFeeds()}
+                            disabled={isRefreshing}
+                            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isRefreshing ? t('refreshing') : t('refreshAllFeeds')}
+                          </button>
+                        )}
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-2" id="articles-container">
-                    {isLoading && pagination.page === 1 && (
-                      <div className="text-center py-10">{t('loading')}</div>
-                    )}
-                    
                     {articles.map((article) => (
                       <ArticleItem key={article.id} article={article} />
                     ))}

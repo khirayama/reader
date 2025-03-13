@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
@@ -6,6 +6,33 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import Link from 'next/link';
 import { GetServerSideProps } from 'next';
+
+// Get favicon for a domain
+function getFaviconUrl(url: string): string {
+  try {
+    if (!url || typeof url !== 'string') {
+      return 'https://www.google.com/s2/favicons?domain=rss.com&sz=32';
+    }
+    
+    // URLが正しい形式であることを確認
+    let domain;
+    try {
+      const parsedUrl = new URL(url);
+      domain = parsedUrl.hostname;
+    } catch (e) {
+      // URLではない場合、そのまま使用
+      domain = url;
+    }
+    
+    // クエリパラメータをエンコード
+    const encodedDomain = encodeURIComponent(domain);
+    return `https://www.google.com/s2/favicons?domain=${encodedDomain}&sz=32`;
+  } catch (error) {
+    console.error("Error getting favicon:", error);
+    // Fallback to default icon if URL is invalid
+    return 'https://www.google.com/s2/favicons?domain=rss.com&sz=32';
+  }
+}
 
 // Types
 interface Article {
@@ -91,12 +118,24 @@ export default function ArticleDetailPage() {
         {article ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center mb-4">
-              <Link
-                href={`/feeds/${article.feed.id}`}
-                className="text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
-              >
-                {article.feed.title}
-              </Link>
+              <div className="flex items-center">
+                <img 
+                  src={getFaviconUrl(article.url)}
+                  alt=""
+                  width="16" 
+                  height="16"
+                  className="mr-2 rounded-sm"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://www.google.com/s2/favicons?domain=rss.com&sz=32';
+                  }}
+                />
+                <Link
+                  href={`/feeds/${article.feed.id}`}
+                  className="text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
+                >
+                  {article.feed.title}
+                </Link>
+              </div>
               <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
                 {new Date(article.publishedAt).toLocaleDateString()}
               </span>

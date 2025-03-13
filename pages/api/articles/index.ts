@@ -28,8 +28,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // 特定のフィードの記事のみ取得
       if (feedId) {
+        console.log(`Filtering articles by feedId: ${feedId}`);
         where.feedId = feedId;
       }
+      
+      console.log('WHERE clause:', JSON.stringify(where));
 
 
       // 検索クエリがある場合
@@ -63,6 +66,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         take: limit,
       });
 
+      console.log(`Found ${articles.length} articles, total count: ${totalCount}`);
+      
       // 結果を返す
       return res.status(200).json({
         articles,

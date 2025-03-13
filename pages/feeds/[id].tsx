@@ -119,10 +119,15 @@ export default function FeedDetailPage() {
   };
 
 
-  // Load feed on initial load
+  // Load feed on initial load and refresh if needed
   useEffect(() => {
     if (status === 'authenticated' && id) {
-      fetchFeed();
+      fetchFeed().then(() => {
+        // 初回ロード時に自動更新を実行
+        refreshFeed().catch(err => {
+          console.error('Auto refresh failed:', err);
+        });
+      });
     }
   }, [status, id]);
 
@@ -184,7 +189,14 @@ export default function FeedDetailPage() {
 
               {feed.articles.length === 0 ? (
                 <div className="text-center py-10 text-gray-500 dark:text-gray-400">
-                  {t('noArticles')}
+                  <p className="mb-4">{t('noArticles')}</p>
+                  <button
+                    onClick={refreshFeed}
+                    disabled={isRefreshing}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isRefreshing ? t('refreshing') : t('refreshNow')}
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-4">

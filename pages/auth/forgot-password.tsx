@@ -5,6 +5,7 @@ import { z } from "zod";
 import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { GetStaticProps } from "next";
+import { useAuth } from "../../lib/auth-context";
 
 // Email validation schema with i18n
 function getEmailSchema(t: (key: string) => string) {
@@ -15,6 +16,7 @@ function getEmailSchema(t: (key: string) => string) {
 
 export default function ForgotPassword() {
   const { t } = useTranslation("forgotPassword");
+  const { resetPassword } = useAuth();
   const emailSchema = getEmailSchema(t);
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
@@ -42,18 +44,12 @@ export default function ForgotPassword() {
     setError("");
 
     try {
-      const response = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || t("resetRequestFailed"));
+      const { error } = await resetPassword(email);
+      
+      if (error) {
+        throw new Error(error.message || t("resetRequestFailed"));
       }
-
+      
       setSuccess(true);
     } catch (error) {
       setError(error instanceof Error ? error.message : t("resetRequestFailed"));

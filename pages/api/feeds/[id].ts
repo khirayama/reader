@@ -177,7 +177,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         // createMany を使用して一括作成
         await prisma.article.createMany({
           data: createData,
-          skipDuplicates: true,
         });
         
         // フロントエンドに返すために新しい記事を取得

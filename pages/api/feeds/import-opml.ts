@@ -140,7 +140,6 @@ export default async function handler(
                       publishedAt: item.publishedAt,
                       feedId: newFeed.id
                     })),
-                    skipDuplicates: true,
                   });
                   
                   totalArticles.added += newItems.length;

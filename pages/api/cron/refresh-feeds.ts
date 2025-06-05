@@ -196,7 +196,6 @@ export default async function handler(
               publishedAt: item.publishedAt,
               feedId: feed.id
             })),
-            skipDuplicates: true,
           });
           
           feedUpdatedCount = newItems.length;

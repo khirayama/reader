@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Link from "next/link";
@@ -7,6 +6,7 @@ import { z } from "zod";
 import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { GetStaticProps } from "next";
+import { useAuth } from "../../lib/auth-context";
 
 // Form validation schema with i18n
 function getValidationSchema(t: (key: string) => string) {
@@ -25,6 +25,7 @@ interface FormData {
 export default function SignIn() {
   const router = useRouter();
   const { t } = useTranslation("auth");
+  const { signIn, signUp } = useAuth();
   const validationSchema = getValidationSchema(t);
   const [formData, setFormData] = useState<FormData>({
     email: "",
@@ -58,59 +59,45 @@ export default function SignIn() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     setIsLoading(true);
     setAuthError(null);
 
-    if (isSignUp) {
-      // 新規ユーザー登録
-      try {
-        const response = await fetch("/api/auth/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || t("signupError"));
+    try {
+      if (isSignUp) {
+        // 新規ユーザー登録処理
+        const { error, data } = await signUp(formData.email, formData.password);
+        
+        if (error) {
+          throw new Error(error.message || t("signupError"));
         }
-
-        // 登録成功後、自動ログイン
-        const result = await signIn("credentials", {
-          redirect: false,
-          email: formData.email,
-          password: formData.password,
-        });
-
-        if (result?.error) {
-          throw new Error(result.error);
+        
+        // 登録後、フィードページへリダイレクト（確認メールの場合は確認を促す）
+        if (data?.user) {
+          router.push("/feeds");
+        } else {
+          // メール確認が必要な場合
+          setAuthError(t("confirmEmail"));
         }
-
+      } else {
+        // ログイン処理
+        const { error } = await signIn(formData.email, formData.password);
+        
+        if (error) {
+          throw new Error(error.message || t("signinError"));
+        }
+        
+        // ログイン成功
         router.push("/feeds");
-      } catch (error) {
-        setAuthError(error instanceof Error ? error.message : t("signupError"));
-        setIsLoading(false);
       }
-    } else {
-      // ログイン処理
-      const result = await signIn("credentials", {
-        redirect: false,
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (result?.error) {
-        setAuthError(t("signinError"));
-        setIsLoading(false);
-        return;
-      }
-
-      router.push("/feeds");
+    } catch (error) {
+      console.error("Authentication error:", error);
+      setAuthError(error instanceof Error ? error.message : t(isSignUp ? "signupError" : "signinError"));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -143,7 +130,7 @@ export default function SignIn() {
             </div>
           )}
 
-          <form onSubmit={handleSignIn} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label
                 htmlFor="email"

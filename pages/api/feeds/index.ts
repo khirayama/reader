@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth';
 import { z } from 'zod';
-import { authOptions } from '../auth/[...nextauth]';
+import { withAuth, getAuthenticatedUserId } from '../../../lib/auth-middleware';
 import { prisma } from '../../../lib/prisma';
 import { fetchRssFeed } from '../../../lib/rss';
 
@@ -76,19 +75,14 @@ async function refreshOldestFeed(req: NextApiRequest, userId: string, forceRefre
   }
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getServerSession(req, res, authOptions);
-
-  if (!session) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
+async function handler(req: NextApiRequest, res: NextApiResponse, userId: string) {
 
   // フィード一覧を取得
   if (req.method === 'GET') {
     try {
       const feeds = await prisma.feed.findMany({
         where: {
-          userId: session.user.id as string,
+          userId: userId,
         },
         orderBy: {
           createdAt: 'desc',
@@ -103,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // 2. 強制更新フラグがON、または5つ以上のフィードがある
       if (feeds.length > 0 && (forceRefresh || feeds.length >= 5)) {
         // すべてのフィードを更新するが、ヘッダーテストのため1つだけ先に実行
-        refreshOldestFeed(req, session.user.id as string, forceRefresh).catch(err => {
+        refreshOldestFeed(req, userId, forceRefresh).catch(err => {
           console.error('Failed to schedule background refresh:', err);
         });
 
@@ -155,7 +149,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // 既にURL登録済みかチェック
       const existingFeed = await prisma.feed.findFirst({
         where: {
-          userId: session.user.id as string,
+          userId: userId,
           url: url,
         },
       });
@@ -186,7 +180,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             title: feedData.title.substring(0, 255), // タイトルが長すぎる場合に切り詰め
             url: feedData.url || formattedUrl,
             description: feedData.description ? feedData.description.substring(0, 1000) : null, // 説明が長すぎる場合に切り詰め
-            userId: session.user.id as string,
+            userId: userId,
           },
         });
 
@@ -218,7 +212,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   publishedAt: item.publishedAt,
                   feedId: feed.id
                 })),
-                skipDuplicates: true,
               });
             } catch (articleError) {
               // 記事の作成に失敗しても、フィード自体は作成済みなので続行
@@ -268,3 +261,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // その他のHTTPメソッドには405を返す
   return res.status(405).json({ message: 'Method not allowed' });
 }
+
+export default withAuth(handler);

@@ -1,12 +1,11 @@
-import { SessionProvider } from "next-auth/react";
 import type { AppProps } from "next/app";
 import { appWithTranslation } from "next-i18next";
 import { ThemeProvider } from "../lib/theme";
-import { useEffect } from "react";
+import { AuthProvider } from "../lib/auth-context";
 import Script from "next/script";
 import "../styles/globals.css";
 
-function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
+function App({ Component, pageProps }: AppProps) {
   return (
     <>
       {/* This script runs immediately, before React hydration, to prevent flicker */}
@@ -39,11 +38,11 @@ function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
           `,
         }}
       />
-      <SessionProvider session={session}>
+      <AuthProvider>
         <ThemeProvider>
           <Component {...pageProps} />
         </ThemeProvider>
-      </SessionProvider>
+      </AuthProvider>
     </>
   );
 }

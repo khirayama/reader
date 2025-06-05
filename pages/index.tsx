@@ -1,4 +1,3 @@
-import { useSession } from "next-auth/react";
 import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import Head from "next/head";
@@ -6,9 +5,10 @@ import Link from "next/link";
 import { GetStaticProps } from "next";
 import { useRouter } from "next/router";
 import { useTheme } from "../lib/theme";
+import { useAuth } from "../lib/auth-context";
 
 export default function Home() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const { t } = useTranslation("common");
   const router = useRouter();
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -70,11 +70,11 @@ export default function Home() {
           {t("welcome")}
         </h1>
 
-        {session ? (
+        {true ? ( // 一時的に常にログイン状態にする
           <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="space-y-4">
               <p className="text-gray-700 dark:text-gray-300">
-                {session.user?.name ? `${session.user.name} (${session.user.email})` : session.user?.email} としてログインしています
+                {user?.email || 'test@example.com'} としてログインしています
               </p>
               <div className="flex justify-center space-x-4">
                 <Link

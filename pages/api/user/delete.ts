@@ -1,35 +1,57 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { getServerSession } from "next-auth";
+import { withAuth } from "../../../lib/auth-middleware";
 import { prisma } from "../../../lib/prisma";
-import { authOptions } from "../auth/[...nextauth]";
+import { supabaseAdmin } from "../../../lib/supabase";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Only allow DELETE method
+type ResponseData = {
+  success?: boolean;
+  message?: string;
+  error?: any;
+};
+
+async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<ResponseData>,
+  userId: string
+) {
+  // DELETEリクエストのみ許可
   if (req.method !== "DELETE") {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  // Get session to authorize the request
-  const session = await getServerSession(req, res, authOptions);
-  
-  if (!session || !session.user) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
   try {
-    const userEmail = session.user.email as string;
-    
-    // First, delete any related records in other tables (if necessary)
-    // This will depend on your schema relationships
-    
-    // Then delete the user
-    await prisma.user.delete({
-      where: { email: userEmail },
+    // トランザクションでデータベースからユーザーとその関連データを削除
+    await prisma.$transaction(async (tx) => {
+      // 関連するデータを削除（手動でカスケード削除の代わり）
+      await tx.feed.deleteMany({
+        where: { userId },
+      });
+      
+      await tx.settings.deleteMany({
+        where: { userId },
+      });
+      
+      // ユーザーを削除
+      await tx.user.delete({
+        where: { id: userId },
+      });
     });
-    
-    return res.status(200).json({ message: "Account deleted successfully" });
+
+    // Supabase認証からユーザーを削除
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+
+    if (error) {
+      throw new Error(`認証データの削除に失敗しました: ${error.message}`);
+    }
+
+    return res.status(200).json({ success: true, message: "アカウントが削除されました" });
   } catch (error) {
     console.error("Account deletion error:", error);
-    return res.status(500).json({ message: "An error occurred while deleting your account" });
+    return res.status(500).json({
+      message: "アカウントの削除に失敗しました",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 }
+
+export default withAuth(handler);

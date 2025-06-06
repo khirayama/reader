@@ -1,4 +1,6 @@
-# RSS Reader
+# RSS Reader - 仕様書
+
+モノレポ構成の現代的な RSS リーダーアプリケーション。Web、Native（iOS/Android）対応。
 
 ## 機能
 
@@ -27,10 +29,26 @@
 - フィード登録ページ
 - アカウント・設定ページ
 
+## アーキテクチャ
+
+### モノレポ構成
+- **apps/api**: Node.js/Express/Prisma API サーバー
+- **apps/web**: Next.js ウェブアプリケーション  
+- **apps/native**: React Native/Expo モバイルアプリ
+- **packages/sdk**: TypeScript SDK（API クライアント）
+
+### 技術スタック
+- **フロントエンド**: React, TypeScript, Tailwind CSS
+- **バックエンド**: Node.js, Express, Prisma, PostgreSQL
+- **モバイル**: React Native, Expo
+- **ツール**: Turborepo, Biome, Vitest
+
 ## デザイン/UI
 
 - シンプルでフラットデザイン
-- モバイルにも対応
+- レスポンシブデザイン（モバイルファースト）
+- ダークモード対応
+- 多言語対応（日本語/英語）
 
 ## 各ページの構成
 

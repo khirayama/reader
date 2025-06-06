@@ -2,6 +2,7 @@
   "permissions": {
     "allow": [
       "*",
+      "Bash",
       "Bash(git add:*)",
       "Bash(mkdir:*)",
       "Bash(npx prisma generate:*)",
@@ -12,7 +13,12 @@
       "Bash(npm run type-check:*)",
       "Bash(npm run lint)",
       "Bash(npm run build:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(npx prisma db push:*)",
+      "Bash(npx turbo run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   },

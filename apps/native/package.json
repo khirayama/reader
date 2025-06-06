@@ -19,7 +19,7 @@
     "clean": "expo r -c"
   },
   "dependencies": {
-    "react": "^18.3.1",
+    "react": "18.2.0",
     "react-native": "0.74.3",
     "expo": "~51.0.18",
     "@rss-reader/sdk": "workspace:*",

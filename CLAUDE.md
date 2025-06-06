@@ -3,6 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 必ず日本語で回答してください。
+毎回、docs配下に必要な変更を適用してください。
 
 ## Project Overview
 

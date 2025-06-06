@@ -18,7 +18,8 @@ RSS Reader - A modern monorepo RSS feed reader application with web and native (
 
 ### Key Technologies
 
-- **Monorepo**: Turborepo for orchestration
+- **Monorepo**: Turborepo for orchestration (npm without workspace support)
+- **Package Manager**: npm (workspace機能なし、各アプリで個別にnpm install)
 - **Backend**: Express, Prisma, PostgreSQL, JWT authentication, RSS parsing
 - **Authentication**: JWT tokens, bcryptjs password hashing, rate limiting
 - **Security**: helmet, CORS, express-rate-limit, input validation with Zod
@@ -41,14 +42,23 @@ npm run clean        # Clean build artifacts
 ```
 
 ### Individual app development:
+**注意**: 各アプリケーションで個別に `npm install` を実行してから開発サーバーを起動してください。
+
 ```bash
+# 依存関係のインストール（初回のみ）
+cd apps/api && npm install
+cd apps/web && npm install  
+cd apps/native && npm install
+cd packages/sdk && npm install
+
+# 開発サーバー起動
 # API server (port 3001)
 cd apps/api && npm run dev
 
-# Web app (port 3000) 
+# Web app (port 3000, 使用中の場合は自動で別ポートを選択) 
 cd apps/web && npm run dev
 
-# Native app
+# Native app (port 8081)
 cd apps/native && npm run dev
 
 # SDK development

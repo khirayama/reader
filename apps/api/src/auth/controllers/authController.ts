@@ -1,5 +1,6 @@
-import { Request, Response } from 'express';
-import { AuthService, AuthResponse, UserResponse } from '../services/authService';
+import type { Request, Response } from 'express';
+import { AuthService } from '../services/authService';
+import type { AuthResponse, UserResponse } from '../services/authService';
 import {
   RegisterInput,
   LoginInput,

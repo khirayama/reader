@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/authService';
 
 // 認証エラー応答型
@@ -61,6 +61,7 @@ export const requireAuth = async (
 
     // リクエストオブジェクトにユーザー情報を追加
     req.user = {
+      id: payload.userId,
       userId: payload.userId,
       email: payload.email,
     };
@@ -105,6 +106,7 @@ export const optionalAuth = async (
 
     if (user) {
       req.user = {
+        id: payload.userId,
         userId: payload.userId,
         email: payload.email,
       };

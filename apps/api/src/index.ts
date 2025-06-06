@@ -4,6 +4,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { authRouter } from './auth/routes/authRoutes';
+import { feedRouter } from './feeds/routes/feedRoutes';
+import { articleRouter } from './articles/routes/articleRoutes';
 import { corsOptions } from './config/cors';
 import {
   generalLimiter,
@@ -56,6 +58,10 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/forgot-password', passwordResetLimiter);
 app.use('/api/auth', authRouter);
 
+// フィード・記事管理ルート
+app.use('/api/feeds', feedRouter);
+app.use('/api/articles', articleRouter);
+
 // 404ハンドラー
 app.use('*', (req, res) => {
   res.status(404).json({
@@ -97,6 +103,8 @@ if (process.env.NODE_ENV !== 'test') {
     console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🏥 Health check: http://localhost:${PORT}/health`);
     console.log(`🔐 Auth API: http://localhost:${PORT}/api/auth`);
+    console.log(`📰 Feed API: http://localhost:${PORT}/api/feeds`);
+    console.log(`📄 Article API: http://localhost:${PORT}/api/articles`);
   });
 
   // 優雅なシャットダウン

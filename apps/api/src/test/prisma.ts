@@ -1,7 +1,7 @@
 import { PrismaClient } from '../../node_modules/.prisma/test-client';
 
 declare global {
-  // eslint-disable-next-line no-var
+  // biome-ignore lint/style/noVar: グローバル変数の定義のため必要
   var testPrisma: PrismaClient | undefined;
 }
 

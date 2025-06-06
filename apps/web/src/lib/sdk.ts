@@ -1,13 +1,13 @@
-import { createRSSReaderSDK } from '@rss-reader/sdk';
+import { createRSSReaderSDK } from './rss-sdk';
+
+// ローカルストレージのキー
+export const TOKEN_STORAGE_KEY = 'rss-reader-token';
 
 // SDKインスタンスを作成
 export const sdk = createRSSReaderSDK({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
   timeout: 10000,
 });
-
-// ローカルストレージのキー
-export const TOKEN_STORAGE_KEY = 'rss-reader-token';
 
 // トークンをローカルストレージから読み込み
 if (typeof window !== 'undefined') {

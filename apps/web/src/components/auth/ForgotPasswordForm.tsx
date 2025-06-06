@@ -27,7 +27,7 @@ export function ForgotPasswordForm() {
     setError(null);
 
     try {
-      await sdk.auth.forgotPassword({ email: data.email });
+      await sdk.auth.forgotPassword(data.email);
       setSuccess(true);
     } catch (err) {
       if (err instanceof Error) {

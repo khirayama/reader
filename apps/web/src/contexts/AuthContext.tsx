@@ -1,7 +1,15 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import type { User } from '@rss-reader/sdk';
+// User型を直接定義
+interface User {
+  id: string;
+  email: string;
+  theme: 'SYSTEM' | 'LIGHT' | 'DARK';
+  language: 'JA' | 'EN';
+  createdAt: string;
+  updatedAt: string;
+}
 import { sdk, saveToken, clearToken } from '@/lib/sdk';
 
 interface AuthContextType {

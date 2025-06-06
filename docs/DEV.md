@@ -75,6 +75,19 @@
 
 ```bash
 npm install
+cd apps/api && npm install
+cd ../web && npm install
+cd ../native && npm install
+cd ../../packages/sdk && npm install
+```
+
+### 1.1. SDKビルド（重要）
+
+Webアプリをビルドする前に、SDKパッケージをビルドする必要があります：
+
+```bash
+cd packages/sdk
+npm run build
 ```
 
 ### 2. 環境変数の設定

@@ -95,6 +95,7 @@ export interface GetFeedsQuery {
   page?: number;
   limit?: number;
   search?: string;
+  [key: string]: unknown;
 }
 
 export interface FeedsResponse {
@@ -127,6 +128,7 @@ export interface GetArticlesQuery {
   page?: number;
   limit?: number;
   search?: string;
+  [key: string]: unknown;
 }
 
 export interface ArticlesResponse {

@@ -2,7 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { sdk } from '@/lib/sdk';
-import { Feed } from '@rss-reader/sdk';
+// Feed型を直接定義
+interface Feed {
+  id: string;
+  title: string;
+  url: string;
+  siteUrl?: string;
+  description?: string;
+  favicon?: string;
+  userId: string;
+  lastFetchedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    articles: number;
+  };
+}
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
@@ -119,7 +134,7 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
           </Button>
           
           <Button
-            variant={selectedFeedId ? 'outline' : 'default'}
+            variant={selectedFeedId ? 'outline' : 'primary'}
             onClick={() => onFeedSelect(null)}
             className="w-full"
           >

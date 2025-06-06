@@ -225,4 +225,63 @@ export class FeedController {
       });
     }
   }
+
+  // フィード手動更新
+  static async refreshFeed(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: '認証が必要です' });
+      }
+
+      const { feedId } = req.params;
+
+      const updatedFeed = await FeedService.refreshFeed(feedId, userId);
+
+      res.json({
+        success: true,
+        message: 'フィードを更新しました',
+        feed: updatedFeed,
+      });
+    } catch (error: any) {
+      console.error('Refresh feed error:', error);
+
+      if (error.message === 'フィードが見つかりません') {
+        return res.status(404).json({
+          success: false,
+          error: error.message,
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        error: 'フィードの更新中にエラーが発生しました',
+      });
+    }
+  }
+
+  // 全フィード更新
+  static async refreshAllFeeds(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: '認証が必要です' });
+      }
+
+      const result = await FeedService.refreshAllUserFeeds(userId);
+
+      res.json({
+        success: true,
+        message: `${result.success}個のフィードを更新しました`,
+        result,
+      });
+    } catch (error: any) {
+      console.error('Refresh all feeds error:', error);
+
+      res.status(500).json({
+        success: false,
+        error: '全フィードの更新中にエラーが発生しました',
+      });
+    }
+  }
 }

@@ -17,4 +17,8 @@ router.delete('/:feedId', FeedController.deleteFeed); // DELETE /api/feeds/:feed
 // フィードの記事管理
 router.get('/:feedId/articles', FeedController.getFeedArticles); // GET /api/feeds/:feedId/articles - フィード記事取得
 
+// フィード更新
+router.post('/:feedId/refresh', FeedController.refreshFeed); // POST /api/feeds/:feedId/refresh - フィード手動更新
+router.post('/refresh-all', FeedController.refreshAllFeeds); // POST /api/feeds/refresh-all - 全フィード更新
+
 export { router as feedRouter };

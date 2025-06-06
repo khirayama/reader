@@ -19,9 +19,12 @@ RSS Reader - A modern monorepo RSS feed reader application with web and native (
 
 - **Monorepo**: Turborepo for orchestration
 - **Backend**: Express, Prisma, PostgreSQL, JWT authentication, RSS parsing
+- **Authentication**: JWT tokens, bcryptjs password hashing, rate limiting
+- **Security**: helmet, CORS, express-rate-limit, input validation with Zod
 - **Frontend**: React, Next.js, Tailwind CSS, React Hook Form with Zod validation
 - **Mobile**: React Native, Expo
-- **Tooling**: Biome for linting/formatting, Vitest for testing, TypeScript
+- **Testing**: Vitest, Supertest, SQLite for test database
+- **Tooling**: Biome for linting/formatting, TypeScript strict mode
 
 ## Development Commands
 
@@ -54,9 +57,14 @@ cd packages/sdk && npm run dev
 ### Database operations (API):
 ```bash
 cd apps/api
-npx prisma migrate dev     # Run database migrations
-npx prisma db seed         # Seed database with initial data
-npx prisma studio          # Open Prisma Studio for database management
+npx prisma generate            # Generate Prisma client
+npx prisma migrate dev         # Run database migrations
+npx prisma db push             # Push schema changes to database
+npx prisma studio              # Open Prisma Studio for database management
+
+# Test database operations
+npx prisma generate --schema=prisma/schema.test.prisma  # Generate test client
+npx prisma db push --schema=prisma/schema.test.prisma   # Setup test database
 ```
 
 ### Testing:
@@ -81,22 +89,49 @@ cd apps/web && npm run test    # Web tests only
 The API requires PostgreSQL. Set up environment variables in `apps/api/.env`:
 ```
 DATABASE_URL="postgresql://user:password@localhost:5432/rss_reader"
-JWT_SECRET="your-jwt-secret"
+JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
 PORT=3001
+NODE_ENV="development"
+
+# Security & CORS settings
+WEB_URL="http://localhost:3000"
+ALLOWED_ORIGINS="http://localhost:3000,http://localhost:19006"
 ```
 
 ## Deployment
 
 - **API & Web**: Vercel (with Supabase PostgreSQL)
 - **Native**: EAS Build (Expo Application Services)
-- **Environment variables**: Set DATABASE_URL and JWT_SECRET in Vercel dashboard
+- **Environment variables**: 
+  - DATABASE_URL (Supabase PostgreSQL connection)
+  - JWT_SECRET (strong secret key for production)
+  - WEB_URL (frontend application URL)
+  - ALLOWED_ORIGINS (comma-separated list of allowed domains)
 
 ## Key Features
 
-- User authentication (register/login/password reset)
-- RSS feed management (CRUD operations) 
-- Article search and filtering
-- OPML import/export
-- Daily feed refresh via cron jobs
-- Responsive design with dark mode
-- Multilingual support (Japanese/English)
+- **Authentication System**: Complete JWT-based auth with registration, login, password reset
+- **Security**: Rate limiting, CORS protection, input validation, secure headers
+- **RSS feed management**: CRUD operations for feeds and articles
+- **Article search and filtering**: Full-text search capabilities
+- **OPML import/export**: Standard RSS feed list management
+- **Daily feed refresh**: Automated via cron jobs (Vercel Functions)
+- **Responsive design**: Mobile-first with dark mode support
+- **Multilingual support**: Japanese/English with i18next
+- **Testing**: Comprehensive test suite with 100% auth coverage
+
+## Authentication API
+
+The API implements a complete authentication system:
+
+- **POST** `/api/auth/register` - User registration
+- **POST** `/api/auth/login` - User login  
+- **POST** `/api/auth/forgot-password` - Password reset request
+- **POST** `/api/auth/reset-password` - Password reset execution
+- **GET** `/api/auth/profile` - Get user profile (requires auth)
+- **PUT** `/api/auth/password` - Change password (requires auth)
+- **PUT** `/api/auth/email` - Change email (requires auth)
+- **PUT** `/api/auth/settings` - Update user settings (requires auth)
+- **DELETE** `/api/auth/account` - Delete account (requires auth)
+
+All endpoints include proper validation, error handling, and security measures.

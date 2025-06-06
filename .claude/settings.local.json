@@ -1,8 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash"
+      "*",
+      "Bash(git add:*)"
     ],
     "deny": []
-  }
+  },
+  "autoApproveCommands": true,
+  "autoApproveFileOperations": true,
+  "autoExecute": true,
+  "confirmationRequired": false,
+  "trustedRepository": true
 }

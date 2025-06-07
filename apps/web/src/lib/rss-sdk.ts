@@ -30,12 +30,6 @@ export interface LoginResponse {
   token: string
 }
 
-export interface ApiResponse<T = unknown> {
-  success: boolean
-  data?: T
-  error?: string
-  message?: string
-}
 
 // シンプルなHTTPクライアント
 class SimpleApiClient {
@@ -61,7 +55,7 @@ class SimpleApiClient {
     return this.token
   }
 
-  private async request<T>(method: string, path: string, data?: unknown): Promise<ApiResponse<T>> {
+  private async request<T>(method: string, path: string, data?: unknown): Promise<T> {
     const url = `${this.baseURL}${path}`
 
     const headers: Record<string, string> = {
@@ -84,29 +78,35 @@ class SimpleApiClient {
 
     try {
       const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || `HTTP ${response.status}`)
+      }
+      
       const result = await response.json()
       return result
     } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Network error',
+      if (error instanceof Error) {
+        throw error
       }
+      throw new Error('Network error')
     }
   }
 
-  async get<T>(path: string): Promise<ApiResponse<T>> {
+  async get<T>(path: string): Promise<T> {
     return this.request<T>('GET', path)
   }
 
-  async post<T>(path: string, data: unknown): Promise<ApiResponse<T>> {
+  async post<T>(path: string, data: unknown): Promise<T> {
     return this.request<T>('POST', path, data)
   }
 
-  async put<T>(path: string, data: unknown): Promise<ApiResponse<T>> {
+  async put<T>(path: string, data: unknown): Promise<T> {
     return this.request<T>('PUT', path, data)
   }
 
-  async delete<T>(path: string): Promise<ApiResponse<T>> {
+  async delete<T>(path: string): Promise<T> {
     return this.request<T>('DELETE', path)
   }
 }
@@ -116,41 +116,23 @@ class AuthService {
   constructor(private client: SimpleApiClient) {}
 
   async register(data: RegisterRequest): Promise<LoginResponse> {
-    const response = await this.client.post<LoginResponse>('/api/auth/register', data)
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Registration failed')
-    }
-    return response.data
+    return await this.client.post<LoginResponse>('/api/auth/register', data)
   }
 
   async login(data: LoginRequest): Promise<LoginResponse> {
-    const response = await this.client.post<LoginResponse>('/api/auth/login', data)
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Login failed')
-    }
-    return response.data
+    return await this.client.post<LoginResponse>('/api/auth/login', data)
   }
 
   async getProfile(): Promise<User> {
-    const response = await this.client.get<User>('/api/auth/profile')
-    if (!response.success || !response.data) {
-      throw new Error(response.error || 'Profile fetch failed')
-    }
-    return response.data
+    return await this.client.get<User>('/api/auth/profile')
   }
 
-  async forgotPassword(email: string): Promise<void> {
-    const response = await this.client.post<void>('/api/auth/forgot-password', { email })
-    if (!response.success) {
-      throw new Error(response.error || 'Forgot password failed')
-    }
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    return await this.client.post<{ message: string }>('/api/auth/forgot-password', { email })
   }
 
-  async resetPassword(data: { token: string; password: string }): Promise<void> {
-    const response = await this.client.post<void>('/api/auth/reset-password', data)
-    if (!response.success) {
-      throw new Error(response.error || 'Password reset failed')
-    }
+  async resetPassword(data: { token: string; password: string }): Promise<{ message: string }> {
+    return await this.client.post<{ message: string }>('/api/auth/reset-password', data)
   }
 
   logout(): void {

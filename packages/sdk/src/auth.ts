@@ -63,19 +63,13 @@ export class AuthService {
   // パスワードリセット要求
   async forgotPassword(data: ForgotPasswordRequest): Promise<void> {
     const response = await this.client.post('/api/auth/forgot-password', data);
-    
-    if (!response.success) {
-      throw new Error(response.error || 'パスワードリセット要求に失敗しました');
-    }
+    // AuthControllerは成功時にメッセージを直接返すため、エラーがなければ成功
   }
 
   // パスワードリセット実行
   async resetPassword(data: ResetPasswordRequest): Promise<void> {
     const response = await this.client.post('/api/auth/reset-password', data);
-    
-    if (!response.success) {
-      throw new Error(response.error || 'パスワードリセットに失敗しました');
-    }
+    // AuthControllerは成功時にメッセージを直接返すため、エラーがなければ成功
   }
 
   // ユーザープロフィール取得
@@ -99,53 +93,46 @@ export class AuthService {
   // パスワード変更
   async changePassword(data: ChangePasswordRequest): Promise<void> {
     const response = await this.client.put('/api/auth/password', data);
-    
-    if (!response.success) {
-      throw new Error(response.error || 'パスワード変更に失敗しました');
-    }
+    // AuthControllerは成功時にメッセージを直接返すため、エラーがなければ成功
   }
 
   // メールアドレス変更
   async changeEmail(data: ChangeEmailRequest): Promise<void> {
     const response = await this.client.put('/api/auth/email', data);
-    
-    if (!response.success) {
-      throw new Error(response.error || 'メールアドレス変更に失敗しました');
-    }
+    // AuthControllerは成功時にメッセージを直接返すため、エラーがなければ成功
   }
 
   // ユーザー設定更新
   async updateSettings(data: UpdateSettingsRequest): Promise<User> {
     const response = await this.client.put<User>('/api/auth/settings', data);
     
-    if (response.success && response.data) {
-      return response.data;
+    // AuthControllerは直接Userオブジェクトを返す
+    if (response && (response as any).id) {
+      return response as User;
     }
     
-    throw new Error(response.error || '設定の更新に失敗しました');
+    throw new Error('設定の更新に失敗しました');
   }
 
   // ユーザー情報更新
   async updateUser(data: UpdateUserRequest): Promise<User> {
     const response = await this.client.put<User>('/api/auth/profile', data);
     
-    if (response.success && response.data) {
-      return response.data;
+    // AuthControllerは直接Userオブジェクトを返す
+    if (response && (response as any).id) {
+      return response as User;
     }
     
-    throw new Error(response.error || 'ユーザー情報の更新に失敗しました');
+    throw new Error('ユーザー情報の更新に失敗しました');
   }
 
   // アカウント削除
   async deleteAccount(): Promise<void> {
     const response = await this.client.delete('/api/auth/account');
     
-    if (response.success) {
-      // アカウント削除後はトークンをクリア
-      this.client.clearToken();
-    } else {
-      throw new Error(response.error || 'アカウント削除に失敗しました');
-    }
+    // AuthControllerは成功時にメッセージを直接返すため、エラーがなければ成功
+    // アカウント削除後はトークンをクリア
+    this.client.clearToken();
   }
 
   // 認証状態確認

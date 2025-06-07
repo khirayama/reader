@@ -10,8 +10,9 @@ export class ArticlesService {
 
   // 全記事取得
   async getArticles(query?: GetArticlesQuery): Promise<ArticlesResponse> {
-    const response = await this.client.get<ArticlesResponse>('/api/articles', query);
+    const response = await this.client.get<any>('/api/articles', query);
     
+    // ArticleRoutesはApiResponse形式で{success: true, data: result}を返す
     if (response.success && response.data) {
       return response.data;
     }
@@ -21,8 +22,9 @@ export class ArticlesService {
 
   // 記事詳細取得
   async getArticleById(articleId: string): Promise<Article> {
-    const response = await this.client.get<Article>(`/api/articles/${articleId}`);
+    const response = await this.client.get<any>(`/api/articles/${articleId}`);
     
+    // ArticleRoutesはApiResponse形式で{success: true, data: result}を返す
     if (response.success && response.data) {
       return response.data;
     }
@@ -34,8 +36,9 @@ export class ArticlesService {
   async markAsRead(articleId: string): Promise<void> {
     const response = await this.client.put(`/api/articles/${articleId}/read`);
     
-    if (!response.success) {
-      throw new Error(response.error || '記事の既読設定に失敗しました');
+    // ArticleRoutesはApiResponse形式で{success: boolean}を返す
+    if (!(response as any).success) {
+      throw new Error((response as any).error || '記事の既読設定に失敗しました');
     }
   }
 
@@ -43,8 +46,9 @@ export class ArticlesService {
   async markAsUnread(articleId: string): Promise<void> {
     const response = await this.client.put(`/api/articles/${articleId}/unread`);
     
-    if (!response.success) {
-      throw new Error(response.error || '記事の未読設定に失敗しました');
+    // ArticleRoutesはApiResponse形式で{success: boolean}を返す
+    if (!(response as any).success) {
+      throw new Error((response as any).error || '記事の未読設定に失敗しました');
     }
   }
 
@@ -52,8 +56,9 @@ export class ArticlesService {
   async addBookmark(articleId: string): Promise<void> {
     const response = await this.client.post(`/api/articles/${articleId}/bookmark`);
     
-    if (!response.success) {
-      throw new Error(response.error || 'ブックマークの追加に失敗しました');
+    // ArticleRoutesはApiResponse形式で{success: boolean}を返す
+    if (!(response as any).success) {
+      throw new Error((response as any).error || 'ブックマークの追加に失敗しました');
     }
   }
 
@@ -61,15 +66,17 @@ export class ArticlesService {
   async removeBookmark(articleId: string): Promise<void> {
     const response = await this.client.delete(`/api/articles/${articleId}/bookmark`);
     
-    if (!response.success) {
-      throw new Error(response.error || 'ブックマークの削除に失敗しました');
+    // ArticleRoutesはApiResponse形式で{success: boolean}を返す
+    if (!(response as any).success) {
+      throw new Error((response as any).error || 'ブックマークの削除に失敗しました');
     }
   }
 
   // ブックマーク記事一覧取得
   async getBookmarks(query?: GetArticlesQuery): Promise<ArticlesResponse> {
-    const response = await this.client.get<ArticlesResponse>('/api/articles/bookmarks/list', query);
+    const response = await this.client.get<any>('/api/articles/bookmarks/list', query);
     
+    // ArticleRoutesはApiResponse形式で{success: true, data: result}を返す
     if (response.success && response.data) {
       return response.data;
     }

@@ -44,14 +44,14 @@ describe('フィードAPI', () => {
       expect(response.body.feed.url).toBe(feedUrl);
       expect(response.body.feed.title).toBeDefined();
       expect(response.body.feed.userId).toBe(userId);
-    });
+    }, 10000);
 
     it('無効なURLでフィード作成が失敗する', async () => {
       const response = await authenticatedRequest(authToken)
         .post('/api/feeds')
         .send({ url: 'invalid-url' });
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
     });
 

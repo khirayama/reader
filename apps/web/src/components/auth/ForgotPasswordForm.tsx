@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
+import type React from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { sdk } from '@/lib/sdk'
 import { Button } from '@/components/ui/Button'

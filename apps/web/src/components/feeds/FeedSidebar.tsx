@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import type React from 'react'
+import { useState, useEffect } from 'react'
 import { sdk } from '@/lib/sdk'
 // Feed型を直接定義
 interface Feed {
@@ -101,94 +102,107 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
   }
 
   return (
-    <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 h-full overflow-y-auto">
+    <div className="h-full flex flex-col bg-white dark:bg-gray-800">
+      {/* フィード管理セクション */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">フィード管理</h2>
+        <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">フィード</h2>
 
-        <form onSubmit={handleAddFeed} className="space-y-3">
+        {/* フィード追加フォーム */}
+        <form onSubmit={handleAddFeed} className="space-y-2 mb-3">
           <Input
             type="url"
-            placeholder="RSS フィード URL"
+            placeholder="フィードURLを追加..."
             value={newFeedUrl}
             onChange={(e) => setNewFeedUrl(e.target.value)}
             disabled={addingFeed}
+            className="text-sm"
           />
-          <Button type="submit" disabled={addingFeed || !newFeedUrl.trim()} className="w-full">
-            {addingFeed ? '追加中...' : 'フィード追加'}
+          <Button 
+            type="submit" 
+            disabled={addingFeed || !newFeedUrl.trim()} 
+            className="w-full text-sm py-2"
+            size="sm"
+          >
+            {addingFeed ? '追加中...' : '追加'}
           </Button>
         </form>
 
-        <div className="mt-4 space-y-2">
+        {/* 操作ボタン */}
+        <div className="space-y-2">
+          <Button
+            variant={selectedFeedId ? 'outline' : 'primary'}
+            onClick={() => onFeedSelect(null)}
+            className="w-full text-sm py-2"
+            size="sm"
+          >
+            すべて
+          </Button>
           <Button
             variant="outline"
             onClick={handleRefreshAll}
             disabled={refreshingAll}
-            className="w-full"
+            className="w-full text-sm py-2"
+            size="sm"
           >
-            {refreshingAll ? '更新中...' : '全フィード更新'}
-          </Button>
-
-          <Button
-            variant={selectedFeedId ? 'outline' : 'primary'}
-            onClick={() => onFeedSelect(null)}
-            className="w-full"
-          >
-            全ての記事
+            {refreshingAll ? '更新中...' : '更新'}
           </Button>
         </div>
       </div>
 
-      <div className="p-4">
+      {/* フィード一覧 */}
+      <div className="flex-1 overflow-y-auto">
         {loading ? (
-          <div className="text-center text-gray-500 dark:text-gray-400">読み込み中...</div>
+          <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">読み込み中...</div>
         ) : feeds.length === 0 ? (
-          <div className="text-center text-gray-500 dark:text-gray-400">フィードがありません</div>
+          <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">フィードがありません</div>
         ) : (
-          <div className="space-y-2">
+          <div className="p-2">
             {feeds.map((feed) => (
-              <Card
+              <div
                 key={feed.id}
-                className={`p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                className={`group p-3 cursor-pointer rounded-md transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
                   selectedFeedId === feed.id
-                    ? 'bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-700'
+                    ? 'bg-blue-50 dark:bg-blue-900/30 border-l-2 border-blue-500'
                     : ''
                 }`}
                 onClick={() => onFeedSelect(feed.id)}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2">
-                      {feed.favicon && (
-                        <img
-                          src={feed.favicon}
-                          alt=""
-                          className="w-4 h-4 rounded"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none'
-                          }}
-                        />
-                      )}
-                      <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                        {feed.title}
-                      </h3>
-                    </div>
-                    {feed._count && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {feed._count.articles} 記事
-                      </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                    {feed.favicon && (
+                      <img
+                        src={feed.favicon}
+                        alt=""
+                        className="w-4 h-4 rounded flex-shrink-0"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
                     )}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {feed.title}
+                      </div>
+                      {feed._count && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {feed._count.articles}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
                       handleDeleteFeed(feed.id)
                     }}
-                    className="text-red-500 hover:text-red-700 text-xs ml-2"
+                    className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity p-1"
                   >
-                    削除
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}

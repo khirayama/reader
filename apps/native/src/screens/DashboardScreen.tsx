@@ -77,105 +77,119 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
+    <View style={styles.container}>
+      {/* ヘッダー */}
       <View style={styles.header}>
         <Text style={styles.title}>RSS Reader</Text>
-        <Text style={styles.welcome}>こんにちは、{user?.name}さん</Text>
-      </View>
-
-      <Card>
-        <View style={styles.statsContainer}>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>{feeds.length}</Text>
-            <Text style={styles.statLabel}>フィード</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>{recentArticles.length}</Text>
-            <Text style={styles.statLabel}>未読記事</Text>
-          </View>
-        </View>
-
-        <View style={styles.buttonContainer}>
-          <Button
-            title="フィード管理"
-            onPress={() => navigation.navigate('Feeds')}
-            style={styles.button}
-          />
-          <Button
-            title="記事一覧"
-            onPress={() => navigation.navigate('Articles')}
-            style={styles.button}
-          />
-        </View>
-      </Card>
-
-      {recentArticles.length > 0 && (
-        <Card>
-          <Text style={styles.sectionTitle}>最新記事</Text>
-          {recentArticles.slice(0, 5).map((article) => (
-            <View key={article.id} style={styles.articleItem}>
-              <Text style={styles.articleTitle} numberOfLines={2}>
-                {article.title}
-              </Text>
-              <Text style={styles.articleMeta}>
-                {article.feed?.title || 'フィード'} • {formatDate(article.publishedAt)}
-              </Text>
-            </View>
-          ))}
-          <Button
-            title="全ての記事を見る"
-            onPress={() => navigation.navigate('Articles')}
-            variant="secondary"
-            style={styles.seeAllButton}
-          />
-        </Card>
-      )}
-
-      {feeds.length > 0 && (
-        <Card>
-          <Text style={styles.sectionTitle}>マイフィード</Text>
-          {feeds.slice(0, 5).map((feed) => (
-            <View key={feed.id} style={styles.feedItem}>
-              <Text style={styles.feedTitle} numberOfLines={1}>
-                {feed.title}
-              </Text>
-              <Text style={styles.feedMeta}>
-                {feed.lastFetchedAt
-                  ? `最終更新: ${formatDate(feed.lastFetchedAt)}`
-                  : '未更新'}
-              </Text>
-            </View>
-          ))}
-          <Button
-            title="全てのフィードを見る"
-            onPress={() => navigation.navigate('Feeds')}
-            variant="secondary"
-            style={styles.seeAllButton}
-          />
-        </Card>
-      )}
-
-      <Card>
-        <Text style={styles.sectionTitle}>アカウント</Text>
-        <Button
-          title="プロフィール設定"
-          onPress={() => navigation.navigate('Profile')}
-          variant="secondary"
-          style={styles.accountButton}
-        />
         <Button
           title="ログアウト"
           onPress={handleLogout}
-          variant="danger"
-          style={styles.accountButton}
+          variant="outline"
+          size="small"
+          style={styles.logoutButton}
         />
-      </Card>
-    </ScrollView>
+      </View>
+
+      <ScrollView
+        style={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ユーザー情報とナビゲーション */}
+        <Card style={styles.mainCard}>
+          <Text style={styles.welcome}>こんにちは、{user?.name || user?.email}さん</Text>
+          
+          <View style={styles.statsContainer}>
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>{feeds.length}</Text>
+              <Text style={styles.statLabel}>フィード</Text>
+            </View>
+            <View style={styles.stat}>
+              <Text style={styles.statValue}>{recentArticles.length}</Text>
+              <Text style={styles.statLabel}>記事</Text>
+            </View>
+          </View>
+
+          <View style={styles.buttonContainer}>
+            <Button
+              title="フィード"
+              onPress={() => navigation.navigate('Feeds')}
+              style={styles.navButton}
+              size="medium"
+            />
+            <Button
+              title="記事"
+              onPress={() => navigation.navigate('Articles')}
+              style={styles.navButton}
+              size="medium"
+            />
+          </View>
+        </Card>
+
+        {/* 最新記事 */}
+        {recentArticles.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>最新記事</Text>
+            {recentArticles.slice(0, 5).map((article) => (
+              <View key={article.id} style={styles.listItem}>
+                <Text style={styles.articleTitle} numberOfLines={2}>
+                  {article.title}
+                </Text>
+                <Text style={styles.articleMeta}>
+                  {article.feed?.title || 'フィード'} • {formatDate(article.publishedAt)}
+                </Text>
+              </View>
+            ))}
+            <Button
+              title="すべて表示"
+              onPress={() => navigation.navigate('Articles')}
+              variant="outline"
+              size="small"
+              style={styles.seeAllButton}
+            />
+          </View>
+        )}
+
+        {/* フィード一覧 */}
+        {feeds.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>フィード</Text>
+            {feeds.slice(0, 5).map((feed) => (
+              <View key={feed.id} style={styles.listItem}>
+                <Text style={styles.feedTitle} numberOfLines={1}>
+                  {feed.title}
+                </Text>
+                <Text style={styles.feedMeta}>
+                  {feed.lastFetchedAt
+                    ? `最終更新: ${formatDate(feed.lastFetchedAt)}`
+                    : '未更新'}
+                </Text>
+              </View>
+            ))}
+            <Button
+              title="すべて表示"
+              onPress={() => navigation.navigate('Feeds')}
+              variant="outline"
+              size="small"
+              style={styles.seeAllButton}
+            />
+          </View>
+        )}
+
+        {/* プロフィール */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>設定</Text>
+          <Button
+            title="プロフィール設定"
+            onPress={() => navigation.navigate('Profile')}
+            variant="outline"
+            style={styles.settingsButton}
+          />
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -185,86 +199,104 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9FAFB',
   },
   header: {
-    padding: 16,
-    paddingTop: 60,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 60,
+    paddingBottom: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   title: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#1F2937',
-    marginBottom: 8,
+  },
+  logoutButton: {
+    paddingHorizontal: 12,
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  mainCard: {
+    marginBottom: 20,
   },
   welcome: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#6B7280',
+    marginBottom: 16,
+    textAlign: 'center',
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   stat: {
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#3B82F6',
   },
   statLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6B7280',
     marginTop: 4,
   },
   buttonContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 12,
   },
-  button: {
+  navButton: {
     flex: 1,
-    marginHorizontal: 4,
+  },
+  section: {
+    marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#1F2937',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  articleItem: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+  listItem: {
+    backgroundColor: '#FFFFFF',
+    padding: 12,
+    marginBottom: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   articleTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
     color: '#1F2937',
     marginBottom: 4,
+    lineHeight: 18,
   },
   articleMeta: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6B7280',
   },
-  feedItem: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
   feedTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
     color: '#1F2937',
     marginBottom: 4,
   },
   feedMeta: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6B7280',
   },
   seeAllButton: {
-    marginTop: 16,
+    marginTop: 8,
   },
-  accountButton: {
-    marginBottom: 8,
+  settingsButton: {
+    marginTop: 8,
   },
 });

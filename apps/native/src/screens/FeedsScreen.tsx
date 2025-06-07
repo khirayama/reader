@@ -107,114 +107,114 @@ export function FeedsScreen({ navigation }: FeedsScreenProps) {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
+    <View style={styles.container}>
+      {/* ヘッダー */}
       <View style={styles.header}>
-        <Text style={styles.title}>フィード管理</Text>
+        <Text style={styles.title}>フィード</Text>
         <Button
-          title={showAddForm ? 'キャンセル' : 'フィード追加'}
+          title={showAddForm ? 'キャンセル' : '追加'}
           onPress={() => {
             setShowAddForm(!showAddForm);
             setNewFeedUrl('');
           }}
-          variant={showAddForm ? 'secondary' : 'primary'}
+          variant={showAddForm ? 'outline' : 'primary'}
+          size="small"
         />
       </View>
 
+      {/* フィード追加フォーム */}
       {showAddForm && (
-        <Card>
-          <Text style={styles.addFormTitle}>新しいフィードを追加</Text>
+        <View style={styles.addFormContainer}>
           <Input
-            label="フィードURL"
             value={newFeedUrl}
             onChangeText={setNewFeedUrl}
-            placeholder="https://example.com/feed.xml"
+            placeholder="フィードURLを入力..."
             keyboardType="url"
             autoCapitalize="none"
-            required
+            style={styles.addInput}
           />
           <Button
-            title={isAdding ? '追加中...' : 'フィードを追加'}
+            title={isAdding ? '追加中...' : '追加'}
             onPress={handleAddFeed}
             disabled={isAdding}
+            size="small"
+            style={styles.addButton}
           />
-        </Card>
+        </View>
       )}
 
-      {feeds.length === 0 ? (
-        <Card>
-          <Text style={styles.emptyMessage}>
-            まだフィードが登録されていません。
-            上の「フィード追加」ボタンから新しいフィードを追加してください。
-          </Text>
-        </Card>
-      ) : (
-        feeds.map((feed) => (
-          <Card key={feed.id}>
-            <View style={styles.feedHeader}>
-              <Text style={styles.feedTitle} numberOfLines={2}>
-                {feed.title}
-              </Text>
-              <View style={styles.feedStatus}>
-                <View
-                  style={[
-                    styles.statusDot,
-                    { backgroundColor: feed.isActive ? '#10B981' : '#EF4444' },
-                  ]}
-                />
-                <Text style={styles.statusText}>
-                  {feed.isActive ? 'アクティブ' : '無効'}
+      {/* フィード一覧 */}
+      <ScrollView
+        style={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {feeds.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyMessage}>
+              まだフィードが登録されていません。
+              上の「追加」ボタンから新しいフィードを追加してください。
+            </Text>
+          </View>
+        ) : (
+          feeds.map((feed) => (
+            <View key={feed.id} style={styles.feedCard}>
+              <View style={styles.feedHeader}>
+                <Text style={styles.feedTitle} numberOfLines={2}>
+                  {feed.title}
                 </Text>
+                <View style={styles.feedStatus}>
+                  <View
+                    style={[
+                      styles.statusDot,
+                      { backgroundColor: feed.isActive ? '#10B981' : '#EF4444' },
+                    ]}
+                  />
+                </View>
+              </View>
+
+              {feed.description && (
+                <Text style={styles.feedDescription} numberOfLines={2}>
+                  {feed.description}
+                </Text>
+              )}
+
+              <Text style={styles.feedMeta}>
+                最終更新: {formatDate(feed.lastFetchedAt)}
+              </Text>
+
+              <View style={styles.feedActions}>
+                <Button
+                  title="更新"
+                  onPress={() => handleRefreshFeed(feed.id)}
+                  variant="outline"
+                  size="small"
+                  style={styles.actionButton}
+                />
+                <Button
+                  title="記事"
+                  onPress={() =>
+                    navigation.navigate('Articles', { feedId: feed.id })
+                  }
+                  variant="outline"
+                  size="small"
+                  style={styles.actionButton}
+                />
+                <Button
+                  title="削除"
+                  onPress={() => handleDeleteFeed(feed.id, feed.title)}
+                  variant="danger"
+                  size="small"
+                  style={styles.actionButton}
+                />
               </View>
             </View>
-
-            {feed.description && (
-              <Text style={styles.feedDescription} numberOfLines={3}>
-                {feed.description}
-              </Text>
-            )}
-
-            <Text style={styles.feedUrl} numberOfLines={1}>
-              {feed.url}
-            </Text>
-
-            <Text style={styles.feedMeta}>
-              最終更新: {formatDate(feed.lastFetchedAt)}
-            </Text>
-
-            <View style={styles.feedActions}>
-              <Button
-                title="更新"
-                onPress={() => handleRefreshFeed(feed.id)}
-                variant="secondary"
-                size="small"
-                style={styles.actionButton}
-              />
-              <Button
-                title="記事"
-                onPress={() =>
-                  navigation.navigate('Articles', { feedId: feed.id })
-                }
-                variant="secondary"
-                size="small"
-                style={styles.actionButton}
-              />
-              <Button
-                title="削除"
-                onPress={() => handleDeleteFeed(feed.id, feed.title)}
-                variant="danger"
-                size="small"
-                style={styles.actionButton}
-              />
-            </View>
-          </Card>
-        ))
-      )}
-    </ScrollView>
+          ))
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -222,31 +222,61 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
-    padding: 16,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    paddingHorizontal: 16,
     paddingTop: 60,
+    paddingBottom: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#1F2937',
   },
-  addFormTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 16,
+  addFormContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    gap: 8,
+  },
+  addInput: {
+    flex: 1,
+  },
+  addButton: {
+    paddingHorizontal: 16,
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
   },
   emptyMessage: {
     fontSize: 16,
     color: '#6B7280',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  feedCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    marginBottom: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   feedHeader: {
     flexDirection: 'row',
@@ -255,7 +285,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   feedTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#1F2937',
     flex: 1,
@@ -269,34 +299,23 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: 6,
-  },
-  statusText: {
-    fontSize: 12,
-    color: '#6B7280',
   },
   feedDescription: {
     fontSize: 14,
     color: '#6B7280',
     marginBottom: 8,
-    lineHeight: 20,
-  },
-  feedUrl: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    marginBottom: 8,
+    lineHeight: 18,
   },
   feedMeta: {
     fontSize: 12,
     color: '#6B7280',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   feedActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 8,
   },
   actionButton: {
     flex: 1,
-    marginHorizontal: 4,
   },
 });

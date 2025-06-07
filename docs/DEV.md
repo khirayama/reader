@@ -6,8 +6,7 @@
 │   ├── api/              # Node.js/Express API サーバー
 │   ├── web/              # Next.js ウェブアプリケーション
 │   └── native/           # React Native/Expo モバイルアプリ
-├── packages/
-│   └── sdk/              # TypeScript SDK
+├── packages/             # 共有パッケージ（未実装）
 ├── docs/                 # ドキュメント
 ├── biome.json           # Biome 設定
 ├── .prettierrc          # Prettier 設定
@@ -59,14 +58,13 @@
 - Prettier
 - Vitest
 
-### packages/sdk
+### packages/sdk（未実装）
 
+現在、SDKは各アプリケーション内（apps/web/src/lib/sdk.ts、apps/native/src/lib/sdk.ts）で個別実装されています。
 - TypeScript
 - axios
-- Zod
-- Biome
-- Prettier
-- Vitest
+- Zod（バリデーションはAPIサーバー側で実装済み）
+- 共有SDK化は将来の改善課題
 
 
 ## セットアップ手順
@@ -78,16 +76,16 @@ npm install
 cd apps/api && npm install
 cd ../web && npm install
 cd ../native && npm install
-cd ../../packages/sdk && npm install
 ```
 
-### 1.1. SDKビルド（重要）
+### 1.1. アプリケーション依存関係
 
-Webアプリをビルドする前に、SDKパッケージをビルドする必要があります：
+各アプリケーションは独立しており、packages/sdkは存在しません：
 
 ```bash
-cd packages/sdk
-npm run build
+# 各アプリケーションで個別にSDKを実装
+# apps/web/src/lib/sdk.ts
+# apps/native/src/lib/sdk.ts
 ```
 
 ### 2. 環境変数の設定
@@ -185,9 +183,7 @@ npm run dev
 cd apps/native
 npm run dev
 
-# SDK の開発 (watch モード)
-cd packages/sdk
-npm run dev
+# SDK は各アプリケーション内で実装されているため、個別のSDK開発は不要
 ```
 
 ## デプロイメント(本番環境)
@@ -279,11 +275,101 @@ model User {
   password  String
   theme     Theme    @default(SYSTEM)
   language  Language @default(JA)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
   
+  // Relations
   feeds              Feed[]
   passwordResetTokens PasswordResetToken[]
+  articleReadStatus  ArticleReadStatus[]
+  articleBookmarks   ArticleBookmark[]
+
+  @@map("users")
+}
+```
+
+#### Feed テーブル
+
+```prisma
+model Feed {
+  id            String    @id @default(cuid())
+  title         String
+  url           String
+  siteUrl       String?   @map("site_url")
+  description   String?
+  favicon       String?
+  userId        String    @map("user_id")
+  lastFetchedAt DateTime? @map("last_fetched_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  articles Article[]
+
+  @@unique([userId, url])
+  @@map("feeds")
+}
+```
+
+#### Article テーブル
+
+```prisma
+model Article {
+  id          String   @id @default(cuid())
+  title       String
+  url         String   @unique
+  description String?
+  publishedAt DateTime @map("published_at")
+  feedId      String   @map("feed_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  feed Feed @relation(fields: [feedId], references: [id], onDelete: Cascade)
+  readStatus ArticleReadStatus[]
+  bookmarks  ArticleBookmark[]
+
+  @@map("articles")
+}
+```
+
+#### ArticleReadStatus テーブル
+
+```prisma
+model ArticleReadStatus {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  articleId String   @map("article_id")
+  isRead    Boolean  @default(false) @map("is_read")
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@map("article_read_status")
+}
+```
+
+#### ArticleBookmark テーブル
+
+```prisma
+model ArticleBookmark {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  articleId String   @map("article_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@map("article_bookmarks")
 }
 ```
 
@@ -293,12 +379,15 @@ model User {
 model PasswordResetToken {
   id        String   @id @default(cuid())
   token     String   @unique
-  userId    String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
   used      Boolean  @default(false)
-  
+
+  // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
 }
 ```
 
@@ -318,6 +407,17 @@ model CronLog {
 
   @@index([jobName, executedAt])
   @@map("cron_logs")
+}
+
+enum Theme {
+  SYSTEM
+  LIGHT
+  DARK
+}
+
+enum Language {
+  JA
+  EN
 }
 ```
 

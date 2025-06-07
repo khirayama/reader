@@ -201,11 +201,15 @@ npm run dev
   - JWT_SECRET (強力な秘密鍵)
   - WEB_URL (フロントエンドURL)
   - ALLOWED_ORIGINS (許可するドメインリスト)
+  - ADMIN_API_TOKEN (管理API用トークン)
 
 ### apps/web
 
 - **プラットフォーム**: Vercel
-- **環境変数**: NEXT_PUBLIC_API_URL
+- **環境変数**: 
+  - NEXT_PUBLIC_API_URL (APIサーバーURL)
+  - CRON_SECRET (Vercel Cron Job認証用)
+  - ADMIN_API_TOKEN (管理API用トークン)
 
 ### apps/native
 
@@ -232,12 +236,23 @@ RSS Reader API は JWT ベースの認証システムを実装しています。
 | PUT | `/api/auth/settings` | ユーザー設定更新 | 必要 |
 | DELETE | `/api/auth/account` | アカウント削除 | 必要 |
 
+#### 管理APIエンドポイント
+
+| メソッド | エンドポイント | 説明 | 認証 |
+|---------|---------------|------|------|
+| POST | `/api/admin/refresh-all-feeds` | 全フィード更新 | Bearer Token |
+| GET | `/api/admin/cron-logs` | Cronログ取得 | Bearer Token |
+
 #### 認証ヘッダー
 
 認証が必要なエンドポイントにはJWTトークンを含める必要があります：
 
 ```bash
+# 一般API認証
 Authorization: Bearer <JWT_TOKEN>
+
+# 管理API認証
+Authorization: Bearer <ADMIN_API_TOKEN>
 ```
 
 #### パスワード要件
@@ -287,6 +302,25 @@ model PasswordResetToken {
 }
 ```
 
+#### CronLog テーブル
+
+```prisma
+model CronLog {
+  id           String   @id @default(cuid())
+  jobName      String   @map("job_name")
+  status       String   // 'success', 'partial', 'failed'
+  totalFeeds   Int      @map("total_feeds")
+  successCount Int      @map("success_count")
+  errorCount   Int      @map("error_count")
+  errors       String?  // JSON string of error details
+  executedAt   DateTime @map("executed_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([jobName, executedAt])
+  @@map("cron_logs")
+}
+```
+
 ### セキュリティ機能
 
 - **JWT トークン**: 24時間有効期限
@@ -296,6 +330,63 @@ model PasswordResetToken {
 - **レート制限**: エンドポイント別の制限
 - **入力バリデーション**: Zod スキーマ
 - **リクエストサイズ制限**: 1MB まで
+- **管理API認証**: Bearer トークンによる認証
+
+### Cron Job機能
+
+- **Vercel Cron Job**: `/api/cron/refresh-feeds` エンドポイント
+- **実行頻度**: 毎日午前0時（UTC）
+- **管理API**: `/api/admin/refresh-all-feeds` で手動実行可能
+- **ログ管理**: CronLogテーブルで実行履歴を記録
+
+#### Vercel Cron Job設定
+
+`apps/web/vercel.json` で定義：
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron/refresh-feeds",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
+```
+
+#### 必要な環境変数
+
+```bash
+# Vercel Cron Job認証（apps/web/.env）
+CRON_SECRET="your-cron-secret"
+
+# 管理API認証（両方のアプリで同じ値を設定）
+# apps/api/.env
+ADMIN_API_TOKEN="your-admin-api-token"
+# apps/web/.env
+ADMIN_API_TOKEN="your-admin-api-token"
+```
+
+| メソッド | エンドポイント | 説明 | 認証 |
+|---------|---------------|------|------|
+| POST | `/api/admin/refresh-all-feeds` | 全フィード手動更新 | Bearer Token |
+| GET | `/api/admin/cron-logs` | Cron実行ログ取得 | Bearer Token |
+
+認証ヘッダー：
+```bash
+Authorization: Bearer <ADMIN_API_TOKEN>
+```
+
+#### ログ管理
+
+CronLogテーブルで実行履歴を記録：
+- jobName: ジョブ名
+- status: 'success' | 'partial' | 'failed'
+- totalFeeds: 処理対象フィード数
+- successCount: 成功数
+- errorCount: エラー数
+- errors: エラー詳細（JSON）
+- executedAt: 実行日時
 
 ### テスト
 

@@ -15,7 +15,7 @@
 - フィード一覧表示
 - フィードの削除
 - フィードの記事一覧表示
-- 1日ごとにフィードの更新(Vercel Cron JobのHobbyプランの制約を考慮)
+- 1日ごとにフィードの自動更新（Vercel Cron Job実装済み、HobbyプランのCron制約を考慮）
 - OPMLのインポート/エクスポート
 - 記事の検索機能
 
@@ -142,3 +142,21 @@
 - **ユーザー設定**: テーマ、言語設定
 - **データ削除**: アカウント削除時にカスケード削除
 - **ログ管理**: 認証イベントのログ記録
+
+## フィード自動更新仕様
+
+### Vercel Cron Job
+- **実行頻度**: 1日1回（UTC 0:00）
+- **エンドポイント**: `/api/cron/refresh-feeds`（Next.js API Route）
+- **認証**: CRON_SECRET環境変数による保護
+- **設定**: `vercel.json`で定義
+
+### 管理API
+- **手動実行**: `/api/admin/refresh-all-feeds`（POST）
+- **ログ取得**: `/api/admin/cron-logs`（GET）
+- **認証**: Bearer Token（ADMIN_API_TOKEN）
+
+### 実行ログ
+- **記録内容**: 実行日時、処理フィード数、成功/失敗数、エラー詳細
+- **保存先**: CronLogテーブル
+- **用途**: 監視、デバッグ、パフォーマンス分析

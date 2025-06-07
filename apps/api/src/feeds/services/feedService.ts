@@ -165,6 +165,66 @@ export class FeedService {
     });
   }
 
+  // フィードを更新
+  static async refreshFeed(feedId: string, userId: string): Promise<Feed> {
+    // フィードの存在確認と所有者チェック
+    const feed = await prisma.feed.findFirst({
+      where: {
+        id: feedId,
+        userId,
+      },
+    });
+
+    if (!feed) {
+      throw new Error('フィードが見つかりません');
+    }
+
+    // RSS フィードを再解析
+    const parsedFeed = await RSSService.parseFeed(feed.url);
+    
+    // フィード情報を更新
+    const updatedFeed = await prisma.feed.update({
+      where: { id: feedId },
+      data: {
+        title: parsedFeed.title,
+        description: parsedFeed.description,
+        siteUrl: parsedFeed.siteUrl,
+        lastFetchedAt: new Date(),
+      },
+    });
+
+    // 新しい記事を追加
+    if (parsedFeed.items.length > 0) {
+      await prisma.article.createMany({
+        data: parsedFeed.items.map((item) => ({
+          title: item.title,
+          url: item.url,
+          description: item.description,
+          publishedAt: item.publishedAt,
+          feedId: feed.id,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    return updatedFeed;
+  }
+
+  // 全フィードを更新
+  static async refreshAllUserFeeds(userId: string): Promise<void> {
+    const feeds = await prisma.feed.findMany({
+      where: { userId },
+    });
+
+    for (const feed of feeds) {
+      try {
+        await this.refreshFeed(feed.id, userId);
+      } catch (error) {
+        console.error(`Failed to refresh feed ${feed.id}:`, error);
+      }
+    }
+  }
+
   // フィードの記事取得
   static async getFeedArticles(
     feedId: string,
@@ -260,70 +320,4 @@ export class FeedService {
     };
   }
 
-  // フィードを手動で更新
-  static async refreshFeed(feedId: string, userId: string): Promise<Feed> {
-    // フィードの存在確認と所有者チェック
-    const existingFeed = await prisma.feed.findFirst({
-      where: {
-        id: feedId,
-        userId,
-      },
-    });
-
-    if (!existingFeed) {
-      throw new Error('フィードが見つかりません');
-    }
-
-    // RSS フィードを解析
-    const parsedFeed = await RSSService.parseFeed(existingFeed.url);
-
-    // フィード情報を更新
-    const updatedFeed = await prisma.feed.update({
-      where: { id: feedId },
-      data: {
-        title: parsedFeed.title,
-        description: parsedFeed.description,
-        siteUrl: parsedFeed.siteUrl,
-        lastFetchedAt: new Date(),
-      },
-    });
-
-    // 新しい記事を追加
-    if (parsedFeed.items.length > 0) {
-      await prisma.article.createMany({
-        data: parsedFeed.items.map((item) => ({
-          title: item.title,
-          url: item.url,
-          description: item.description,
-          publishedAt: item.publishedAt,
-          feedId: feedId,
-        })),
-        skipDuplicates: true,
-      });
-    }
-
-    return updatedFeed;
-  }
-
-  // ユーザーの全フィードを更新
-  static async refreshAllUserFeeds(userId: string): Promise<{ success: number; errors: string[] }> {
-    const feeds = await prisma.feed.findMany({
-      where: { userId },
-      select: { id: true, url: true },
-    });
-
-    let success = 0;
-    const errors: string[] = [];
-
-    for (const feed of feeds) {
-      try {
-        await this.refreshFeed(feed.id, userId);
-        success++;
-      } catch (error) {
-        errors.push(`${feed.url}: ${error instanceof Error ? error.message : '不明なエラー'}`);
-      }
-    }
-
-    return { success, errors };
-  }
 }

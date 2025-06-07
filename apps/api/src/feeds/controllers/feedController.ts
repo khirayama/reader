@@ -268,12 +268,11 @@ export class FeedController {
         return res.status(401).json({ error: '認証が必要です' });
       }
 
-      const result = await FeedService.refreshAllUserFeeds(userId);
+      await FeedService.refreshAllUserFeeds(userId);
 
       return res.json({
         success: true,
-        message: `${result.success}個のフィードを更新しました`,
-        result,
+        message: 'フィードの更新を完了しました',
       });
     } catch (error: any) {
       console.error('Refresh all feeds error:', error);

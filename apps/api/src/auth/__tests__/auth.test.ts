@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '../../index';
+import { prisma } from '../../lib/prisma';
 import {
   mockUsers,
   createTestUser,

@@ -2,7 +2,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { testPrisma } from './prisma';
+import { prisma } from '../lib/prisma';
 import { User } from '../../node_modules/.prisma/test-client';
 
 // JWT ペイロード型定義
@@ -73,7 +73,7 @@ export class TestAuthService {
   // ユーザー登録
   static async register(email: string, password: string): Promise<AuthResponse> {
     // 既存ユーザーチェック
-    const existingUser = await testPrisma.user.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { email },
     });
 
@@ -85,7 +85,7 @@ export class TestAuthService {
     const hashedPassword = await this.hashPassword(password);
 
     // ユーザー作成
-    const user = await testPrisma.user.create({
+    const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
@@ -104,7 +104,7 @@ export class TestAuthService {
   // ログイン
   static async login(email: string, password: string): Promise<AuthResponse> {
     // ユーザー検索
-    const user = await testPrisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email },
     });
 
@@ -131,7 +131,7 @@ export class TestAuthService {
   // パスワードリセット要求
   static async requestPasswordReset(email: string): Promise<string> {
     // ユーザー検索
-    const user = await testPrisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email },
     });
 
@@ -141,7 +141,7 @@ export class TestAuthService {
     }
 
     // 既存の未使用トークンを削除
-    await testPrisma.passwordResetToken.deleteMany({
+    await prisma.passwordResetToken.deleteMany({
       where: {
         userId: user.id,
         used: false,
@@ -152,7 +152,7 @@ export class TestAuthService {
     const token = this.generateResetToken();
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1時間後
 
-    await testPrisma.passwordResetToken.create({
+    await prisma.passwordResetToken.create({
       data: {
         token,
         userId: user.id,
@@ -166,7 +166,7 @@ export class TestAuthService {
   // パスワードリセット実行
   static async resetPassword(token: string, newPassword: string): Promise<string> {
     // リセットトークン検証
-    const resetToken = await testPrisma.passwordResetToken.findUnique({
+    const resetToken = await prisma.passwordResetToken.findUnique({
       where: { token },
       include: { user: true },
     });
@@ -186,14 +186,14 @@ export class TestAuthService {
     // パスワード更新
     const hashedPassword = await this.hashPassword(newPassword);
 
-    await testPrisma.$transaction([
+    await prisma.$transaction([
       // パスワード更新
-      testPrisma.user.update({
+      prisma.user.update({
         where: { id: resetToken.userId },
         data: { password: hashedPassword },
       }),
       // トークンを使用済みにマーク
-      testPrisma.passwordResetToken.update({
+      prisma.passwordResetToken.update({
         where: { id: resetToken.id },
         data: { used: true },
       }),
@@ -204,7 +204,7 @@ export class TestAuthService {
 
   // ユーザーIDでユーザー取得
   static async getUserById(userId: string): Promise<UserResponse | null> {
-    const user = await testPrisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: userId },
     });
 
@@ -213,7 +213,7 @@ export class TestAuthService {
 
   // パスワード変更
   static async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<string> {
-    const user = await testPrisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: userId },
     });
 
@@ -232,7 +232,7 @@ export class TestAuthService {
     const hashedPassword = await this.hashPassword(newPassword);
 
     // パスワード更新
-    await testPrisma.user.update({
+    await prisma.user.update({
       where: { id: userId },
       data: { password: hashedPassword },
     });
@@ -242,7 +242,7 @@ export class TestAuthService {
 
   // メールアドレス変更
   static async changeEmail(userId: string, newEmail: string, password: string): Promise<UserResponse> {
-    const user = await testPrisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: userId },
     });
 
@@ -258,7 +258,7 @@ export class TestAuthService {
     }
 
     // メールアドレス重複チェック
-    const existingUser = await testPrisma.user.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { email: newEmail },
     });
 
@@ -267,7 +267,7 @@ export class TestAuthService {
     }
 
     // メールアドレス更新
-    const updatedUser = await testPrisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { email: newEmail },
     });
@@ -280,7 +280,7 @@ export class TestAuthService {
     userId: string,
     settings: { theme?: string; language?: string }
   ): Promise<UserResponse> {
-    const updatedUser = await testPrisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: settings,
     });
@@ -290,7 +290,7 @@ export class TestAuthService {
 
   // アカウント削除
   static async deleteAccount(userId: string, password: string): Promise<string> {
-    const user = await testPrisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: userId },
     });
 
@@ -306,7 +306,7 @@ export class TestAuthService {
     }
 
     // ユーザー削除（Cascadeにより関連データも削除される）
-    await testPrisma.user.delete({
+    await prisma.user.delete({
       where: { id: userId },
     });
 

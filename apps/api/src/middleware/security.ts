@@ -1,6 +1,11 @@
 import rateLimit from 'express-rate-limit';
 import { Request, Response } from 'express';
 
+// テスト環境でレート制限をスキップするミドルウェア
+const skipIfTest = (req: Request, res: Response) => {
+  return process.env.NODE_ENV === 'test';
+};
+
 // 一般的なAPIのレート制限
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15分
@@ -11,6 +16,7 @@ export const generalLimiter = rateLimit({
   },
   standardHeaders: true, // `RateLimit-*` ヘッダーを含める
   legacyHeaders: false, // `X-RateLimit-*` ヘッダーを無効化
+  skip: skipIfTest,
 });
 
 // 認証関連のレート制限（より厳格）
@@ -24,6 +30,7 @@ export const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true, // 成功したリクエストはカウントしない
+  skip: skipIfTest,
 });
 
 // パスワードリセットのレート制限
@@ -36,6 +43,7 @@ export const passwordResetLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipIfTest,
 });
 
 // アカウント作成のレート制限
@@ -48,6 +56,7 @@ export const registrationLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipIfTest,
 });
 
 // IPベースの重いレート制限（DDoS対策）
@@ -60,6 +69,7 @@ export const strictLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipIfTest,
 });
 
 // セキュリティヘッダー設定

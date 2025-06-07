@@ -1,13 +1,9 @@
 import { beforeAll, afterAll, beforeEach } from 'vitest';
 import { execSync } from 'node:child_process';
-import { testPrisma } from './prisma';
+import { prisma } from '../lib/prisma';
 
 // テスト用データベースセットアップ
 beforeAll(async () => {
-  // テスト用環境変数設定
-  (process.env as any).NODE_ENV = 'test';
-  process.env.JWT_SECRET = 'test-jwt-secret-key';
-
   console.log('Setting up test database...');
   
   // テスト用データベースの初期化
@@ -25,14 +21,19 @@ beforeAll(async () => {
 // 各テスト前にデータベースをクリーンアップ
 beforeEach(async () => {
   // テスト用データのクリーンアップ（順序重要：外部キー制約のため）
-  await testPrisma.passwordResetToken.deleteMany();
-  await testPrisma.article.deleteMany();
-  await testPrisma.feed.deleteMany();
-  await testPrisma.user.deleteMany();
+  try {
+    await prisma.passwordResetToken.deleteMany();
+    await prisma.article.deleteMany();
+    await prisma.feed.deleteMany();
+    await prisma.user.deleteMany();
+  } catch (error) {
+    console.error('Failed to cleanup test data:', error);
+    throw error;
+  }
 });
 
 // テスト終了後のクリーンアップ
 afterAll(async () => {
-  await testPrisma.$disconnect();
+  await prisma.$disconnect();
   console.log('Test database disconnected');
 });

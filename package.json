@@ -5,6 +5,10 @@
   "description": "RSS Reader - A modern RSS feed reader with web and native apps",
   "author": "khirayama",
   "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",

@@ -33,7 +33,7 @@ RSS Reader - A modern monorepo RSS feed reader application with web and native (
 
 ### Root-level commands (use these for most tasks):
 ```bash
-npm run dev          # Start all apps in development mode
+npm run dev          # Start all applications in parallel (API, Web, Native)
 npm run build        # Build all applications
 npm run test         # Run tests across all apps
 npm run lint         # Lint all applications with Biome
@@ -52,7 +52,7 @@ cd apps/web && npm install
 cd apps/native && npm install
 cd packages/sdk && npm install
 
-# 開発サーバー起動
+# 開発サーバー起動（個別実行する場合）
 # API server (port 3001)
 cd apps/api && npm run dev
 

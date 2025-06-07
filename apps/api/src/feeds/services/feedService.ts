@@ -167,61 +167,114 @@ export class FeedService {
 
   // フィードを更新
   static async refreshFeed(feedId: string, userId: string): Promise<Feed> {
-    // フィードの存在確認と所有者チェック
-    const feed = await prisma.feed.findFirst({
-      where: {
-        id: feedId,
-        userId,
-      },
-    });
-
-    if (!feed) {
-      throw new Error('フィードが見つかりません');
-    }
-
-    // RSS フィードを再解析
-    const parsedFeed = await RSSService.parseFeed(feed.url);
+    console.log(`[FeedService] フィード更新開始: feedId=${feedId}, userId=${userId}`);
     
-    // フィード情報を更新
-    const updatedFeed = await prisma.feed.update({
-      where: { id: feedId },
-      data: {
-        title: parsedFeed.title,
-        description: parsedFeed.description,
-        siteUrl: parsedFeed.siteUrl,
-        lastFetchedAt: new Date(),
-      },
-    });
-
-    // 新しい記事を追加
-    if (parsedFeed.items.length > 0) {
-      await prisma.article.createMany({
-        data: parsedFeed.items.map((item) => ({
-          title: item.title,
-          url: item.url,
-          description: item.description,
-          publishedAt: item.publishedAt,
-          feedId: feed.id,
-        })),
-        skipDuplicates: true,
+    try {
+      // フィードの存在確認と所有者チェック
+      const feed = await prisma.feed.findFirst({
+        where: {
+          id: feedId,
+          userId,
+        },
       });
-    }
 
-    return updatedFeed;
+      if (!feed) {
+        console.warn(`[FeedService] フィードが見つかりません: feedId=${feedId}`);
+        throw new Error('フィードが見つかりません');
+      }
+
+      console.log(`[FeedService] フィード情報: ${feed.title} (${feed.url})`);
+
+      // RSS フィードを再解析
+      const parsedFeed = await RSSService.parseFeed(feed.url);
+      console.log(`[FeedService] フィード解析完了: ${parsedFeed.items.length}件の記事`);
+      
+      // トランザクションでフィード更新と記事追加を原子的に実行
+      const result = await prisma.$transaction(async (tx: any) => {
+        // フィード情報を更新
+        const updatedFeed = await tx.feed.update({
+          where: { id: feedId },
+          data: {
+            title: parsedFeed.title,
+            description: parsedFeed.description,
+            siteUrl: parsedFeed.siteUrl,
+            lastFetchedAt: new Date(),
+          },
+        });
+
+        // 新しい記事を追加
+        if (parsedFeed.items.length > 0) {
+          const articleData = parsedFeed.items.map((item) => ({
+            title: item.title?.substring(0, 500) || 'タイトルなし', // タイトルの長さ制限
+            url: item.url,
+            description: item.description?.substring(0, 2000) || null, // 説明の長さ制限
+            publishedAt: item.publishedAt,
+            feedId: feed.id,
+          }));
+          
+          console.log(`[FeedService] ${articleData.length}件の記事をデータベースに追加中...`);
+          
+          await tx.article.createMany({
+            data: articleData,
+            skipDuplicates: true,
+          });
+          
+          console.log(`[FeedService] 記事の追加完了`);
+        }
+
+        return updatedFeed;
+      });
+
+      console.log(`[FeedService] フィード更新成功: ${result.title}`);
+      return result;
+      
+    } catch (error) {
+      console.error(`[FeedService] フィード更新エラー: feedId=${feedId}`, error);
+      
+      // エラーの再スロー（メッセージをそのまま伝播）
+      throw error;
+    }
   }
 
   // 全フィードを更新
   static async refreshAllUserFeeds(userId: string): Promise<void> {
-    const feeds = await prisma.feed.findMany({
-      where: { userId },
-    });
+    console.log(`[FeedService] 全フィード更新開始: userId=${userId}`);
+    
+    try {
+      const feeds = await prisma.feed.findMany({
+        where: { userId },
+        select: { id: true, title: true, url: true },
+      });
 
-    for (const feed of feeds) {
-      try {
-        await this.refreshFeed(feed.id, userId);
-      } catch (error) {
-        console.error(`Failed to refresh feed ${feed.id}:`, error);
+      console.log(`[FeedService] ${feeds.length}件のフィードを更新中...`);
+
+      const results = {
+        success: 0,
+        failed: 0,
+        errors: [] as string[],
+      };
+
+      for (const feed of feeds) {
+        try {
+          console.log(`[FeedService] フィード更新中: ${feed.title} (${feed.id})`);
+          await this.refreshFeed(feed.id, userId);
+          results.success++;
+        } catch (error) {
+          results.failed++;
+          const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+          results.errors.push(`${feed.title}: ${errorMessage}`);
+          console.error(`[FeedService] フィード更新失敗 ${feed.id} (${feed.title}):`, error);
+        }
       }
+
+      console.log(`[FeedService] 全フィード更新完了: 成功=${results.success}, 失敗=${results.failed}`);
+      
+      if (results.errors.length > 0) {
+        console.warn(`[FeedService] 更新エラーの詳細:`, results.errors);
+      }
+    } catch (error) {
+      console.error(`[FeedService] 全フィード更新で予期しないエラー:`, error);
+      throw error;
     }
   }
 

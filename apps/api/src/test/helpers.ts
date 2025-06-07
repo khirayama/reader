@@ -21,30 +21,30 @@ export const mockUsers = {
 };
 
 // ユーザー作成ヘルパー
-export const createTestUser = async (userData = mockUsers.valid) => {
+export const createTestUser = async (email = 'test@example.com', password = 'TestPass123') => {
   const response = await request(app)
     .post('/api/auth/register')
-    .send(userData);
+    .send({ email, password });
 
-  return response;
+  return response.body.user;
 };
 
 // ログインヘルパー
-export const loginTestUser = async (userData = mockUsers.valid) => {
+export const loginTestUser = async (email = 'test@example.com', password = 'TestPass123') => {
   const response = await request(app)
     .post('/api/auth/login')
-    .send(userData);
+    .send({ email, password });
 
-  return response;
+  return response.body;
 };
 
 // 認証付きリクエストヘルパー
-export const authenticatedRequest = (token: string) => {
+export const authenticatedRequest = (appInstance: any, token: string) => {
   return {
-    get: (url: string) => request(app).get(url).set('Authorization', `Bearer ${token}`),
-    post: (url: string) => request(app).post(url).set('Authorization', `Bearer ${token}`),
-    put: (url: string) => request(app).put(url).set('Authorization', `Bearer ${token}`),
-    delete: (url: string) => request(app).delete(url).set('Authorization', `Bearer ${token}`),
+    get: (url: string) => request(appInstance).get(url).set('Authorization', `Bearer ${token}`),
+    post: (url: string) => request(appInstance).post(url).set('Authorization', `Bearer ${token}`),
+    put: (url: string) => request(appInstance).put(url).set('Authorization', `Bearer ${token}`),
+    delete: (url: string) => request(appInstance).delete(url).set('Authorization', `Bearer ${token}`),
   };
 };
 

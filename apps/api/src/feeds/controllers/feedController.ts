@@ -240,21 +240,25 @@ export class FeedController {
     try {
       const userId = req.user?.id;
       if (!userId) {
+        console.warn(`[FeedController] 認証エラー: userIdが不明`);
         return res.status(401).json({ error: '認証が必要です' });
       }
 
       const { feedId } = req.params;
+      console.log(`[FeedController] フィード更新リクエスト: feedId=${feedId}, userId=${userId}`);
 
       const updatedFeed = await FeedService.refreshFeed(feedId, userId);
 
+      console.log(`[FeedController] フィード更新成功: ${updatedFeed.title}`);
       return res.json({
         success: true,
         message: 'フィードを更新しました',
         feed: updatedFeed,
       });
     } catch (error: any) {
-      console.error('Refresh feed error:', error);
+      console.error(`[FeedController] フィード更新エラー:`, error);
 
+      // フィードが見つからないエラー
       if (error.message === 'フィードが見つかりません') {
         return res.status(404).json({
           success: false,
@@ -262,9 +266,30 @@ export class FeedController {
         });
       }
 
+      // RSS関連のエラーを特定して適切なステータスコードを返す
+      if (error.message?.includes('タイムアウト') || 
+          error.message?.includes('アクセスできません') ||
+          error.message?.includes('有効なRSS/Atomフィードではありません')) {
+        return res.status(400).json({
+          success: false,
+          error: `フィードの取得に失敗しました: ${error.message}`,
+        });
+      }
+
+      // データベースエラー
+      if (error.message?.includes('Prisma') || error.message?.includes('database')) {
+        console.error(`[FeedController] データベースエラー:`, error);
+        return res.status(503).json({
+          success: false,
+          error: 'データベースエラーが発生しました。しばらくしてから再度お試しください。',
+        });
+      }
+
+      // その他のエラー
       return res.status(500).json({
         success: false,
-        error: 'フィードの更新中にエラーが発生しました',
+        error: 'フィードの更新中に予期しないエラーが発生しました',
+        details: error.message,
       });
     }
   }
@@ -274,21 +299,25 @@ export class FeedController {
     try {
       const userId = req.user?.id;
       if (!userId) {
+        console.warn(`[FeedController] 全フィード更新で認証エラー: userIdが不明`);
         return res.status(401).json({ error: '認証が必要です' });
       }
 
+      console.log(`[FeedController] 全フィード更新リクエスト: userId=${userId}`);
       await FeedService.refreshAllUserFeeds(userId);
 
+      console.log(`[FeedController] 全フィード更新完了: userId=${userId}`);
       return res.json({
         success: true,
         message: 'フィードの更新を完了しました',
       });
     } catch (error: any) {
-      console.error('Refresh all feeds error:', error);
+      console.error(`[FeedController] 全フィード更新エラー:`, error);
 
       return res.status(500).json({
         success: false,
         error: '全フィードの更新中にエラーが発生しました',
+        details: error.message,
       });
     }
   }

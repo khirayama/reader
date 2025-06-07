@@ -27,6 +27,8 @@ export class RSSService {
   // RSS/Atom フィードを解析
   static async parseFeed(feedUrl: string): Promise<ParsedFeed> {
     try {
+      console.log(`[RSSService] フィード解析開始: ${feedUrl}`);
+      
       // URLの検証
       const url = new URL(feedUrl);
       if (!['http:', 'https:'].includes(url.protocol)) {
@@ -35,6 +37,7 @@ export class RSSService {
 
       // RSS フィードを取得してパース
       const feed = await this.parser.parseURL(feedUrl);
+      console.log(`[RSSService] フィード解析成功: ${feed.title || 'タイトルなし'}`);
 
       // フィードのメタデータを抽出
       const parsedFeed: ParsedFeed = {
@@ -79,18 +82,41 @@ export class RSSService {
 
       return parsedFeed;
     } catch (error) {
+      console.error(`[RSSService] フィード解析エラー: ${feedUrl}`, error);
+      
       if (error instanceof Error) {
-        if (error.message.includes('timeout')) {
+        // タイムアウトエラー
+        if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')) {
           throw new Error('フィードの取得がタイムアウトしました');
         }
-        if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')) {
+        // ネットワーク接続エラー
+        if (error.message.includes('ENOTFOUND') || 
+            error.message.includes('ECONNREFUSED') || 
+            error.message.includes('ECONNRESET') ||
+            error.message.includes('EHOSTUNREACH')) {
           throw new Error('フィードのURLにアクセスできません');
         }
-        if (error.message.includes('Invalid XML')) {
+        // XML/RSS パースエラー
+        if (error.message.includes('Invalid XML') || 
+            error.message.includes('Non-whitespace before first tag') ||
+            error.message.includes('Unexpected end of input')) {
           throw new Error('有効なRSS/Atomフィードではありません');
         }
+        // HTTP エラー
+        if (error.message.includes('Request failed with status code')) {
+          const statusMatch = error.message.match(/status code (\d+)/);
+          const status = statusMatch ? statusMatch[1] : 'unknown';
+          throw new Error(`HTTPエラー: ${status} - フィードにアクセスできません`);
+        }
+        // URLエラー
+        if (error.message.includes('Invalid URL')) {
+          throw new Error('無効なURLです');
+        }
       }
-      throw new Error(`フィードの解析に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+      
+      // その他の予期しないエラー
+      const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+      throw new Error(`フィードの解析に失敗しました: ${errorMessage}`);
     }
   }
 

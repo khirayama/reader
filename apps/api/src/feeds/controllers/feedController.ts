@@ -56,7 +56,10 @@ export class FeedController {
 
       const result = await FeedService.getUserFeeds(userId, query);
 
-      return res.json(result);
+      return res.json({
+        success: true,
+        data: result,
+      });
     } catch (error: any) {
       console.error('Get feeds error:', error);
 
@@ -91,7 +94,10 @@ export class FeedController {
         });
       }
 
-      return res.json(feed);
+      return res.json({
+        success: true,
+        data: feed,
+      });
     } catch (error: any) {
       console.error('Get feed by ID error:', error);
 
@@ -186,7 +192,10 @@ export class FeedController {
 
       const result = await FeedService.getFeedArticles(feedId, userId, page, limit);
 
-      return res.json(result);
+      return res.json({
+        success: true,
+        data: result,
+      });
     } catch (error: any) {
       console.error('Get feed articles error:', error);
 

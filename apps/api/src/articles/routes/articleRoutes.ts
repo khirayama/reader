@@ -13,6 +13,30 @@ const GetArticlesQuerySchema = z.object({
   search: z.string().optional(),
 });
 
+// ブックマーク記事一覧取得（具体的なルートを先に定義）
+router.get('/bookmarks/list', requireAuth, async (req, res) => {
+  try {
+    const query = GetArticlesQuerySchema.parse(req.query);
+    const userId = req.user!.id;
+
+    const result = await ArticleService.getUserBookmarks(
+      userId,
+      query.page,
+      query.limit
+    );
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'ブックマークの取得に失敗しました',
+    });
+  }
+});
+
 // 全ての記事取得
 router.get('/', requireAuth, async (req, res) => {
   try {
@@ -140,30 +164,6 @@ router.delete('/:articleId/bookmark', requireAuth, async (req, res) => {
     res.status(statusCode).json({
       success: false,
       error: error instanceof Error ? error.message : 'ブックマークの削除に失敗しました',
-    });
-  }
-});
-
-// ブックマーク記事一覧取得
-router.get('/bookmarks/list', requireAuth, async (req, res) => {
-  try {
-    const query = GetArticlesQuerySchema.parse(req.query);
-    const userId = req.user!.id;
-
-    const result = await ArticleService.getUserBookmarks(
-      userId,
-      query.page,
-      query.limit
-    );
-
-    res.json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'ブックマークの取得に失敗しました',
     });
   }
 });

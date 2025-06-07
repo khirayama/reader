@@ -20,31 +20,68 @@ export const mockUsers = {
   },
 };
 
-// ユーザー作成ヘルパー
+// ユーザー作成ヘルパー（既存の型での互換性を保つため）
 export const createTestUser = async (email = 'test@example.com', password = 'TestPass123') => {
   const response = await request(app)
     .post('/api/auth/register')
-    .send({ email, password });
+    .send({ 
+      email, 
+      password, 
+      name: 'Test User' 
+    });
 
   return response.body.user;
 };
 
-// ログインヘルパー
+// 新しいユーザー作成ヘルパー（オブジェクト形式）
+export const createTestUserWithData = async (userData?: { email?: string; password?: string; name?: string }) => {
+  const defaultData = {
+    email: 'test@example.com',
+    password: 'TestPass123',
+    name: 'Test User',
+  };
+  
+  const data = userData ? { ...defaultData, ...userData } : defaultData;
+  
+  const response = await request(app)
+    .post('/api/auth/register')
+    .send(data);
+
+  return response;
+};
+
+// ログインヘルパー（既存の型での互換性を保つため）
 export const loginTestUser = async (email = 'test@example.com', password = 'TestPass123') => {
   const response = await request(app)
     .post('/api/auth/login')
     .send({ email, password });
 
-  return response.body;
+  return response;
+};
+
+// 新しいログインヘルパー（オブジェクト形式）
+export const loginTestUserWithData = async (userData?: { email?: string; password?: string }) => {
+  const defaultData = {
+    email: 'test@example.com',
+    password: 'TestPass123',
+  };
+  
+  const data = userData ? { ...defaultData, ...userData } : defaultData;
+  
+  const response = await request(app)
+    .post('/api/auth/login')
+    .send(data);
+
+  return response;
 };
 
 // 認証付きリクエストヘルパー
-export const authenticatedRequest = (appInstance: any, token: string) => {
+export const authenticatedRequest = (token: string) => {
   return {
-    get: (url: string) => request(appInstance).get(url).set('Authorization', `Bearer ${token}`),
-    post: (url: string) => request(appInstance).post(url).set('Authorization', `Bearer ${token}`),
-    put: (url: string) => request(appInstance).put(url).set('Authorization', `Bearer ${token}`),
-    delete: (url: string) => request(appInstance).delete(url).set('Authorization', `Bearer ${token}`),
+    get: (url: string) => request(app).get(url).set('Authorization', `Bearer ${token}`),
+    post: (url: string) => request(app).post(url).set('Authorization', `Bearer ${token}`),
+    put: (url: string) => request(app).put(url).set('Authorization', `Bearer ${token}`),
+    delete: (url: string) => request(app).delete(url).set('Authorization', `Bearer ${token}`),
   };
 };
 

@@ -39,6 +39,7 @@ export class FeedController {
 
       return res.status(500).json({
         error: 'フィードの作成中にエラーが発生しました',
+        details: error.message,
       });
     }
   }

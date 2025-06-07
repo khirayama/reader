@@ -4,6 +4,7 @@ import app from '../../index';
 import { prisma } from '../../lib/prisma';
 import {
   createTestUser,
+  createTestUserWithData,
   loginTestUser,
   authenticatedRequest,
 } from '../../test/helpers';
@@ -16,7 +17,7 @@ describe('フィードAPI', () => {
     // テストユーザーを作成してログイン
     const user = await createTestUser();
     const loginResult = await loginTestUser();
-    authToken = loginResult.token;
+    authToken = loginResult.body.token;
     userId = user.id;
   });
 
@@ -31,7 +32,7 @@ describe('フィードAPI', () => {
     it('Gizmodo JapanのRSSフィードを正常に追加できる', async () => {
       const feedUrl = 'https://www.gizmodo.jp/index.xml';
       
-      const response = await authenticatedRequest(app, authToken)
+      const response = await authenticatedRequest(authToken)
         .post('/api/feeds')
         .send({ url: feedUrl });
 
@@ -46,7 +47,7 @@ describe('フィードAPI', () => {
     });
 
     it('無効なURLでフィード作成が失敗する', async () => {
-      const response = await authenticatedRequest(app, authToken)
+      const response = await authenticatedRequest(authToken)
         .post('/api/feeds')
         .send({ url: 'invalid-url' });
 
@@ -58,12 +59,12 @@ describe('フィードAPI', () => {
       const feedUrl = 'https://www.gizmodo.jp/index.xml';
       
       // 最初の追加
-      await authenticatedRequest(app, authToken)
+      await authenticatedRequest(authToken)
         .post('/api/feeds')
         .send({ url: feedUrl });
 
       // 重複追加の試行
-      const response = await authenticatedRequest(app, authToken)
+      const response = await authenticatedRequest(authToken)
         .post('/api/feeds')
         .send({ url: feedUrl });
 
@@ -77,7 +78,7 @@ describe('フィードAPI', () => {
 
     beforeEach(async () => {
       // テスト用フィードを事前に作成
-      const feedResponse = await authenticatedRequest(app, authToken)
+      const feedResponse = await authenticatedRequest(authToken)
         .post('/api/feeds')
         .send({ url: 'https://www.gizmodo.jp/index.xml' });
       
@@ -85,7 +86,7 @@ describe('フィードAPI', () => {
     });
 
     it('Gizmodo Japanフィードを正常に更新できる', async () => {
-      const response = await authenticatedRequest(app, authToken)
+      const response = await authenticatedRequest(authToken)
         .post(`/api/feeds/${feedId}/refresh`);
 
       console.log('Feed refresh response:', response.body);
@@ -101,7 +102,7 @@ describe('フィードAPI', () => {
     it('存在しないフィードIDで更新が失敗する', async () => {
       const nonExistentId = '00000000-0000-0000-0000-000000000000';
       
-      const response = await authenticatedRequest(app, authToken)
+      const response = await authenticatedRequest(authToken)
         .post(`/api/feeds/${nonExistentId}/refresh`);
 
       expect(response.status).toBe(404);
@@ -111,10 +112,10 @@ describe('フィードAPI', () => {
 
     it('他のユーザーのフィードは更新できない', async () => {
       // 別のユーザーを作成
-      const otherUser = await createTestUser('other@example.com');
+      const otherUser = await createTestUser('other@example.com', 'TestPass123');
       const otherLoginResult = await loginTestUser('other@example.com', 'TestPass123');
       
-      const response = await authenticatedRequest(app, otherLoginResult.token)
+      const response = await authenticatedRequest(otherLoginResult.body.token)
         .post(`/api/feeds/${feedId}/refresh`);
 
       expect(response.status).toBe(404);
@@ -125,13 +126,13 @@ describe('フィードAPI', () => {
   describe('POST /api/feeds/refresh-all', () => {
     beforeEach(async () => {
       // 複数のテスト用フィードを作成
-      await authenticatedRequest(app, authToken)
+      await authenticatedRequest(authToken)
         .post('/api/feeds')
         .send({ url: 'https://www.gizmodo.jp/index.xml' });
     });
 
     it('全フィードを正常に更新できる', async () => {
-      const response = await authenticatedRequest(app, authToken)
+      const response = await authenticatedRequest(authToken)
         .post('/api/feeds/refresh-all');
 
       console.log('Refresh all feeds response:', response.body);
@@ -147,19 +148,19 @@ describe('フィードAPI', () => {
 
     beforeEach(async () => {
       // テスト用フィードを作成して記事を取得
-      const feedResponse = await authenticatedRequest(app, authToken)
+      const feedResponse = await authenticatedRequest(authToken)
         .post('/api/feeds')
         .send({ url: 'https://www.gizmodo.jp/index.xml' });
       
       feedId = feedResponse.body.feed.id;
 
       // フィードを更新して記事を取得
-      await authenticatedRequest(app, authToken)
+      await authenticatedRequest(authToken)
         .post(`/api/feeds/${feedId}/refresh`);
     });
 
     it('フィードの記事一覧を取得できる', async () => {
-      const response = await authenticatedRequest(app, authToken)
+      const response = await authenticatedRequest(authToken)
         .get(`/api/feeds/${feedId}/articles`);
 
       console.log('Feed articles response:', response.body);
@@ -173,7 +174,7 @@ describe('フィードAPI', () => {
     });
 
     it('ページネーションが正常に動作する', async () => {
-      const response = await authenticatedRequest(app, authToken)
+      const response = await authenticatedRequest(authToken)
         .get(`/api/feeds/${feedId}/articles?page=1&limit=5`);
 
       expect(response.status).toBe(200);
@@ -192,7 +193,7 @@ describe('フィードAPI', () => {
       ];
 
       for (const url of invalidUrls) {
-        const response = await authenticatedRequest(app, authToken)
+        const response = await authenticatedRequest(authToken)
           .post('/api/feeds')
           .send({ url });
 

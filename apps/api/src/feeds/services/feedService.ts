@@ -41,16 +41,31 @@ export class FeedService {
 
     // 記事をデータベースに保存
     if (parsedFeed.items.length > 0) {
-      await prisma.article.createMany({
-        data: parsedFeed.items.map((item) => ({
+      // 既存の記事URLを取得して重複チェック
+      const existingArticles = await prisma.article.findMany({
+        where: { feedId: feed.id },
+        select: { url: true },
+      });
+      
+      const existingUrls = new Set(existingArticles.map((article: { url: string }) => article.url));
+      
+      // 新規記事のみをフィルタリング
+      const newArticles = parsedFeed.items
+        .filter(item => !existingUrls.has(item.url))
+        .map((item) => ({
           title: item.title,
           url: item.url,
           description: item.description,
           publishedAt: item.publishedAt,
           feedId: feed.id,
-        })),
-        skipDuplicates: true,
-      });
+        }));
+      
+      // 新規記事が存在する場合のみ保存
+      if (newArticles.length > 0) {
+        await prisma.article.createMany({
+          data: newArticles,
+        });
+      }
     }
 
     return feed;
@@ -204,20 +219,32 @@ export class FeedService {
 
         // 新しい記事を追加
         if (parsedFeed.items.length > 0) {
-          const articleData = parsedFeed.items.map((item) => ({
-            title: item.title?.substring(0, 500) || 'タイトルなし', // タイトルの長さ制限
-            url: item.url,
-            description: item.description?.substring(0, 2000) || null, // 説明の長さ制限
-            publishedAt: item.publishedAt,
-            feedId: feed.id,
-          }));
-          
-          console.log(`[FeedService] ${articleData.length}件の記事をデータベースに追加中...`);
-          
-          await tx.article.createMany({
-            data: articleData,
-            skipDuplicates: true,
+          // 既存の記事URLを取得して重複チェック
+          const existingArticles = await tx.article.findMany({
+            where: { feedId: feed.id },
+            select: { url: true },
           });
+          
+          const existingUrls = new Set(existingArticles.map((article: { url: string }) => article.url));
+          
+          // 新規記事のみをフィルタリング
+          const newArticles = parsedFeed.items
+            .filter(item => !existingUrls.has(item.url))
+            .map((item) => ({
+              title: item.title?.substring(0, 500) || 'タイトルなし', // タイトルの長さ制限
+              url: item.url,
+              description: item.description?.substring(0, 2000) || null, // 説明の長さ制限
+              publishedAt: item.publishedAt,
+              feedId: feed.id,
+            }));
+          
+          console.log(`[FeedService] ${newArticles.length}件の新規記事をデータベースに追加中...`);
+          
+          if (newArticles.length > 0) {
+            await tx.article.createMany({
+              data: newArticles,
+            });
+          }
           
           console.log(`[FeedService] 記事の追加完了`);
         }

@@ -5,6 +5,7 @@ import { prisma } from '../../lib/prisma';
 import {
   mockUsers,
   createTestUser,
+  createTestUserWithData,
   loginTestUser,
   authenticatedRequest,
   createPasswordResetToken,
@@ -53,7 +54,7 @@ describe('認証API', () => {
 
     it('重複したメールアドレスで登録が失敗する', async () => {
       // 最初のユーザーを登録
-      await createTestUser(mockUsers.valid);
+      await createTestUser(mockUsers.valid.email, mockUsers.valid.password);
 
       // 同じメールアドレスで再度登録
       const response = await request(app)
@@ -68,11 +69,11 @@ describe('認証API', () => {
   describe('POST /api/auth/login', () => {
     beforeEach(async () => {
       // テスト用ユーザーを作成
-      await createTestUser(mockUsers.valid);
+      await createTestUser(mockUsers.valid.email, mockUsers.valid.password);
     });
 
     it('有効な認証情報でログインが成功する', async () => {
-      const response = await loginTestUser(mockUsers.valid);
+      const response = await loginTestUser(mockUsers.valid.email, mockUsers.valid.password);
 
       expect(response.status).toBe(200);
       expectValidAuthResponse(response);
@@ -106,8 +107,9 @@ describe('認証API', () => {
 
   describe('GET /api/auth/profile', () => {
     it('認証されたユーザーがプロフィールを取得できる', async () => {
-      const registerResponse = await createTestUser(mockUsers.valid);
-      const token = registerResponse.body.token;
+      const registerResponse = await createTestUser();
+      const loginResult = await loginTestUser();
+      const token = loginResult.body.token;
 
       const response = await authenticatedRequest(token).get('/api/auth/profile');
 
@@ -135,7 +137,7 @@ describe('認証API', () => {
 
   describe('POST /api/auth/forgot-password', () => {
     beforeEach(async () => {
-      await createTestUser(mockUsers.valid);
+      await createTestUser(mockUsers.valid.email, mockUsers.valid.password);
     });
 
     it('有効なメールアドレスでパスワードリセット要求が成功する', async () => {
@@ -159,7 +161,7 @@ describe('認証API', () => {
 
   describe('POST /api/auth/reset-password', () => {
     beforeEach(async () => {
-      await createTestUser(mockUsers.valid);
+      await createTestUser(mockUsers.valid.email, mockUsers.valid.password);
     });
 
     it('有効なトークンでパスワードリセットが成功する', async () => {
@@ -205,7 +207,7 @@ describe('認証API', () => {
 
   describe('PUT /api/auth/password', () => {
     it('認証されたユーザーがパスワードを変更できる', async () => {
-      const registerResponse = await createTestUser(mockUsers.valid);
+      const registerResponse = await createTestUserWithData(mockUsers.valid);
       const token = registerResponse.body.token;
 
       const response = await authenticatedRequest(token)
@@ -230,7 +232,7 @@ describe('認証API', () => {
     });
 
     it('間違った現在のパスワードでパスワード変更が失敗する', async () => {
-      const registerResponse = await createTestUser(mockUsers.valid);
+      const registerResponse = await createTestUserWithData(mockUsers.valid);
       const token = registerResponse.body.token;
 
       const response = await authenticatedRequest(token)
@@ -247,7 +249,7 @@ describe('認証API', () => {
 
   describe('PUT /api/auth/settings', () => {
     it('認証されたユーザーが設定を更新できる', async () => {
-      const registerResponse = await createTestUser(mockUsers.valid);
+      const registerResponse = await createTestUserWithData(mockUsers.valid);
       const token = registerResponse.body.token;
 
       const response = await authenticatedRequest(token)
@@ -266,7 +268,7 @@ describe('認証API', () => {
 
   describe('DELETE /api/auth/account', () => {
     it('認証されたユーザーがアカウントを削除できる', async () => {
-      const registerResponse = await createTestUser(mockUsers.valid);
+      const registerResponse = await createTestUserWithData(mockUsers.valid);
       const token = registerResponse.body.token;
 
       const response = await authenticatedRequest(token)
@@ -287,7 +289,7 @@ describe('認証API', () => {
     });
 
     it('間違ったパスワードでアカウント削除が失敗する', async () => {
-      const registerResponse = await createTestUser(mockUsers.valid);
+      const registerResponse = await createTestUserWithData(mockUsers.valid);
       const token = registerResponse.body.token;
 
       const response = await authenticatedRequest(token)

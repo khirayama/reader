@@ -17,28 +17,42 @@ export class AuthService {
 
   // ユーザー登録
   async register(data: RegisterRequest): Promise<LoginResponse> {
-    const response = await this.client.post<LoginResponse>('/api/auth/register', data);
-    
-    if (response.success && response.data) {
-      // 自動的にトークンを設定
-      this.client.setToken(response.data.token);
-      return response.data;
+    try {
+      const response = await this.client.post<LoginResponse>('/api/auth/register', data);
+      console.log('Auth service register response:', response);
+      
+      // APIサーバーは直接 { user, token } を返すので、responseがLoginResponseです
+      if (response && response.token && response.user) {
+        // 自動的にトークンを設定
+        this.client.setToken(response.token);
+        return response;
+      }
+      
+      throw new Error('無効なレスポンス形式です');
+    } catch (error) {
+      console.error('Auth service register error:', error);
+      throw error;
     }
-    
-    throw new Error(response.error || '登録に失敗しました');
   }
 
   // ログイン
   async login(data: LoginRequest): Promise<LoginResponse> {
-    const response = await this.client.post<LoginResponse>('/api/auth/login', data);
-    
-    if (response.success && response.data) {
-      // 自動的にトークンを設定
-      this.client.setToken(response.data.token);
-      return response.data;
+    try {
+      const response = await this.client.post<LoginResponse>('/api/auth/login', data);
+      console.log('Auth service login response:', response);
+      
+      // APIサーバーは直接 { user, token } を返すので、responseがLoginResponseです
+      if (response && response.token && response.user) {
+        // 自動的にトークンを設定
+        this.client.setToken(response.token);
+        return response;
+      }
+      
+      throw new Error('無効なレスポンス形式です');
+    } catch (error) {
+      console.error('Auth service login error:', error);
+      throw error;
     }
-    
-    throw new Error(response.error || 'ログインに失敗しました');
   }
 
   // ログアウト
@@ -66,13 +80,20 @@ export class AuthService {
 
   // ユーザープロフィール取得
   async getProfile(): Promise<User> {
-    const response = await this.client.get<User>('/api/auth/profile');
-    
-    if (response.success && response.data) {
-      return response.data;
+    try {
+      const response = await this.client.get<User>('/api/auth/profile');
+      console.log('Auth service getProfile response:', response);
+      
+      // APIサーバーは直接 User オブジェクトを返します
+      if (response && response.id) {
+        return response;
+      }
+      
+      throw new Error('無効なレスポンス形式です');
+    } catch (error) {
+      console.error('Auth service getProfile error:', error);
+      throw error;
     }
-    
-    throw new Error(response.error || 'プロフィールの取得に失敗しました');
   }
 
   // パスワード変更

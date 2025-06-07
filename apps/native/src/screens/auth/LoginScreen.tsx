@@ -35,8 +35,11 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
   const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true);
+      console.log('LoginScreen: Starting login process');
       await login(data.email, data.password);
+      console.log('LoginScreen: Login completed successfully');
     } catch (error: unknown) {
+      console.error('LoginScreen: Login error:', error);
       const errorMessage = error instanceof Error ? error.message : 'ログインに失敗しました。メールアドレスとパスワードを確認してください。';
       Alert.alert(
         'ログインエラー',

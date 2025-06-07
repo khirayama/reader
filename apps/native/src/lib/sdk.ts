@@ -1,4 +1,4 @@
-import { createSDK } from '../../../../packages/sdk/src/index';
+import { createSDK } from '@rss-reader/sdk';
 
 const API_URL = __DEV__ ? 'http://localhost:3001' : 'https://your-api-domain.vercel.app';
 

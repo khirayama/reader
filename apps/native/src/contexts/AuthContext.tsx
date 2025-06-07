@@ -59,12 +59,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const login = async (email: string, password: string) => {
-    const response = await sdk.auth.login({ email, password });
-    const { token, user: userData } = response;
-    
-    await AsyncStorage.setItem(TOKEN_KEY, token);
-    sdk.setToken(token);
-    setUser(userData);
+    try {
+      console.log('Login attempt:', { email });
+      const response = await sdk.auth.login({ email, password });
+      console.log('Login response:', response);
+      
+      const { token, user: userData } = response;
+      
+      await AsyncStorage.setItem(TOKEN_KEY, token);
+      sdk.setToken(token);
+      setUser(userData);
+      
+      console.log('Login successful, user set:', userData);
+    } catch (error) {
+      console.error('Login error in AuthContext:', error);
+      throw error;
+    }
   };
 
   const register = async (email: string, password: string, name: string) => {

@@ -13,6 +13,8 @@ const Stack = createStackNavigator();
 function AppContent() {
   const { user, isLoading } = useAuth();
 
+  console.log('AppContent render:', { user: !!user, isLoading });
+
   if (isLoading) {
     // TODO: Add loading screen component
     return null;

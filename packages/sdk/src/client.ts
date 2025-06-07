@@ -59,9 +59,9 @@ export class ApiClient {
     url: string,
     params?: Record<string, unknown>,
     config?: AxiosRequestConfig
-  ): Promise<ApiResponse<T>> {
+  ): Promise<T> {
     try {
-      const response = await this.client.get<ApiResponse<T>>(url, {
+      const response = await this.client.get<T>(url, {
         params,
         ...config,
       });
@@ -76,11 +76,13 @@ export class ApiClient {
     url: string,
     data?: unknown,
     config?: AxiosRequestConfig
-  ): Promise<ApiResponse<T>> {
+  ): Promise<T> {
     try {
-      const response = await this.client.post<ApiResponse<T>>(url, data, config);
+      const response = await this.client.post<T>(url, data, config);
+      console.log('API response:', { url, status: response.status, data: response.data });
       return response.data;
     } catch (error) {
+      console.error('API error:', { url, error });
       throw this.handleError(error);
     }
   }
@@ -90,9 +92,9 @@ export class ApiClient {
     url: string,
     data?: unknown,
     config?: AxiosRequestConfig
-  ): Promise<ApiResponse<T>> {
+  ): Promise<T> {
     try {
-      const response = await this.client.put<ApiResponse<T>>(url, data, config);
+      const response = await this.client.put<T>(url, data, config);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -103,9 +105,9 @@ export class ApiClient {
   async delete<T>(
     url: string,
     config?: AxiosRequestConfig
-  ): Promise<ApiResponse<T>> {
+  ): Promise<T> {
     try {
-      const response = await this.client.delete<ApiResponse<T>>(url, config);
+      const response = await this.client.delete<T>(url, config);
       return response.data;
     } catch (error) {
       throw this.handleError(error);

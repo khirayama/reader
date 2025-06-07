@@ -1,136 +1,136 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect } from 'react';
-import { sdk } from '@/lib/sdk';
+import React, { useState, useEffect } from 'react'
+import { sdk } from '@/lib/sdk'
 // Article型を直接定義
 interface Article {
-  id: string;
-  title: string;
-  url: string;
-  description?: string;
-  publishedAt: string;
-  feedId: string;
-  createdAt: string;
-  updatedAt: string;
+  id: string
+  title: string
+  url: string
+  description?: string
+  publishedAt: string
+  feedId: string
+  createdAt: string
+  updatedAt: string
   feed?: {
-    id: string;
-    title: string;
-    favicon?: string;
-  };
-  isRead?: boolean;
-  readAt?: string;
-  isBookmarked?: boolean;
-  bookmarkedAt?: string;
+    id: string
+    title: string
+    favicon?: string
+  }
+  isRead?: boolean
+  readAt?: string
+  isBookmarked?: boolean
+  bookmarkedAt?: string
 }
-import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card'
+import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
 
 interface ArticleListProps {
-  selectedFeedId?: string;
+  selectedFeedId?: string
 }
 
 export function ArticleList({ selectedFeedId }: ArticleListProps) {
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
+  const [articles, setArticles] = useState<Article[]>([])
+  const [loading, setLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
 
   useEffect(() => {
-    loadArticles(true);
-  }, [selectedFeedId, searchTerm]);
+    loadArticles(true)
+  }, [selectedFeedId, searchTerm])
 
   const loadArticles = async (reset = false) => {
     try {
-      setLoading(true);
-      const currentPage = reset ? 1 : page;
-      
-      let response;
+      setLoading(true)
+      const currentPage = reset ? 1 : page
+
+      let response
       if (selectedFeedId) {
         response = await sdk.feeds.getFeedArticles(selectedFeedId, {
           page: currentPage,
           limit: 20,
           search: searchTerm || undefined,
-        });
+        })
       } else {
         response = await sdk.articles.getArticles({
           page: currentPage,
           limit: 20,
           search: searchTerm || undefined,
-        });
+        })
       }
 
       if (reset) {
-        setArticles(response.articles);
-        setPage(2);
+        setArticles(response.articles)
+        setPage(2)
       } else {
-        setArticles(prev => [...prev, ...response.articles]);
-        setPage(prev => prev + 1);
+        setArticles((prev) => [...prev, ...response.articles])
+        setPage((prev) => prev + 1)
       }
-      
-      setHasMore(response.pagination.hasNext);
+
+      setHasMore(response.pagination.hasNext)
     } catch (error) {
-      console.error('記事読み込みエラー:', error);
+      console.error('記事読み込みエラー:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    loadArticles(true);
-  };
+    e.preventDefault()
+    loadArticles(true)
+  }
 
   const handleMarkAsRead = async (articleId: string) => {
     try {
-      await sdk.articles.markAsRead(articleId);
-      setArticles(prev => 
-        prev.map(article => 
-          article.id === articleId 
+      await sdk.articles.markAsRead(articleId)
+      setArticles((prev) =>
+        prev.map((article) =>
+          article.id === articleId
             ? { ...article, isRead: true, readAt: new Date().toISOString() }
             : article
         )
-      );
+      )
     } catch (error) {
-      console.error('既読マークエラー:', error);
+      console.error('既読マークエラー:', error)
     }
-  };
+  }
 
   const handleToggleBookmark = async (articleId: string, isBookmarked: boolean) => {
     try {
       if (isBookmarked) {
-        await sdk.articles.removeBookmark(articleId);
+        await sdk.articles.removeBookmark(articleId)
       } else {
-        await sdk.articles.addBookmark(articleId);
+        await sdk.articles.addBookmark(articleId)
       }
-      
-      setArticles(prev => 
-        prev.map(article => 
-          article.id === articleId 
-            ? { 
-                ...article, 
+
+      setArticles((prev) =>
+        prev.map((article) =>
+          article.id === articleId
+            ? {
+                ...article,
                 isBookmarked: !isBookmarked,
-                bookmarkedAt: !isBookmarked ? new Date().toISOString() : undefined
+                bookmarkedAt: !isBookmarked ? new Date().toISOString() : undefined,
               }
             : article
         )
-      );
+      )
     } catch (error) {
-      console.error('ブックマーク操作エラー:', error);
+      console.error('ブックマーク操作エラー:', error)
     }
-  };
+  }
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = new Date(dateString)
     return date.toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    });
-  };
+    })
+  }
 
   return (
     <div className="flex-1 p-6">
@@ -138,7 +138,7 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
           {selectedFeedId ? 'フィード記事' : '全ての記事'}
         </h2>
-        
+
         <form onSubmit={handleSearch} className="flex space-x-2">
           <Input
             placeholder="記事を検索..."
@@ -151,13 +151,9 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
       </div>
 
       {loading && articles.length === 0 ? (
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          読み込み中...
-        </div>
+        <div className="text-center text-gray-500 dark:text-gray-400">読み込み中...</div>
       ) : articles.length === 0 ? (
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          記事がありません
-        </div>
+        <div className="text-center text-gray-500 dark:text-gray-400">記事がありません</div>
       ) : (
         <div className="space-y-4">
           {articles.map((article) => (
@@ -171,7 +167,7 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
                         alt=""
                         className="w-4 h-4 rounded"
                         onError={(e) => {
-                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.style.display = 'none'
                         }}
                       />
                     )}
@@ -182,12 +178,14 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
                       {formatDate(article.publishedAt)}
                     </span>
                   </div>
-                  
-                  <h3 className={`text-lg font-medium mb-2 ${
-                    article.isRead 
-                      ? 'text-gray-600 dark:text-gray-400' 
-                      : 'text-gray-900 dark:text-white'
-                  }`}>
+
+                  <h3
+                    className={`text-lg font-medium mb-2 ${
+                      article.isRead
+                        ? 'text-gray-600 dark:text-gray-400'
+                        : 'text-gray-900 dark:text-white'
+                    }`}
+                  >
                     <a
                       href={article.url}
                       target="_blank"
@@ -198,18 +196,21 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
                       {article.title}
                     </a>
                   </h3>
-                  
+
                   {article.description && (
-                    <p className="text-gray-600 dark:text-gray-400 text-sm overflow-hidden" style={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                    }}>
+                    <p
+                      className="text-gray-600 dark:text-gray-400 text-sm overflow-hidden"
+                      style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                      }}
+                    >
                       {article.description}
                     </p>
                   )}
                 </div>
-                
+
                 <div className="flex items-center space-x-2 ml-4">
                   <button
                     onClick={() => handleToggleBookmark(article.id, !!article.isBookmarked)}
@@ -219,7 +220,7 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
                   >
                     {article.isBookmarked ? '★' : '☆'}
                   </button>
-                  
+
                   {!article.isRead && (
                     <button
                       onClick={() => handleMarkAsRead(article.id)}
@@ -232,14 +233,10 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
               </div>
             </Card>
           ))}
-          
+
           {hasMore && (
             <div className="text-center">
-              <Button
-                onClick={() => loadArticles(false)}
-                disabled={loading}
-                variant="outline"
-              >
+              <Button onClick={() => loadArticles(false)} disabled={loading} variant="outline">
                 {loading ? '読み込み中...' : 'さらに読み込む'}
               </Button>
             </div>
@@ -247,5 +244,5 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
         </div>
       )}
     </div>
-  );
+  )
 }

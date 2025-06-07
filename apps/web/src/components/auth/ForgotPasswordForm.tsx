@@ -1,44 +1,65 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import Link from 'next/link';
-import { sdk } from '@/lib/sdk';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/lib/validations/auth';
+import React, { useState } from 'react'
+import Link from 'next/link'
+import { sdk } from '@/lib/sdk'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { forgotPasswordSchema, type ForgotPasswordFormData } from '@/lib/validations/auth'
 
 export function ForgotPasswordForm() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [formData, setFormData] = useState({ email: '' })
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof ForgotPasswordFormData, string>>
+  >({})
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<ForgotPasswordFormData>({
-    resolver: zodResolver(forgotPasswordSchema),
-  });
+  const validateField = (name: keyof ForgotPasswordFormData, value: string) => {
+    try {
+      forgotPasswordSchema.parse({ ...formData, [name]: value })
+      setFieldErrors((prev) => ({ ...prev, [name]: undefined }))
+    } catch (err: any) {
+      const message = err.errors?.[0]?.message || 'Invalid value'
+      setFieldErrors((prev) => ({ ...prev, [name]: message }))
+    }
+  }
 
-  const onSubmit = async (data: ForgotPasswordFormData) => {
-    setIsLoading(true);
-    setError(null);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    validateField(name as keyof ForgotPasswordFormData, value)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
 
     try {
-      await sdk.auth.forgotPassword(data.email);
-      setSuccess(true);
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
+      const validatedData = forgotPasswordSchema.parse(formData)
+      setIsLoading(true)
+      setError(null)
+
+      await sdk.auth.forgotPassword(validatedData.email)
+      setSuccess(true)
+    } catch (err: any) {
+      if (err.errors) {
+        const newErrors: Partial<Record<keyof ForgotPasswordFormData, string>> = {}
+        err.errors.forEach((error: any) => {
+          if (error.path[0]) {
+            newErrors[error.path[0] as keyof ForgotPasswordFormData] = error.message
+          }
+        })
+        setFieldErrors(newErrors)
+      } else if (err instanceof Error) {
+        setError(err.message)
       } else {
-        setError('リクエストの送信に失敗しました');
+        setError('リクエストの送信に失敗しました')
       }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   if (success) {
     return (
@@ -59,18 +80,20 @@ export function ForgotPasswordForm() {
           ログインページに戻る
         </Link>
       </div>
-    );
+    )
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <Input
           label="メールアドレス"
           type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
           autoComplete="email"
-          {...register('email')}
-          error={errors.email?.message}
+          error={fieldErrors.email}
           helperText="登録されているメールアドレスを入力してください"
         />
       </div>
@@ -82,11 +105,7 @@ export function ForgotPasswordForm() {
       )}
 
       <div>
-        <Button
-          type="submit"
-          className="w-full"
-          loading={isLoading}
-        >
+        <Button type="submit" className="w-full" loading={isLoading}>
           リセットメールを送信
         </Button>
       </div>
@@ -100,5 +119,5 @@ export function ForgotPasswordForm() {
         </Link>
       </div>
     </form>
-  );
+  )
 }

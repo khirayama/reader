@@ -1,58 +1,81 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { registerSchema, type RegisterFormData } from '@/lib/validations/auth';
+import React, { useState } from 'react'
+import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { registerSchema, type RegisterFormData } from '@/lib/validations/auth'
 
 interface RegisterFormProps {
-  onSuccess?: () => void;
+  onSuccess?: () => void
 }
 
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
-  const { register: registerUser } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { register: registerUser } = useAuth()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '' })
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof RegisterFormData, string>>>(
+    {}
+  )
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-  });
+  const validateField = (name: keyof RegisterFormData, value: string) => {
+    try {
+      registerSchema.parse({ ...formData, [name]: value })
+      setFieldErrors((prev) => ({ ...prev, [name]: undefined }))
+    } catch (err: any) {
+      const message = err.errors?.[0]?.message || 'Invalid value'
+      setFieldErrors((prev) => ({ ...prev, [name]: message }))
+    }
+  }
 
-  const onSubmit = async (data: RegisterFormData) => {
-    setIsLoading(true);
-    setError(null);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    validateField(name as keyof RegisterFormData, value)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
 
     try {
-      await registerUser(data.email, data.password);
-      onSuccess?.();
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
+      const validatedData = registerSchema.parse(formData)
+      setIsLoading(true)
+      setError(null)
+
+      await registerUser(validatedData.email, validatedData.password)
+      onSuccess?.()
+    } catch (err: any) {
+      if (err.errors) {
+        const newErrors: Partial<Record<keyof RegisterFormData, string>> = {}
+        err.errors.forEach((error: any) => {
+          if (error.path[0]) {
+            newErrors[error.path[0] as keyof RegisterFormData] = error.message
+          }
+        })
+        setFieldErrors(newErrors)
+      } else if (err instanceof Error) {
+        setError(err.message)
       } else {
-        setError('登録に失敗しました');
+        setError('登録に失敗しました')
       }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <Input
           label="メールアドレス"
           type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
           autoComplete="email"
-          {...register('email')}
-          error={errors.email?.message}
+          error={fieldErrors.email}
         />
       </div>
 
@@ -60,9 +83,11 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         <Input
           label="パスワード"
           type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
           autoComplete="new-password"
-          {...register('password')}
-          error={errors.password?.message}
+          error={fieldErrors.password}
           helperText="8文字以上、大文字・小文字・数字を含む"
         />
       </div>
@@ -71,9 +96,11 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         <Input
           label="パスワード確認"
           type="password"
+          name="confirmPassword"
+          value={formData.confirmPassword}
+          onChange={handleChange}
           autoComplete="new-password"
-          {...register('confirmPassword')}
-          error={errors.confirmPassword?.message}
+          error={fieldErrors.confirmPassword}
         />
       </div>
 
@@ -84,11 +111,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       )}
 
       <div>
-        <Button
-          type="submit"
-          className="w-full"
-          loading={isLoading}
-        >
+        <Button type="submit" className="w-full" loading={isLoading}>
           アカウント作成
         </Button>
       </div>
@@ -105,5 +128,5 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         </p>
       </div>
     </form>
-  );
+  )
 }

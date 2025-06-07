@@ -1,9 +1,9 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { GuestGuard } from '@/components/auth/GuestGuard';
-import { AuthLayout } from '@/components/layout/AuthLayout';
-import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
+import React from 'react'
+import { GuestGuard } from '@/components/auth/GuestGuard'
+import { AuthLayout } from '@/components/layout/AuthLayout'
+import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm'
 
 export default function ForgotPasswordPage() {
   return (
@@ -15,5 +15,5 @@ export default function ForgotPasswordPage() {
         <ForgotPasswordForm />
       </AuthLayout>
     </GuestGuard>
-  );
+  )
 }

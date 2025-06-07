@@ -1,73 +1,106 @@
-'use client';
+'use client'
 
-import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import Link from 'next/link';
-import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { AuthLayout } from '@/components/layout/AuthLayout';
-import { sdk } from '@/lib/sdk';
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { z } from 'zod'
+import Link from 'next/link'
+import { Card } from '@/components/ui/Card'
+import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
+import { AuthLayout } from '@/components/layout/AuthLayout'
+import { sdk } from '@/lib/sdk'
 
-const resetPasswordSchema = z.object({
-  password: z.string()
-    .min(8, 'パスワードは8文字以上で入力してください')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'パスワードは大文字・小文字・数字を含む必要があります'),
-  confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'パスワードが一致しません',
-  path: ['confirmPassword'],
-});
+const resetPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, 'パスワードは8文字以上で入力してください')
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        'パスワードは大文字・小文字・数字を含む必要があります'
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'パスワードが一致しません',
+    path: ['confirmPassword'],
+  })
 
-type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+type ResetPasswordInput = z.infer<typeof resetPasswordSchema>
 
 function ResetPasswordForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-  const token = searchParams.get('token');
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [isLoading, setIsLoading] = useState(false)
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [formData, setFormData] = useState({ password: '', confirmPassword: '' })
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof ResetPasswordInput, string>>>(
+    {}
+  )
+  const token = searchParams.get('token')
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<ResetPasswordInput>({
-    resolver: zodResolver(resetPasswordSchema),
-  });
+  const validateField = (name: keyof ResetPasswordInput, value: string) => {
+    try {
+      resetPasswordSchema.parse({ ...formData, [name]: value })
+      setFieldErrors((prev) => ({ ...prev, [name]: undefined }))
+    } catch (err: any) {
+      const message = err.errors?.[0]?.message || 'Invalid value'
+      setFieldErrors((prev) => ({ ...prev, [name]: message }))
+    }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    validateField(name as keyof ResetPasswordInput, value)
+  }
 
   useEffect(() => {
     if (!token) {
-      setMessage({ type: 'error', text: '無効なリンクです。パスワードリセットをもう一度お試しください。' });
+      setMessage({
+        type: 'error',
+        text: '無効なリンクです。パスワードリセットをもう一度お試しください。',
+      })
     }
-  }, [token]);
+  }, [token])
 
-  const onSubmit = async (data: ResetPasswordInput) => {
-    if (!token) return;
-
-    setIsLoading(true);
-    setMessage(null);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!token) return
 
     try {
-      await sdk.auth.resetPassword({ token, password: data.password });
-      setMessage({ type: 'success', text: 'パスワードが正常にリセットされました。' });
-      
+      const validatedData = resetPasswordSchema.parse(formData)
+      setIsLoading(true)
+      setMessage(null)
+
+      await sdk.auth.resetPassword({ token, password: validatedData.password })
+      setMessage({ type: 'success', text: 'パスワードが正常にリセットされました。' })
+
       // 3秒後にログインページへリダイレクト
       setTimeout(() => {
-        router.push('/login');
-      }, 3000);
-    } catch (error: any) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.error || 'パスワードのリセットに失敗しました。もう一度お試しください。' 
-      });
+        router.push('/login')
+      }, 3000)
+    } catch (err: any) {
+      if (err.errors) {
+        const newErrors: Partial<Record<keyof ResetPasswordInput, string>> = {}
+        err.errors.forEach((error: any) => {
+          if (error.path[0]) {
+            newErrors[error.path[0] as keyof ResetPasswordInput] = error.message
+          }
+        })
+        setFieldErrors(newErrors)
+      } else {
+        setMessage({
+          type: 'error',
+          text:
+            err.response?.data?.error ||
+            'パスワードのリセットに失敗しました。もう一度お試しください。',
+        })
+      }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <AuthLayout title="パスワードリセット">
@@ -90,21 +123,25 @@ function ResetPasswordForm() {
         )}
 
         {!message?.type && token && (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               type="password"
               label="新しいパスワード"
-              error={errors.password?.message}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              error={fieldErrors.password}
               disabled={isLoading}
-              {...register('password')}
             />
 
             <Input
               type="password"
               label="パスワード（確認）"
-              error={errors.confirmPassword?.message}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              error={fieldErrors.confirmPassword}
               disabled={isLoading}
-              {...register('confirmPassword')}
             />
 
             <Button type="submit" className="w-full" disabled={isLoading}>
@@ -120,7 +157,7 @@ function ResetPasswordForm() {
         </div>
       </Card>
     </AuthLayout>
-  );
+  )
 }
 
 export default function ResetPasswordPage() {
@@ -128,5 +165,5 @@ export default function ResetPasswordPage() {
     <Suspense fallback={<div>Loading...</div>}>
       <ResetPasswordForm />
     </Suspense>
-  );
+  )
 }

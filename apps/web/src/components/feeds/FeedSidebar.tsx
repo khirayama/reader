@@ -21,6 +21,7 @@ interface Feed {
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
+import OpmlImportExport from './OpmlImportExport'
 
 interface FeedSidebarProps {
   selectedFeedId?: string
@@ -191,6 +192,14 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
             ))}
           </div>
         )}
+      </div>
+
+      {/* OPML インポート/エクスポート */}
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <OpmlImportExport onImportComplete={() => {
+          loadFeeds()
+          onFeedRefresh()
+        }} />
       </div>
     </div>
   )

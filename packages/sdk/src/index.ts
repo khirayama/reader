@@ -2,6 +2,7 @@ import { ApiClient } from './client';
 import { AuthService } from './auth';
 import { FeedsService } from './feeds';
 import { ArticlesService } from './articles';
+import { OpmlService } from './opml';
 import type { SdkConfig } from './types';
 
 // Type exports
@@ -15,6 +16,7 @@ export class RSSReaderSDK {
   public auth: AuthService;
   public feeds: FeedsService;
   public articles: ArticlesService;
+  public opml: OpmlService;
 
   constructor(config: SdkConfig) {
     this.client = new ApiClient(config);
@@ -23,6 +25,7 @@ export class RSSReaderSDK {
     this.auth = new AuthService(this.client);
     this.feeds = new FeedsService(this.client);
     this.articles = new ArticlesService(this.client);
+    this.opml = new OpmlService(this.client);
   }
 
   // Token management
@@ -58,4 +61,4 @@ export function createSDK(baseURL: string): RSSReaderSDK {
 export default RSSReaderSDK;
 
 // Service exports
-export { ApiClient, AuthService, FeedsService, ArticlesService };
+export { ApiClient, AuthService, FeedsService, ArticlesService, OpmlService };

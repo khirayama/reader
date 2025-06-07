@@ -7,6 +7,7 @@ import { authRouter } from './auth/routes/authRoutes';
 import { feedRouter } from './feeds/routes/feedRoutes';
 import { articleRouter } from './articles/routes/articleRoutes';
 import { adminRouter } from './admin/routes/adminRoutes';
+import opmlRouter from './opml/routes/opmlRoutes';
 import { corsOptions } from './config/cors';
 import {
   generalLimiter,
@@ -63,6 +64,9 @@ app.use('/api/auth', authRouter);
 app.use('/api/feeds', feedRouter);
 app.use('/api/articles', articleRouter);
 
+// OPML機能ルート
+app.use('/api/opml', opmlRouter);
+
 // 管理者ルート
 app.use('/api/admin', adminRouter);
 
@@ -109,6 +113,7 @@ if (process.env.NODE_ENV !== 'test') {
     console.log(`🔐 Auth API: http://localhost:${PORT}/api/auth`);
     console.log(`📰 Feed API: http://localhost:${PORT}/api/feeds`);
     console.log(`📄 Article API: http://localhost:${PORT}/api/articles`);
+    console.log(`📤 OPML API: http://localhost:${PORT}/api/opml`);
     console.log(`🛡️  Admin API: http://localhost:${PORT}/api/admin`);
   });
 

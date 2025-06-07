@@ -30,7 +30,7 @@ export class FeedService {
     const feed = await prisma.feed.create({
       data: {
         url: data.url,
-        title: parsedFeed.title,
+        title: data.title || parsedFeed.title,
         description: parsedFeed.description,
         siteUrl: parsedFeed.siteUrl,
         favicon,
@@ -401,3 +401,4 @@ export class FeedService {
   }
 
 }
+export const feedService = FeedService;

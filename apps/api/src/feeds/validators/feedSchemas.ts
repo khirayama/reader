@@ -13,6 +13,7 @@ export const createFeedSchema = z.object({
       },
       { message: 'HTTP または HTTPS URL のみ許可されています' }
     ),
+  title: z.string().min(1, 'タイトルが必要です').optional(),
 });
 
 // フィード更新バリデーションスキーマ

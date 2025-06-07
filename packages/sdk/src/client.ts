@@ -114,6 +114,22 @@ export class ApiClient {
     }
   }
 
+  // 汎用リクエストメソッド（responseTypeなどをサポート）
+  async request<T = any>(
+    url: string,
+    config?: AxiosRequestConfig
+  ): Promise<AxiosResponse<T>> {
+    try {
+      const response = await this.client.request<T>({
+        url,
+        ...config,
+      });
+      return response;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   // エラーハンドリング
   private handleError(error: unknown): ApiError {
     if (axios.isAxiosError(error)) {

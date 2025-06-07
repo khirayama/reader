@@ -14,8 +14,15 @@ interface ValidationErrorResponse {
 export const validate = (schema: ZodSchema) => {
   return (req: Request, res: Response<ValidationErrorResponse>, next: NextFunction): void => {
     try {
-      // リクエストボディをバリデーション
-      schema.parse(req.body);
+      // リクエスト全体をバリデーション（body, query, params, file）
+      const dataToValidate = {
+        ...req.body,
+        query: req.query,
+        params: req.params,
+        file: req.file,
+      };
+      
+      schema.parse(dataToValidate);
       next();
     } catch (error) {
       if (error instanceof ZodError) {

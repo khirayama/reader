@@ -91,6 +91,13 @@ export interface FeedListResponse {
   }
 }
 
+export interface ImportOpmlResponse {
+  message: string
+  imported: number
+  failed: number
+  errors: string[]
+}
+
 
 // シンプルなHTTPクライアント
 class SimpleApiClient {
@@ -116,11 +123,13 @@ class SimpleApiClient {
     return this.token
   }
 
-  private async request<T>(method: string, path: string, data?: unknown): Promise<T> {
+  private async request<T>(method: string, path: string, data?: unknown, isFormData = false): Promise<T> {
     const url = `${this.baseURL}${path}`
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+    const headers: Record<string, string> = {}
+    
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json'
     }
 
     if (this.token) {
@@ -134,7 +143,7 @@ class SimpleApiClient {
     }
 
     if (data && method !== 'GET') {
-      config.body = JSON.stringify(data)
+      config.body = isFormData ? data as BodyInit : JSON.stringify(data)
     }
 
     try {
@@ -147,6 +156,37 @@ class SimpleApiClient {
       
       const result = await response.json()
       return result
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error('Network error')
+    }
+  }
+
+  private async requestBlob(method: string, path: string): Promise<Blob> {
+    const url = `${this.baseURL}${path}`
+
+    const headers: Record<string, string> = {}
+
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`
+    }
+
+    const config: RequestInit = {
+      method,
+      headers,
+      signal: AbortSignal.timeout(this.timeout),
+    }
+
+    try {
+      const response = await fetch(url, config)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+      
+      return await response.blob()
     } catch (error) {
       if (error instanceof Error) {
         throw error
@@ -169,6 +209,14 @@ class SimpleApiClient {
 
   async delete<T>(path: string): Promise<T> {
     return this.request<T>('DELETE', path)
+  }
+
+  async postFormData<T>(path: string, data: FormData): Promise<T> {
+    return this.request<T>('POST', path, data, true)
+  }
+
+  async getBlob(path: string): Promise<Blob> {
+    return this.requestBlob('GET', path)
   }
 }
 
@@ -292,18 +340,35 @@ class ArticlesService {
   }
 }
 
+// OPMLサービス
+class OpmlService {
+  constructor(private client: SimpleApiClient) {}
+
+  async exportOpml(): Promise<Blob> {
+    return await this.client.getBlob('/api/opml/export')
+  }
+
+  async importOpml(file: File): Promise<ImportOpmlResponse> {
+    const formData = new FormData()
+    formData.append('file', file)
+    return await this.client.postFormData<ImportOpmlResponse>('/api/opml/import', formData)
+  }
+}
+
 // RSS Reader SDK クラス
 export class RSSReaderSDK {
   private client: SimpleApiClient
   public auth: AuthService
   public feeds: FeedsService
   public articles: ArticlesService
+  public opml: OpmlService
 
   constructor(config: SdkConfig) {
     this.client = new SimpleApiClient(config)
     this.auth = new AuthService(this.client)
     this.feeds = new FeedsService(this.client)
     this.articles = new ArticlesService(this.client)
+    this.opml = new OpmlService(this.client)
   }
 
   setToken(token: string): void {

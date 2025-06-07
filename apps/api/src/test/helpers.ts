@@ -125,3 +125,29 @@ export const expectValidErrorResponse = (response: any, status: number) => {
   expect(response.body).toHaveProperty('error');
   expect(typeof response.body.error).toBe('string');
 };
+
+// 認証トークン取得ヘルパー
+export const getAuthToken = async (userId: string): Promise<string> => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error('User not found');
+  
+  return TestAuthService.generateToken(user);
+};
+
+// テストデータクリーンアップヘルパー
+export const cleanupTestData = async () => {
+  // テスト環境でのみ実行
+  if (process.env.NODE_ENV !== 'test') {
+    throw new Error('cleanupTestData can only be used in test environment');
+  }
+  
+  // データベースのクリーンアップ（依存関係の順序を考慮）
+  await prisma.$transaction([
+    prisma.passwordResetToken.deleteMany(),
+    prisma.articleReadStatus.deleteMany(),
+    prisma.articleBookmark.deleteMany(),
+    prisma.article.deleteMany(),
+    prisma.feed.deleteMany(),
+    prisma.user.deleteMany(),
+  ]);
+};

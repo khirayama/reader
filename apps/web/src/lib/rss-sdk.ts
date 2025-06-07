@@ -150,6 +150,13 @@ class AuthService {
     }
   }
 
+  async resetPassword(data: { token: string; password: string }): Promise<void> {
+    const response = await this.client.post<void>('/api/auth/reset-password', data);
+    if (!response.success) {
+      throw new Error(response.error || 'Password reset failed');
+    }
+  }
+
   logout(): void {
     // クライアント側でのログアウト処理のみ
   }

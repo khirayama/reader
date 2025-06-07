@@ -71,7 +71,7 @@ export class RSSService {
               url: item.link,
               description: item.contentSnippet || item.summary || undefined,
               publishedAt,
-            };
+            } as ParsedArticle;
           })
           .filter((item): item is ParsedArticle => item !== null)
           .slice(0, 50); // 最新50記事まで

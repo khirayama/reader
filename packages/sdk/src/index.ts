@@ -4,14 +4,14 @@ import { FeedsService } from './feeds';
 import { ArticlesService } from './articles';
 import type { SdkConfig } from './types';
 
-// ãö©í®Øπ›¸»
+// Type exports
 export * from './types';
 
-// RSS Reader SDK ·§ÛØÈπ
+// RSS Reader SDK class
 export class RSSReaderSDK {
   private client: ApiClient;
   
-  // µ¸”πØÈπ
+  // Service instances
   public auth: AuthService;
   public feeds: FeedsService;
   public articles: ArticlesService;
@@ -19,13 +19,13 @@ export class RSSReaderSDK {
   constructor(config: SdkConfig) {
     this.client = new ApiClient(config);
     
-    // µ¸”πí
+    // Initialize services
     this.auth = new AuthService(this.client);
     this.feeds = new FeedsService(this.client);
     this.articles = new ArticlesService(this.client);
   }
 
-  // »¸ØÛ°nÿÎ—¸·Ω√…
+  // Token management
   setToken(token: string): void {
     this.client.setToken(token);
   }
@@ -38,19 +38,24 @@ export class RSSReaderSDK {
     return this.client.getToken();
   }
 
-  // ç<∂K∫ç
+  // Authentication status
   isAuthenticated(): boolean {
     return this.auth.isAuthenticated();
   }
 }
 
-// ø)j Factory ¢p
+// Factory function for creating SDK instance
 export function createRSSReaderSDK(config: SdkConfig): RSSReaderSDK {
   return new RSSReaderSDK(config);
 }
 
-// «’©Î»®Øπ›¸»
+// Alias for createRSSReaderSDK for compatibility
+export function createSDK(baseURL: string): RSSReaderSDK {
+  return new RSSReaderSDK({ baseURL });
+}
+
+// Default export
 export default RSSReaderSDK;
 
-// %µ¸”πn®Øπ›¸»
+// Service exports
 export { ApiClient, AuthService, FeedsService, ArticlesService };

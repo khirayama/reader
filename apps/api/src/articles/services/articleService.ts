@@ -235,7 +235,7 @@ export class ArticleService {
       prisma.articleBookmark.count({ where: { userId } }),
     ]);
 
-    const articles = bookmarks.map((bookmark) => ({
+    const articles = bookmarks.map((bookmark: any) => ({
       ...bookmark.article,
       isRead: bookmark.article.readStatus.length > 0 ? bookmark.article.readStatus[0].isRead : false,
       readAt: bookmark.article.readStatus.length > 0 ? bookmark.article.readStatus[0].readAt : null,

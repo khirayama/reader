@@ -9,6 +9,7 @@ import type {
   ChangePasswordRequest,
   ChangeEmailRequest,
   UpdateSettingsRequest,
+  UpdateUserRequest,
 } from './types';
 
 export class AuthService {
@@ -101,6 +102,17 @@ export class AuthService {
     }
     
     throw new Error(response.error || '設定の更新に失敗しました');
+  }
+
+  // ユーザー情報更新
+  async updateUser(data: UpdateUserRequest): Promise<User> {
+    const response = await this.client.put<User>('/api/auth/profile', data);
+    
+    if (response.success && response.data) {
+      return response.data;
+    }
+    
+    throw new Error(response.error || 'ユーザー情報の更新に失敗しました');
   }
 
   // アカウント削除

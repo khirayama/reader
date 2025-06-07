@@ -17,7 +17,7 @@ const GetArticlesQuerySchema = z.object({
 router.get('/', requireAuth, async (req, res) => {
   try {
     const query = GetArticlesQuerySchema.parse(req.query);
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     const result = await FeedService.getAllUserArticles(
       userId,
@@ -42,7 +42,7 @@ router.get('/', requireAuth, async (req, res) => {
 router.get('/:articleId', requireAuth, async (req, res) => {
   try {
     const { articleId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     const article = await ArticleService.getArticleById(articleId, userId);
 
@@ -63,7 +63,7 @@ router.get('/:articleId', requireAuth, async (req, res) => {
 router.put('/:articleId/read', requireAuth, async (req, res) => {
   try {
     const { articleId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     await ArticleService.markAsRead(articleId, userId);
 
@@ -84,7 +84,7 @@ router.put('/:articleId/read', requireAuth, async (req, res) => {
 router.put('/:articleId/unread', requireAuth, async (req, res) => {
   try {
     const { articleId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     await ArticleService.markAsUnread(articleId, userId);
 
@@ -105,7 +105,7 @@ router.put('/:articleId/unread', requireAuth, async (req, res) => {
 router.post('/:articleId/bookmark', requireAuth, async (req, res) => {
   try {
     const { articleId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     await ArticleService.addBookmark(articleId, userId);
 
@@ -127,7 +127,7 @@ router.post('/:articleId/bookmark', requireAuth, async (req, res) => {
 router.delete('/:articleId/bookmark', requireAuth, async (req, res) => {
   try {
     const { articleId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     await ArticleService.removeBookmark(articleId, userId);
 
@@ -148,7 +148,7 @@ router.delete('/:articleId/bookmark', requireAuth, async (req, res) => {
 router.get('/bookmarks/list', requireAuth, async (req, res) => {
   try {
     const query = GetArticlesQuerySchema.parse(req.query);
-    const userId = req.user.id;
+    const userId = req.user!.id;
 
     const result = await ArticleService.getUserBookmarks(
       userId,

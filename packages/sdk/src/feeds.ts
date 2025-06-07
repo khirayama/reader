@@ -99,4 +99,22 @@ export class FeedsService {
     
     throw new Error(response.error || '全フィードの更新に失敗しました');
   }
+
+  // Compatibility aliases
+  async getAll(query?: GetFeedsQuery): Promise<Feed[]> {
+    const response = await this.getFeeds(query);
+    return response.feeds;
+  }
+
+  async create(data: CreateFeedRequest): Promise<Feed> {
+    return this.createFeed(data);
+  }
+
+  async delete(feedId: string): Promise<void> {
+    return this.deleteFeed(feedId);
+  }
+
+  async refresh(feedId: string): Promise<Feed> {
+    return this.refreshFeed(feedId);
+  }
 }

@@ -5,7 +5,7 @@ import { testPrisma } from './prisma';
 // テスト用データベースセットアップ
 beforeAll(async () => {
   // テスト用環境変数設定
-  process.env.NODE_ENV = 'test';
+  (process.env as any).NODE_ENV = 'test';
   process.env.JWT_SECRET = 'test-jwt-secret-key';
 
   console.log('Setting up test database...');

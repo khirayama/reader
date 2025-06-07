@@ -20,6 +20,7 @@ export interface Pagination {
 export interface User {
   id: string;
   email: string;
+  name: string;
   theme: 'SYSTEM' | 'LIGHT' | 'DARK';
   language: 'JA' | 'EN';
   createdAt: string;
@@ -34,6 +35,7 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password: string;
+  name: string;
 }
 
 export interface LoginResponse {
@@ -47,7 +49,7 @@ export interface ForgotPasswordRequest {
 
 export interface ResetPasswordRequest {
   token: string;
-  newPassword: string;
+  password: string;
 }
 
 export interface ChangePasswordRequest {
@@ -65,6 +67,12 @@ export interface UpdateSettingsRequest {
   language?: 'JA' | 'EN';
 }
 
+export interface UpdateUserRequest {
+  name?: string;
+  theme?: 'SYSTEM' | 'LIGHT' | 'DARK';
+  language?: 'JA' | 'EN';
+}
+
 // フィード関連型
 export interface Feed {
   id: string;
@@ -74,6 +82,7 @@ export interface Feed {
   description?: string;
   favicon?: string;
   userId: string;
+  isActive: boolean;
   lastFetchedAt?: string;
   createdAt: string;
   updatedAt: string;

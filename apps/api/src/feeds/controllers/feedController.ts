@@ -17,7 +17,7 @@ export class FeedController {
 
       const feed = await FeedService.createFeed(userId, validatedData);
 
-      res.status(201).json({
+      return res.status(201).json({
         message: 'フィードが作成されました',
         feed,
       });
@@ -37,7 +37,7 @@ export class FeedController {
         });
       }
 
-      res.status(500).json({
+      return res.status(500).json({
         error: 'フィードの作成中にエラーが発生しました',
       });
     }
@@ -56,7 +56,7 @@ export class FeedController {
 
       const result = await FeedService.getUserFeeds(userId, query);
 
-      res.json(result);
+      return res.json(result);
     } catch (error: any) {
       console.error('Get feeds error:', error);
 
@@ -67,7 +67,7 @@ export class FeedController {
         });
       }
 
-      res.status(500).json({
+      return res.status(500).json({
         error: 'フィード一覧の取得中にエラーが発生しました',
       });
     }
@@ -91,11 +91,11 @@ export class FeedController {
         });
       }
 
-      res.json(feed);
+      return res.json(feed);
     } catch (error: any) {
       console.error('Get feed by ID error:', error);
 
-      res.status(500).json({
+      return res.status(500).json({
         error: 'フィード詳細の取得中にエラーが発生しました',
       });
     }
@@ -116,7 +116,7 @@ export class FeedController {
 
       const updatedFeed = await FeedService.updateFeed(feedId, userId, validatedData);
 
-      res.json({
+      return res.json({
         message: 'フィードが更新されました',
         feed: updatedFeed,
       });
@@ -136,7 +136,7 @@ export class FeedController {
         });
       }
 
-      res.status(500).json({
+      return res.status(500).json({
         error: 'フィードの更新中にエラーが発生しました',
       });
     }
@@ -154,7 +154,7 @@ export class FeedController {
 
       await FeedService.deleteFeed(feedId, userId);
 
-      res.json({
+      return res.json({
         message: 'フィードが削除されました',
       });
     } catch (error: any) {
@@ -166,7 +166,7 @@ export class FeedController {
         });
       }
 
-      res.status(500).json({
+      return res.status(500).json({
         error: 'フィードの削除中にエラーが発生しました',
       });
     }
@@ -186,7 +186,7 @@ export class FeedController {
 
       const result = await FeedService.getFeedArticles(feedId, userId, page, limit);
 
-      res.json(result);
+      return res.json(result);
     } catch (error: any) {
       console.error('Get feed articles error:', error);
 
@@ -196,7 +196,7 @@ export class FeedController {
         });
       }
 
-      res.status(500).json({
+      return res.status(500).json({
         error: 'フィード記事の取得中にエラーが発生しました',
       });
     }
@@ -216,11 +216,11 @@ export class FeedController {
 
       const result = await FeedService.getAllUserArticles(userId, page, limit, search);
 
-      res.json(result);
+      return res.json(result);
     } catch (error: any) {
       console.error('Get all articles error:', error);
 
-      res.status(500).json({
+      return res.status(500).json({
         error: '記事一覧の取得中にエラーが発生しました',
       });
     }
@@ -238,7 +238,7 @@ export class FeedController {
 
       const updatedFeed = await FeedService.refreshFeed(feedId, userId);
 
-      res.json({
+      return res.json({
         success: true,
         message: 'フィードを更新しました',
         feed: updatedFeed,
@@ -253,7 +253,7 @@ export class FeedController {
         });
       }
 
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: 'フィードの更新中にエラーが発生しました',
       });
@@ -270,7 +270,7 @@ export class FeedController {
 
       const result = await FeedService.refreshAllUserFeeds(userId);
 
-      res.json({
+      return res.json({
         success: true,
         message: `${result.success}個のフィードを更新しました`,
         result,
@@ -278,7 +278,7 @@ export class FeedController {
     } catch (error: any) {
       console.error('Refresh all feeds error:', error);
 
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: '全フィードの更新中にエラーが発生しました',
       });

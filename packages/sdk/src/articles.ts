@@ -76,4 +76,9 @@ export class ArticlesService {
     
     throw new Error(response.error || 'ブックマーク一覧の取得に失敗しました');
   }
+
+  // Compatibility alias
+  async getAll(query?: GetArticlesQuery): Promise<ArticlesResponse> {
+    return this.getArticles(query);
+  }
 }

@@ -4,6 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 必ず日本語で回答してください。
 毎回、docs配下に必要な変更を適用してください。
+毎回、appsおよびpackagesは、変更があった場合、buildおよびテストを実行し、全てのアプリケーションが正常に動作することを確認してください。
 
 ## Project Overview
 

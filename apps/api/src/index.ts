@@ -90,7 +90,7 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
   }
 
   // その他のエラー
-  res.status(500).json({
+  return res.status(500).json({
     error: 'サーバーエラーが発生しました',
     details: process.env.NODE_ENV === 'development' ? error.message : undefined,
   });

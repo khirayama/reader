@@ -30,6 +30,67 @@ export interface LoginResponse {
   token: string
 }
 
+export interface Article {
+  id: string
+  title: string
+  url: string
+  description?: string
+  publishedAt: string
+  feedId: string
+  createdAt: string
+  updatedAt: string
+  feed?: {
+    id: string
+    title: string
+    favicon?: string
+  }
+  isRead?: boolean
+  readAt?: string
+  isBookmarked?: boolean
+  bookmarkedAt?: string
+}
+
+export interface Feed {
+  id: string
+  url: string
+  title: string
+  description?: string
+  siteUrl?: string
+  favicon?: string
+  userId: string
+  lastFetchedAt: string
+  createdAt: string
+  updatedAt: string
+  _count?: {
+    articles: number
+  }
+}
+
+export interface Pagination {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
+}
+
+export interface ArticleListResponse {
+  success: boolean
+  data: {
+    articles: Article[]
+    pagination: Pagination
+  }
+}
+
+export interface FeedListResponse {
+  success: boolean
+  data: {
+    feeds: Feed[]
+    pagination: Pagination
+  }
+}
+
 
 // シンプルなHTTPクライアント
 class SimpleApiClient {
@@ -148,38 +209,41 @@ class AuthService {
 class FeedsService {
   constructor(private client: SimpleApiClient) {}
 
-  async getFeeds(query?: { page?: number; limit?: number; search?: string }) {
-    // ダミーレスポンス - 実際のAPIが実装されるまで
-    return {
-      feeds: [],
-      pagination: { page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false },
-    }
+  async getFeeds(query?: { page?: number; limit?: number; search?: string }): Promise<{ feeds: Feed[], pagination: Pagination }> {
+    const params = new URLSearchParams()
+    if (query?.page) params.append('page', query.page.toString())
+    if (query?.limit) params.append('limit', query.limit.toString())
+    if (query?.search) params.append('search', query.search)
+    
+    const path = `/api/feeds${params.toString() ? '?' + params.toString() : ''}`
+    const response = await this.client.get<FeedListResponse>(path)
+    return response.data || response as any
   }
 
   async createFeed(data: { url: string }) {
-    // ダミー実装
-    console.log('Creating feed:', data)
+    return await this.client.post('/api/feeds', data)
   }
 
   async deleteFeed(feedId: string) {
-    // ダミー実装
-    console.log('Deleting feed:', feedId)
+    return await this.client.delete(`/api/feeds/${feedId}`)
   }
 
   async refreshAllFeeds() {
-    // ダミー実装
-    console.log('Refreshing all feeds')
+    return await this.client.post('/api/feeds/refresh-all', {})
   }
 
   async getFeedArticles(
     feedId: string,
     query?: { page?: number; limit?: number; search?: string }
-  ) {
-    // ダミーレスポンス
-    return {
-      articles: [],
-      pagination: { page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false },
-    }
+  ): Promise<{ articles: Article[], pagination: Pagination }> {
+    const params = new URLSearchParams()
+    if (query?.page) params.append('page', query.page.toString())
+    if (query?.limit) params.append('limit', query.limit.toString())
+    if (query?.search) params.append('search', query.search)
+    
+    const path = `/api/feeds/${feedId}/articles${params.toString() ? '?' + params.toString() : ''}`
+    const response = await this.client.get<ArticleListResponse>(path)
+    return response.data || response as any
   }
 }
 
@@ -187,27 +251,44 @@ class FeedsService {
 class ArticlesService {
   constructor(private client: SimpleApiClient) {}
 
-  async getArticles(query?: { page?: number; limit?: number; search?: string }) {
-    // ダミーレスポンス
-    return {
-      articles: [],
-      pagination: { page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false },
-    }
+  async getArticles(query?: { page?: number; limit?: number; search?: string }): Promise<{ articles: Article[], pagination: Pagination }> {
+    const params = new URLSearchParams()
+    if (query?.page) params.append('page', query.page.toString())
+    if (query?.limit) params.append('limit', query.limit.toString())
+    if (query?.search) params.append('search', query.search)
+    
+    const path = `/api/articles${params.toString() ? '?' + params.toString() : ''}`
+    const response = await this.client.get<ArticleListResponse>(path)
+    return response.data || response as any
+  }
+
+  async getArticleById(articleId: string) {
+    return await this.client.get(`/api/articles/${articleId}`)
   }
 
   async markAsRead(articleId: string) {
-    // ダミー実装
-    console.log('Marking as read:', articleId)
+    return await this.client.put(`/api/articles/${articleId}/read`, {})
+  }
+
+  async markAsUnread(articleId: string) {
+    return await this.client.put(`/api/articles/${articleId}/unread`, {})
   }
 
   async addBookmark(articleId: string) {
-    // ダミー実装
-    console.log('Adding bookmark:', articleId)
+    return await this.client.post(`/api/articles/${articleId}/bookmark`, {})
   }
 
   async removeBookmark(articleId: string) {
-    // ダミー実装
-    console.log('Removing bookmark:', articleId)
+    return await this.client.delete(`/api/articles/${articleId}/bookmark`)
+  }
+
+  async getBookmarks(query?: { page?: number; limit?: number }) {
+    const params = new URLSearchParams()
+    if (query?.page) params.append('page', query.page.toString())
+    if (query?.limit) params.append('limit', query.limit.toString())
+    
+    const path = `/api/articles/bookmarks/list${params.toString() ? '?' + params.toString() : ''}`
+    return await this.client.get(path)
   }
 }
 

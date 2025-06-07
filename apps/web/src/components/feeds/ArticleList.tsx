@@ -2,26 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { sdk } from '@/lib/sdk'
-// Article型を直接定義
-interface Article {
-  id: string
-  title: string
-  url: string
-  description?: string
-  publishedAt: string
-  feedId: string
-  createdAt: string
-  updatedAt: string
-  feed?: {
-    id: string
-    title: string
-    favicon?: string
-  }
-  isRead?: boolean
-  readAt?: string
-  isBookmarked?: boolean
-  bookmarkedAt?: string
-}
+import type { Article } from '@/lib/rss-sdk'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'

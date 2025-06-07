@@ -28,6 +28,7 @@ export class OpmlService {
         'Content-Type': 'multipart/form-data',
       },
       data: formData,
+      timeout: 5 * 60 * 1000, // OPML処理専用の5分タイムアウト
     });
     return response.data;
   }

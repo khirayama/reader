@@ -6,7 +6,7 @@ export const TOKEN_STORAGE_KEY = 'rss-reader-token'
 // SDKインスタンスを作成
 export const sdk = createRSSReaderSDK({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
-  timeout: 10000,
+  timeout: 5 * 60 * 1000, // 5分（OPML処理対応）
 })
 
 // トークンをローカルストレージから読み込み

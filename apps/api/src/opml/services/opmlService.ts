@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma";
 import { parseStringPromise, Builder } from "xml2js";
 import type { Feed } from "@prisma/client";
-import { feedService } from "../../feeds/services/feedService";
+import { FeedService } from "../../feeds/services/feedService";
 
 interface OpmlOutline {
   $?: {
@@ -16,14 +16,14 @@ interface OpmlOutline {
 
 interface OpmlDocument {
   opml: {
-    head: {
-      title?: string;
-      dateCreated?: string;
-      dateModified?: string;
-    };
-    body: {
+    head: Array<{
+      title?: string[];
+      dateCreated?: string[];
+      dateModified?: string[];
+    }>;
+    body: Array<{
       outline: OpmlOutline[];
-    };
+    }>;
   };
 }
 
@@ -46,22 +46,26 @@ export const opmlService = {
           $: {
             version: "2.0",
           },
-          head: {
-            title: "RSS Reader Export",
-            dateCreated: now,
-            dateModified: now,
-          },
-          body: {
-            outline: feeds.map((feed: Feed) => ({
-              $: {
-                text: feed.title,
-                title: feed.title,
-                type: "rss",
-                xmlUrl: feed.url,
-                htmlUrl: feed.siteUrl || feed.url,
-              },
-            })),
-          },
+          head: [
+            {
+              title: ["RSS Reader Export"],
+              dateCreated: [now],
+              dateModified: [now],
+            }
+          ],
+          body: [
+            {
+              outline: feeds.map((feed: Feed) => ({
+                $: {
+                  text: feed.title,
+                  title: feed.title,
+                  type: "rss",
+                  xmlUrl: feed.url,
+                  htmlUrl: feed.siteUrl || feed.url,
+                },
+              })),
+            }
+          ],
         },
       };
 
@@ -80,42 +84,84 @@ export const opmlService = {
     try {
       const result: OpmlDocument = await parseStringPromise(xmlContent);
       
-      if (!result.opml || !result.opml.body) {
+      if (!result.opml || !result.opml.body || !Array.isArray(result.opml.body) || result.opml.body.length === 0) {
         throw new Error("Invalid OPML structure");
       }
       
-      if (!result.opml.body.outline) {
-        // OPMLに含まれるアウトラインがない場合は空の配列として扱う
-        result.opml.body.outline = [];
+      const bodyElement = result.opml.body[0];
+      if (!bodyElement.outline) {
+        bodyElement.outline = [];
       }
 
-      const outlines = this.extractOutlines(result.opml.body.outline);
+      const outlines = this.extractOutlines(bodyElement.outline);
+      const validOutlines = outlines.filter(outline => outline.$ && outline.$.xmlUrl);
+      
+      if (validOutlines.length === 0) {
+        return { imported: 0, failed: 0, errors: [] };
+      }
+
+      // 並列で既存フィードをチェック
+      const existingFeeds = await prisma.feed.findMany({
+        where: {
+          userId,
+          url: { in: validOutlines.map(outline => outline.$!.xmlUrl!) },
+        },
+        select: { url: true },
+      });
+      
+      const existingUrls = new Set(existingFeeds.map((feed: { url: string }) => feed.url));
+      const newOutlines = validOutlines.filter(outline => !existingUrls.has(outline.$!.xmlUrl!));
+      
+      if (newOutlines.length === 0) {
+        return { imported: 0, failed: 0, errors: [] };
+      }
+
+      // 並列でフィード作成を実行（制限付き並列処理）
+      const BATCH_SIZE = 5; // 同時実行数を制限
       const errors: string[] = [];
       let imported = 0;
       let failed = 0;
 
-      for (const outline of outlines) {
-        if (outline.$ && outline.$.xmlUrl) {
-          try {
-            const existingFeed = await prisma.feed.findFirst({
-              where: {
-                userId,
-                url: outline.$.xmlUrl,
-              },
-            });
-
-            if (!existingFeed) {
-              await feedService.createFeed(userId, {
-                url: outline.$.xmlUrl,
-                title: outline.$.title || outline.$.text,
+      for (let i = 0; i < newOutlines.length; i += BATCH_SIZE) {
+        const batch = newOutlines.slice(i, i + BATCH_SIZE);
+        
+        const batchResults = await Promise.allSettled(
+          batch.map(async (outline) => {
+            try {
+              await FeedService.createFeed(userId, {
+                url: outline.$!.xmlUrl!,
+                title: outline.$!.title || outline.$!.text,
               });
-              imported++;
+              return { success: true, url: outline.$!.xmlUrl! };
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : "Unknown error";
+              return { 
+                success: false, 
+                url: outline.$!.xmlUrl!, 
+                error: errorMessage 
+              };
             }
-          } catch (error) {
+          })
+        );
+        
+        // バッチ結果を集計
+        for (const result of batchResults) {
+          if (result.status === 'fulfilled') {
+            if (result.value.success) {
+              imported++;
+            } else {
+              failed++;
+              errors.push(`Failed to import ${result.value.url}: ${result.value.error}`);
+            }
+          } else {
             failed++;
-            const errorMessage = error instanceof Error ? error.message : "Unknown error";
-            errors.push(`Failed to import ${outline.$.xmlUrl}: ${errorMessage}`);
+            errors.push(`Failed to process batch: ${result.reason}`);
           }
+        }
+        
+        // バッチ間で少し待機してサーバー負荷を軽減
+        if (i + BATCH_SIZE < newOutlines.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
 

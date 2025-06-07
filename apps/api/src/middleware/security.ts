@@ -99,6 +99,33 @@ export const requestSizeLimit = {
   urlencoded: { limit: '1mb', extended: true },
 };
 
+// OPML操作用の緩いレート制限（大量フィード処理対応）
+export const opmlLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10分
+  max: 5, // OPML操作上限
+  message: {
+    error: 'OPML操作回数が多すぎます',
+    details: '10分後に再試行してください',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipIfTest,
+});
+
+// OPML用のタイムアウト設定ミドルウェア
+export const opmlTimeout = (req: Request, res: Response, next: Function) => {
+  // レスポンスタイムアウトを5分に設定
+  res.setTimeout(5 * 60 * 1000, () => {
+    if (!res.headersSent) {
+      res.status(408).json({
+        error: 'リクエストがタイムアウトしました',
+        details: 'OPML処理が完了しませんでした。ファイルサイズを確認して再試行してください。',
+      });
+    }
+  });
+  next();
+};
+
 // API Key検証（将来の拡張用）
 export const apiKeyAuth = (req: Request, res: Response, next: Function) => {
   const apiKey = req.headers['x-api-key'];

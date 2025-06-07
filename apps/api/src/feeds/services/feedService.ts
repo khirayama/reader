@@ -281,16 +281,44 @@ export class FeedService {
         errors: [] as string[],
       };
 
-      for (const feed of feeds) {
-        try {
-          console.log(`[FeedService] フィード更新中: ${feed.title} (${feed.id})`);
-          await this.refreshFeed(feed.id, userId);
-          results.success++;
-        } catch (error) {
-          results.failed++;
-          const errorMessage = error instanceof Error ? error.message : '不明なエラー';
-          results.errors.push(`${feed.title}: ${errorMessage}`);
-          console.error(`[FeedService] フィード更新失敗 ${feed.id} (${feed.title}):`, error);
+      // 並列でフィード更新を実行（制限付き並列処理）
+      const BATCH_SIZE = 3; // 同時実行数を制限（RSS取得は重い処理のため少なめ）
+      
+      for (let i = 0; i < feeds.length; i += BATCH_SIZE) {
+        const batch = feeds.slice(i, i + BATCH_SIZE);
+        
+        const batchResults = await Promise.allSettled(
+          batch.map(async (feed: { id: string; title: string; url: string }) => {
+            try {
+              console.log(`[FeedService] フィード更新中: ${feed.title} (${feed.id})`);
+              await this.refreshFeed(feed.id, userId);
+              return { success: true, feed };
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+              console.error(`[FeedService] フィード更新失敗 ${feed.id} (${feed.title}):`, error);
+              return { success: false, feed, error: errorMessage };
+            }
+          })
+        );
+        
+        // バッチ結果を集計
+        for (const result of batchResults) {
+          if (result.status === 'fulfilled') {
+            if (result.value.success) {
+              results.success++;
+            } else {
+              results.failed++;
+              results.errors.push(`${result.value.feed.title}: ${result.value.error}`);
+            }
+          } else {
+            results.failed++;
+            results.errors.push(`バッチ処理エラー: ${result.reason}`);
+          }
+        }
+        
+        // バッチ間で少し待機してサーバー負荷を軽減
+        if (i + BATCH_SIZE < feeds.length) {
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
 

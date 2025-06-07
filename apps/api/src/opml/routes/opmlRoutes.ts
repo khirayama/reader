@@ -4,6 +4,7 @@ import { requireAuth } from "../../auth/middleware/requireAuth";
 import { opmlController } from "../controllers/opmlController";
 import { validate } from "../../middleware/validate";
 import { exportOpmlSchema, importOpmlSchema } from "../validators/opmlSchemas";
+import { opmlLimiter, opmlTimeout } from "../../middleware/security";
 
 const router = Router();
 const upload = multer({ 
@@ -23,6 +24,8 @@ router.get(
 router.post(
   "/import",
   requireAuth,
+  opmlLimiter,
+  opmlTimeout,
   upload.single("file"),
   opmlController.importOpml
 );

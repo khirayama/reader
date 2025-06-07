@@ -117,6 +117,11 @@ if (process.env.NODE_ENV !== 'test') {
     console.log(`🛡️  Admin API: http://localhost:${PORT}/api/admin`);
   });
 
+  // サーバータイムアウト設定（大きなOPMLファイルのインポートに対応）
+  server.timeout = 5 * 60 * 1000; // 5分
+  server.keepAliveTimeout = 5 * 60 * 1000; // 5分
+  server.headersTimeout = 5 * 60 * 1000 + 1000; // 5分+1秒（keepAliveTimeoutより長く）
+
   // 優雅なシャットダウン
   process.on('SIGTERM', () => {
     console.log('SIGTERM received, shutting down gracefully');

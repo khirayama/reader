@@ -359,7 +359,7 @@ export class FeedService {
         where: { feedId },
         skip,
         take: limit,
-        orderBy: { publishedAt: 'desc' },
+        orderBy: { createdAt: 'desc' },
       }),
       prisma.article.count({ where: { feedId } }),
     ]);
@@ -401,7 +401,7 @@ export class FeedService {
         where,
         skip,
         take: limit,
-        orderBy: { publishedAt: 'desc' },
+        orderBy: { createdAt: 'desc' },
         include: {
           feed: {
             select: {

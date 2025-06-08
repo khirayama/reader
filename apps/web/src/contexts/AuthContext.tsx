@@ -19,6 +19,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   register: (email: string, password: string) => Promise<void>
   logout: () => void
+  updateUser: (user: User) => void
   isAuthenticated: boolean
 }
 
@@ -37,6 +38,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const profile = await sdk.auth.getProfile()
           setUser(profile)
+          
+          // テーマを適用
+          applyTheme(profile.theme)
         } catch (error) {
           // トークンが無効な場合はクリア
           clearToken()
@@ -47,6 +51,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initAuth()
   }, [])
+
+  // テーマを適用する関数
+  const applyTheme = (theme: 'SYSTEM' | 'LIGHT' | 'DARK') => {
+    if (typeof window === 'undefined') return
+
+    if (theme === 'DARK' || (theme === 'SYSTEM' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }
 
   // トークン期限切れイベントのリスナー
   useEffect(() => {
@@ -89,12 +104,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     sdk.auth.logout()
   }
 
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser)
+    // テーマが更新された場合は適用
+    applyTheme(updatedUser.theme)
+  }
+
   const value = {
     user,
     loading,
     login,
     register,
     logout,
+    updateUser,
     isAuthenticated,
   }
 

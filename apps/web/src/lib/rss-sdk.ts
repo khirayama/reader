@@ -207,8 +207,8 @@ class SimpleApiClient {
     return this.request<T>('PUT', path, data)
   }
 
-  async delete<T>(path: string): Promise<T> {
-    return this.request<T>('DELETE', path)
+  async delete<T>(path: string, data?: unknown): Promise<T> {
+    return this.request<T>('DELETE', path, data)
   }
 
   async postFormData<T>(path: string, data: FormData): Promise<T> {
@@ -242,6 +242,22 @@ class AuthService {
 
   async resetPassword(data: { token: string; password: string }): Promise<{ message: string }> {
     return await this.client.post<{ message: string }>('/api/auth/reset-password', data)
+  }
+
+  async changePassword(data: { currentPassword: string; newPassword: string }): Promise<{ message: string }> {
+    return await this.client.put<{ message: string }>('/api/auth/password', data)
+  }
+
+  async changeEmail(data: { email: string; password: string }): Promise<{ user: User }> {
+    return await this.client.put<{ user: User }>('/api/auth/email', data)
+  }
+
+  async updateSettings(data: { theme?: 'SYSTEM' | 'LIGHT' | 'DARK'; language?: 'JA' | 'EN' }): Promise<{ user: User }> {
+    return await this.client.put<{ user: User }>('/api/auth/settings', data)
+  }
+
+  async deleteAccount(data: { password: string }): Promise<{ message: string }> {
+    return await this.client.delete<{ message: string }>('/api/auth/account', data)
   }
 
   logout(): void {

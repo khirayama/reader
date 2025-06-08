@@ -13,6 +13,8 @@ interface AuthContextType {
   resetPassword: (token: string, password: string) => Promise<void>;
   updateProfile: (name: string) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  changeEmail: (newEmail: string, password: string) => Promise<void>;
+  updateSettings: (theme?: 'SYSTEM' | 'LIGHT' | 'DARK', language?: 'JA' | 'EN') => Promise<void>;
   deleteAccount: () => Promise<void>;
 }
 
@@ -109,6 +111,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await sdk.auth.changePassword({ currentPassword, newPassword });
   };
 
+  const changeEmail = async (newEmail: string, password: string) => {
+    await sdk.auth.changeEmail({ newEmail, password });
+    await loadUserProfile(); // メールアドレスが更新されたらプロフィールを再読み込み
+  };
+
+  const updateSettings = async (theme?: 'SYSTEM' | 'LIGHT' | 'DARK', language?: 'JA' | 'EN') => {
+    const updatedUser = await sdk.auth.updateSettings({ theme, language });
+    setUser(updatedUser);
+  };
+
   const deleteAccount = async () => {
     await sdk.auth.deleteAccount();
     await logout();
@@ -124,6 +136,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     resetPassword,
     updateProfile,
     changePassword,
+    changeEmail,
+    updateSettings,
     deleteAccount,
   };
 

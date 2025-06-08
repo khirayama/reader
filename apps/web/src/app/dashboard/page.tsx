@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { FeedSidebar } from '@/components/feeds/FeedSidebar'
 import { ArticleList } from '@/components/feeds/ArticleList'
+import Link from 'next/link'
 
 export default function DashboardPage() {
   const { user, logout } = useAuth()
@@ -42,6 +43,11 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center space-x-3">
             <span className="hidden sm:block text-sm text-gray-600 dark:text-gray-300">{user?.email}</span>
+            <Link href="/settings">
+              <Button variant="outline" size="sm" className="text-sm">
+                設定
+              </Button>
+            </Link>
             <Button variant="outline" size="sm" onClick={logout} className="text-sm">
               ログアウト
             </Button>

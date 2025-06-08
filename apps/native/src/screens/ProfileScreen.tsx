@@ -22,18 +22,29 @@ const passwordSchema = z.object({
   path: ['confirmPassword'],
 });
 
+const emailSchema = z.object({
+  newEmail: z.string().email('有効なメールアドレスを入力してください'),
+  password: z.string().min(1, 'パスワードを入力してください'),
+});
+
 type ProfileFormData = z.infer<typeof profileSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
+type EmailFormData = z.infer<typeof emailSchema>;
 
 interface ProfileScreenProps {
   navigation: AppTabNavigationProp;
 }
 
 export function ProfileScreen({ navigation }: ProfileScreenProps) {
-  const { user, updateProfile, changePassword, deleteAccount, logout } = useAuth();
+  const { user, updateProfile, changePassword, changeEmail, updateSettings, deleteAccount, logout } = useAuth();
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
+  const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState<'SYSTEM' | 'LIGHT' | 'DARK'>(user?.theme || 'SYSTEM');
+  const [selectedLanguage, setSelectedLanguage] = useState<'JA' | 'EN'>(user?.language || 'JA');
 
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -44,6 +55,10 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
 
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
+  });
+
+  const emailForm = useForm<EmailFormData>({
+    resolver: zodResolver(emailSchema),
   });
 
   const handleUpdateProfile = async (data: ProfileFormData) => {
@@ -69,6 +84,32 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
       Alert.alert('エラー', error instanceof Error ? error.message : 'パスワードの変更に失敗しました。');
     } finally {
       setIsChangingPassword(false);
+    }
+  };
+
+  const handleChangeEmail = async (data: EmailFormData) => {
+    try {
+      setIsChangingEmail(true);
+      await changeEmail(data.newEmail, data.password);
+      emailForm.reset();
+      setShowEmailForm(false);
+      Alert.alert('成功', 'メールアドレスを変更しました。');
+    } catch (error: unknown) {
+      Alert.alert('エラー', error instanceof Error ? error.message : 'メールアドレスの変更に失敗しました。');
+    } finally {
+      setIsChangingEmail(false);
+    }
+  };
+
+  const handleUpdateSettings = async () => {
+    try {
+      setIsUpdatingSettings(true);
+      await updateSettings(selectedTheme, selectedLanguage);
+      Alert.alert('成功', '設定を更新しました。');
+    } catch (error: unknown) {
+      Alert.alert('エラー', error instanceof Error ? error.message : '設定の更新に失敗しました。');
+    } finally {
+      setIsUpdatingSettings(false);
     }
   };
 
@@ -128,6 +169,123 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
           onPress={profileForm.handleSubmit(handleUpdateProfile)}
           disabled={isUpdatingProfile}
         />
+      </Card>
+
+      <Card>
+        <Text style={styles.sectionTitle}>アプリ設定</Text>
+        
+        <View style={styles.settingItem}>
+          <Text style={styles.infoLabel}>テーマ</Text>
+          <View style={styles.buttonGroup}>
+            <Button
+              title="システム"
+              onPress={() => setSelectedTheme('SYSTEM')}
+              variant={selectedTheme === 'SYSTEM' ? 'primary' : 'secondary'}
+              style={styles.themeButton}
+            />
+            <Button
+              title="ライト"
+              onPress={() => setSelectedTheme('LIGHT')}
+              variant={selectedTheme === 'LIGHT' ? 'primary' : 'secondary'}
+              style={styles.themeButton}
+            />
+            <Button
+              title="ダーク"
+              onPress={() => setSelectedTheme('DARK')}
+              variant={selectedTheme === 'DARK' ? 'primary' : 'secondary'}
+              style={styles.themeButton}
+            />
+          </View>
+        </View>
+
+        <View style={styles.settingItem}>
+          <Text style={styles.infoLabel}>言語</Text>
+          <View style={styles.buttonGroup}>
+            <Button
+              title="日本語"
+              onPress={() => setSelectedLanguage('JA')}
+              variant={selectedLanguage === 'JA' ? 'primary' : 'secondary'}
+              style={styles.languageButton}
+            />
+            <Button
+              title="English"
+              onPress={() => setSelectedLanguage('EN')}
+              variant={selectedLanguage === 'EN' ? 'primary' : 'secondary'}
+              style={styles.languageButton}
+            />
+          </View>
+        </View>
+
+        <Button
+          title={isUpdatingSettings ? '更新中...' : '設定を保存'}
+          onPress={handleUpdateSettings}
+          disabled={isUpdatingSettings}
+        />
+      </Card>
+
+      <Card>
+        <Text style={styles.sectionTitle}>メールアドレス変更</Text>
+        
+        {!showEmailForm ? (
+          <Button
+            title="メールアドレスを変更"
+            onPress={() => setShowEmailForm(true)}
+            variant="secondary"
+          />
+        ) : (
+          <>
+            <Controller
+              control={emailForm.control}
+              name="newEmail"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <Input
+                  label="新しいメールアドレス"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={emailForm.formState.errors.newEmail?.message}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  required
+                />
+              )}
+            />
+
+            <Controller
+              control={emailForm.control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <Input
+                  label="パスワード（確認用）"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={emailForm.formState.errors.password?.message}
+                  secureTextEntry
+                  required
+                />
+              )}
+            />
+
+            <View style={styles.passwordActions}>
+              <Button
+                title="キャンセル"
+                onPress={() => {
+                  setShowEmailForm(false);
+                  emailForm.reset();
+                }}
+                variant="secondary"
+                style={styles.actionButton}
+              />
+              <Button
+                title={isChangingEmail ? '変更中...' : 'メールアドレス変更'}
+                onPress={emailForm.handleSubmit(handleChangeEmail)}
+                disabled={isChangingEmail}
+                style={styles.actionButton}
+              />
+            </View>
+          </>
+        )}
       </Card>
 
       <Card>
@@ -276,5 +434,19 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     marginTop: 16,
+  },
+  settingItem: {
+    marginBottom: 20,
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    marginTop: 8,
+    gap: 8,
+  },
+  themeButton: {
+    flex: 1,
+  },
+  languageButton: {
+    flex: 1,
   },
 });

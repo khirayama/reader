@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import AuthNavigator from './navigation/AuthNavigator';
 import AppNavigator from './navigation/AppNavigator';
 import { useAuth } from './contexts/AuthContext';
+import './lib/i18n'; // i18nを初期化
 
 const Stack = createStackNavigator();
 

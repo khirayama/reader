@@ -22,7 +22,7 @@ export interface User {
   email: string;
   name: string;
   theme: 'SYSTEM' | 'LIGHT' | 'DARK';
-  language: 'JA' | 'EN';
+  language: 'ja' | 'en' | 'zh' | 'es' | 'JA' | 'EN'; // 後方互換性のため古い形式も含む
   createdAt: string;
   updatedAt: string;
 }
@@ -64,13 +64,13 @@ export interface ChangeEmailRequest {
 
 export interface UpdateSettingsRequest {
   theme?: 'SYSTEM' | 'LIGHT' | 'DARK';
-  language?: 'JA' | 'EN';
+  language?: 'ja' | 'en' | 'zh' | 'es' | 'JA' | 'EN'; // 後方互換性のため古い形式も含む
 }
 
 export interface UpdateUserRequest {
   name?: string;
   theme?: 'SYSTEM' | 'LIGHT' | 'DARK';
-  language?: 'JA' | 'EN';
+  language?: 'ja' | 'en' | 'zh' | 'es' | 'JA' | 'EN'; // 後方互換性のため古い形式も含む
 }
 
 // フィード関連型

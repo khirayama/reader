@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { AuthGuard } from '@/components/auth/AuthGuard'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
@@ -9,13 +9,15 @@ import { Card } from '@/components/ui/Card'
 import { sdk } from '@/lib/sdk'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 
 type Theme = 'SYSTEM' | 'LIGHT' | 'DARK'
-type Language = 'JA' | 'EN'
+type Language = 'ja' | 'en' | 'zh' | 'es'
 
 export default function SettingsPage() {
   const { user, updateUser, logout } = useAuth()
   const router = useRouter()
+  const { t, i18n } = useTranslation()
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -24,7 +26,22 @@ export default function SettingsPage() {
   const [theme, setTheme] = useState<Theme>(user?.theme || 'SYSTEM')
 
   // 言語設定の状態
-  const [language, setLanguage] = useState<Language>(user?.language || 'JA')
+  const [language, setLanguage] = useState<Language>(() => {
+    // 古い形式から新しい形式への変換
+    const userLang = user?.language
+    if (userLang === 'JA') return 'ja'
+    if (userLang === 'EN') return 'en'
+    if (userLang && ['ja', 'en', 'zh', 'es'].includes(userLang)) {
+      return userLang as Language
+    }
+    return (i18n.language as Language) || 'en'
+  })
+
+  useEffect(() => {
+    if (user?.language && user.language !== i18n.language) {
+      i18n.changeLanguage(user.language)
+    }
+  }, [user?.language, i18n])
 
   // パスワード変更の状態
   const [currentPassword, setCurrentPassword] = useState('')
@@ -48,11 +65,18 @@ export default function SettingsPage() {
     setMessage('')
 
     try {
-      const response = await sdk.auth.updateSettings({ theme, language })
+      const response = await sdk.auth.updateSettings({ 
+        theme, 
+        language: language as any // 型安全性は実行時にチェック
+      })
       updateUser(response.user)
-      setMessage('設定を更新しました')
+      // 言語が変更された場合はi18nも更新
+      if (language !== i18n.language) {
+        i18n.changeLanguage(language)
+      }
+      setMessage(t('settings.updateSuccess'))
     } catch (err: any) {
-      setError(err.message || '設定の更新に失敗しました')
+      setError(err.message || t('settings.updateError'))
     } finally {
       setLoading(false)
     }
@@ -63,7 +87,7 @@ export default function SettingsPage() {
     e.preventDefault()
     
     if (newPassword !== confirmPassword) {
-      setError('新しいパスワードが一致しません')
+      setError(t('auth.passwordMismatch', 'パスワードが一致しません'))
       return
     }
 
@@ -73,12 +97,12 @@ export default function SettingsPage() {
 
     try {
       await sdk.auth.changePassword({ currentPassword, newPassword })
-      setMessage('パスワードを変更しました')
+      setMessage(t('settings.passwordChangeSuccess', 'パスワードを変更しました'))
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
     } catch (err: any) {
-      setError(err.message || 'パスワードの変更に失敗しました')
+      setError(err.message || t('settings.passwordChangeError', 'パスワードの変更に失敗しました'))
     } finally {
       setLoading(false)
     }
@@ -95,11 +119,11 @@ export default function SettingsPage() {
     try {
       const response = await sdk.auth.changeEmail({ email: newEmail, password: emailPassword })
       updateUser(response.user)
-      setMessage('メールアドレスを変更しました')
+      setMessage(t('settings.emailChangeSuccess', 'メールアドレスを変更しました'))
       setNewEmail('')
       setEmailPassword('')
     } catch (err: any) {
-      setError(err.message || 'メールアドレスの変更に失敗しました')
+      setError(err.message || t('settings.emailChangeError', 'メールアドレスの変更に失敗しました'))
     } finally {
       setLoading(false)
     }
@@ -115,7 +139,7 @@ export default function SettingsPage() {
       logout()
       router.push('/')
     } catch (err: any) {
-      setError(err.message || 'アカウントの削除に失敗しました')
+      setError(err.message || t('settings.deleteAccountError', 'アカウントの削除に失敗しました'))
       setShowDeleteConfirm(false)
     } finally {
       setLoading(false)
@@ -128,10 +152,10 @@ export default function SettingsPage() {
         {/* ヘッダー */}
         <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">設定</h1>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{t('settings.settings')}</h1>
             <Link href="/dashboard">
               <Button variant="outline" size="sm">
-                ダッシュボードに戻る
+                {t('dashboard.dashboard')}
               </Button>
             </Link>
           </div>
@@ -152,34 +176,36 @@ export default function SettingsPage() {
 
           {/* 一般設定 */}
           <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">一般設定</h2>
+            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">{t('settings.general')}</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  テーマ
+                  {t('settings.theme')}
                 </label>
                 <select
                   value={theme}
                   onChange={(e) => setTheme(e.target.value as Theme)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="SYSTEM">システム設定に従う</option>
-                  <option value="LIGHT">ライト</option>
-                  <option value="DARK">ダーク</option>
+                  <option value="SYSTEM">{t('settings.system')}</option>
+                  <option value="LIGHT">{t('settings.light')}</option>
+                  <option value="DARK">{t('settings.dark')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  言語
+                  {t('settings.language')}
                 </label>
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value as Language)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="JA">日本語</option>
-                  <option value="EN">English</option>
+                  <option value="ja">{t('languages.ja')}</option>
+                  <option value="en">{t('languages.en')}</option>
+                  <option value="zh">{t('languages.zh')}</option>
+                  <option value="es">{t('languages.es')}</option>
                 </select>
               </div>
 
@@ -188,76 +214,76 @@ export default function SettingsPage() {
                 disabled={loading}
                 className="w-full sm:w-auto"
               >
-                設定を保存
+                {t('settings.saveChanges')}
               </Button>
             </div>
           </Card>
 
           {/* パスワード変更 */}
           <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">パスワード変更</h2>
+            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">{t('settings.changePassword')}</h2>
             <form onSubmit={handleChangePassword} className="space-y-4">
               <Input
                 type="password"
-                label="現在のパスワード"
+                label={t('settings.currentPassword')}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
               />
               <Input
                 type="password"
-                label="新しいパスワード"
+                label={t('auth.newPassword')}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
-                placeholder="8文字以上、大文字・小文字・数字を含む"
+                placeholder={t('auth.passwordMinLength')}
               />
               <Input
                 type="password"
-                label="新しいパスワード（確認）"
+                label={t('auth.confirmPassword')}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
               />
               <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-                パスワードを変更
+                {t('settings.changePassword')}
               </Button>
             </form>
           </Card>
 
           {/* メールアドレス変更 */}
           <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">メールアドレス変更</h2>
+            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">{t('settings.changeEmail')}</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              現在のメールアドレス: <strong>{user?.email}</strong>
+              {t('auth.email')}: <strong>{user?.email}</strong>
             </p>
             <form onSubmit={handleChangeEmail} className="space-y-4">
               <Input
                 type="email"
-                label="新しいメールアドレス"
+                label={t('settings.newEmail')}
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
                 required
               />
               <Input
                 type="password"
-                label="パスワード"
+                label={t('auth.password')}
                 value={emailPassword}
                 onChange={(e) => setEmailPassword(e.target.value)}
                 required
-                placeholder="確認のため現在のパスワードを入力"
+                placeholder={t('settings.currentPassword')}
               />
               <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-                メールアドレスを変更
+                {t('settings.changeEmail')}
               </Button>
             </form>
           </Card>
 
           {/* アカウント削除 */}
           <Card className="p-6 border-red-200 dark:border-red-800">
-            <h2 className="text-lg font-semibold mb-4 text-red-600 dark:text-red-400">危険な操作</h2>
+            <h2 className="text-lg font-semibold mb-4 text-red-600 dark:text-red-400">{t('settings.deleteAccount')}</h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              アカウントを削除すると、すべてのデータが完全に削除され、復元することはできません。
+              {t('settings.deleteAccountConfirm')}
             </p>
             {!showDeleteConfirm ? (
               <Button
@@ -265,19 +291,19 @@ export default function SettingsPage() {
                 onClick={() => setShowDeleteConfirm(true)}
                 className="w-full sm:w-auto"
               >
-                アカウントを削除
+                {t('settings.deleteAccountButton')}
               </Button>
             ) : (
               <div className="space-y-4">
                 <p className="text-sm font-medium text-red-600 dark:text-red-400">
-                  本当にアカウントを削除しますか？この操作は取り消せません。
+                  {t('settings.deleteAccountConfirm')}
                 </p>
                 <Input
                   type="password"
-                  label="パスワードを入力して確認"
+                  label={t('auth.password')}
                   value={deletePassword}
                   onChange={(e) => setDeletePassword(e.target.value)}
-                  placeholder="パスワード"
+                  placeholder={t('auth.password')}
                 />
                 <div className="flex space-x-3">
                   <Button
@@ -285,7 +311,7 @@ export default function SettingsPage() {
                     onClick={handleDeleteAccount}
                     disabled={loading || !deletePassword}
                   >
-                    削除を実行
+                    {t('common.delete')}
                   </Button>
                   <Button
                     variant="outline"
@@ -294,7 +320,7 @@ export default function SettingsPage() {
                       setDeletePassword('')
                     }}
                   >
-                    キャンセル
+                    {t('common.cancel')}
                   </Button>
                 </div>
               </div>

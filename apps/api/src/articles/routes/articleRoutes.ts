@@ -8,8 +8,8 @@ const router = Router();
 
 // 記事検索のクエリスキーマ
 const GetArticlesQuerySchema = z.object({
-  page: z.string().optional().transform(val => val ? parseInt(val, 10) : 1),
-  limit: z.string().optional().transform(val => val ? Math.min(parseInt(val, 10), 100) : 20),
+  page: z.string().optional().transform(val => val ? Number.parseInt(val, 10) : 1),
+  limit: z.string().optional().transform(val => val ? Math.min(Number.parseInt(val, 10), 100) : 20),
   search: z.string().optional(),
 });
 

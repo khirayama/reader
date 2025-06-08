@@ -212,29 +212,6 @@ export class FeedController {
     }
   }
 
-  // 全記事取得（ユーザーの全フィードから）
-  static async getAllArticles(req: AuthenticatedRequest, res: Response) {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ error: '認証が必要です' });
-      }
-
-      const page = Number.parseInt(req.query.page as string) || 1;
-      const limit = Number.parseInt(req.query.limit as string) || 20;
-      const search = req.query.search as string;
-
-      const result = await FeedService.getAllUserArticles(userId, page, limit, search);
-
-      return res.json(result);
-    } catch (error: any) {
-      console.error('Get all articles error:', error);
-
-      return res.status(500).json({
-        error: '記事一覧の取得中にエラーが発生しました',
-      });
-    }
-  }
 
   // フィード手動更新
   static async refreshFeed(req: AuthenticatedRequest, res: Response) {

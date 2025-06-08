@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 毎回、docs配下に必要な変更を適用してください。
 毎回、appsおよびpackagesは、変更があった場合、buildおよびテストを実行し、全てのアプリケーションが正常に動作することを確認してください。
 
+@docs/DEV.md
+@docs/FEATURES.md
+@docs/SPEC.md
+
 ## Project Overview
 
 RSS Reader - A modern monorepo RSS feed reader application with web and native (iOS/Android) apps. Built with TypeScript across all applications.

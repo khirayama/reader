@@ -108,7 +108,10 @@
     "emailChangeError": "Failed to change email",
     "deleteAccountError": "Failed to delete account",
     "deleteAccountConfirm": "Deleting your account will remove all your data. This action cannot be undone.",
-    "deleteAccountButton": "Delete Account"
+    "deleteAccountButton": "Delete Account",
+    "dataManagement": "Data Management",
+    "opmlDescription": "You can backup and import your feed lists.",
+    "opmlImportSuccess": "Feeds have been successfully imported"
   },
   "languages": {
     "ja": "日本語",

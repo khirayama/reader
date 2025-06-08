@@ -108,7 +108,10 @@
     "emailChangeError": "邮箱修改失败",
     "deleteAccountError": "账户删除失败",
     "deleteAccountConfirm": "删除您的账户将移除所有数据。此操作无法撤销。",
-    "deleteAccountButton": "删除账户"
+    "deleteAccountButton": "删除账户",
+    "dataManagement": "数据管理",
+    "opmlDescription": "您可以备份和导入您的订阅源列表。",
+    "opmlImportSuccess": "订阅源导入成功"
   },
   "languages": {
     "ja": "日本語",

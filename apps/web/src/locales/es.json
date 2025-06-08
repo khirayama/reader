@@ -108,7 +108,10 @@
     "emailChangeError": "Error al cambiar correo",
     "deleteAccountError": "Error al eliminar cuenta",
     "deleteAccountConfirm": "Eliminar tu cuenta removerá todos tus datos. Esta acción no se puede deshacer.",
-    "deleteAccountButton": "Eliminar Cuenta"
+    "deleteAccountButton": "Eliminar Cuenta",
+    "dataManagement": "Gestión de Datos",
+    "opmlDescription": "Puedes respaldar e importar tus listas de feeds.",
+    "opmlImportSuccess": "Los feeds han sido importados exitosamente"
   },
   "languages": {
     "ja": "日本語",

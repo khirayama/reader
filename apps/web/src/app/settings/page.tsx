@@ -10,6 +10,7 @@ import { sdk } from '@/lib/sdk'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
+import OpmlImportExport from '@/components/feeds/OpmlImportExport'
 
 type Theme = 'SYSTEM' | 'LIGHT' | 'DARK'
 type Language = 'ja' | 'en' | 'zh' | 'es'
@@ -277,6 +278,17 @@ export default function SettingsPage() {
                 {t('settings.changeEmail')}
               </Button>
             </form>
+          </Card>
+
+          {/* データ管理 */}
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">{t('settings.dataManagement')}</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              {t('settings.opmlDescription')}
+            </p>
+            <OpmlImportExport onImportComplete={() => {
+              setMessage(t('settings.opmlImportSuccess', 'フィードが正常にインポートされました'))
+            }} />
           </Card>
 
           {/* アカウント削除 */}

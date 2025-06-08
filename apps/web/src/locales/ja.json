@@ -108,7 +108,10 @@
     "emailChangeError": "メールアドレスの変更に失敗しました",
     "deleteAccountError": "アカウントの削除に失敗しました",
     "deleteAccountConfirm": "アカウントを削除すると、すべてのデータが失われます。この操作は取り消せません。",
-    "deleteAccountButton": "アカウントを削除する"
+    "deleteAccountButton": "アカウントを削除する",
+    "dataManagement": "データ管理",
+    "opmlDescription": "フィードリストのバックアップやインポートができます。",
+    "opmlImportSuccess": "フィードが正常にインポートされました"
   },
   "languages": {
     "ja": "日本語",

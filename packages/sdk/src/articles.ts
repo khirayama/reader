@@ -84,8 +84,20 @@ export class ArticlesService {
     throw new Error(response.error || 'ブックマーク一覧の取得に失敗しました');
   }
 
-  // Compatibility alias
+  // Compatibility aliases
   async getAll(query?: GetArticlesQuery): Promise<ArticlesResponse> {
     return this.getArticles(query);
+  }
+
+  async markRead(articleId: string): Promise<void> {
+    return this.markAsRead(articleId);
+  }
+
+  async bookmark(articleId: string): Promise<void> {
+    return this.addBookmark(articleId);
+  }
+
+  async unbookmark(articleId: string): Promise<void> {
+    return this.removeBookmark(articleId);
   }
 }

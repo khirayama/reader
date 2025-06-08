@@ -89,8 +89,11 @@ export function ArticlesScreen({ navigation, route }: ArticlesScreenProps) {
     }
   };
 
-  const handleOpenArticle = async (url: string) => {
+  const handleOpenArticle = async (url: string, articleId: string) => {
     try {
+      // 記事を既読にマーク
+      await handleMarkAsRead(articleId);
+      
       const supported = await Linking.canOpenURL(url);
       if (supported) {
         await Linking.openURL(url);
@@ -99,6 +102,45 @@ export function ArticlesScreen({ navigation, route }: ArticlesScreenProps) {
       }
     } catch (error) {
       Alert.alert('エラー', 'URLを開く際にエラーが発生しました。');
+    }
+  };
+
+  const handleMarkAsRead = async (articleId: string) => {
+    try {
+      await sdk.articles.markRead(articleId);
+      setArticles(prev => 
+        prev.map(article => 
+          article.id === articleId
+            ? { ...article, isRead: true, readAt: new Date().toISOString() }
+            : article
+        )
+      );
+    } catch (error: unknown) {
+      console.error('既読マークエラー:', error);
+    }
+  };
+
+  const handleToggleBookmark = async (articleId: string, isBookmarked: boolean) => {
+    try {
+      if (isBookmarked) {
+        await sdk.articles.unbookmark(articleId);
+      } else {
+        await sdk.articles.bookmark(articleId);
+      }
+
+      setArticles(prev => 
+        prev.map(article => 
+          article.id === articleId
+            ? {
+                ...article,
+                isBookmarked: !isBookmarked,
+                bookmarkedAt: !isBookmarked ? new Date().toISOString() : undefined,
+              }
+            : article
+        )
+      );
+    } catch (error: unknown) {
+      Alert.alert('エラー', 'ブックマーク操作に失敗しました。');
     }
   };
 
@@ -177,7 +219,13 @@ export function ArticlesScreen({ navigation, route }: ArticlesScreenProps) {
                 {article.feed?.title || 'フィード'} • {formatDate(article.publishedAt)}
               </Text>
               
-              <Text style={styles.articleTitle} numberOfLines={3}>
+              <Text 
+                style={[
+                  styles.articleTitle,
+                  article.isRead && styles.readArticleTitle
+                ]} 
+                numberOfLines={3}
+              >
                 {article.title}
               </Text>
 
@@ -187,13 +235,22 @@ export function ArticlesScreen({ navigation, route }: ArticlesScreenProps) {
                 </Text>
               )}
 
-              <Button
-                title="記事を読む"
-                onPress={() => handleOpenArticle(article.url)}
-                variant="outline"
-                size="small"
-                style={styles.readButton}
-              />
+              <View style={styles.articleActions}>
+                <Button
+                  title="記事を読む"
+                  onPress={() => handleOpenArticle(article.url, article.id)}
+                  variant="outline"
+                  size="small"
+                  style={styles.readButton}
+                />
+                <Button
+                  title={article.isBookmarked ? '★' : '☆'}
+                  onPress={() => handleToggleBookmark(article.id, !!article.isBookmarked)}
+                  variant="outline"
+                  size="small"
+                  style={styles.bookmarkButton}
+                />
+              </View>
             </View>
           ))
         )}
@@ -286,14 +343,26 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     lineHeight: 20,
   },
+  readArticleTitle: {
+    color: '#6B7280',
+    fontWeight: '400',
+  },
   articleContent: {
     fontSize: 14,
     color: '#4B5563',
     lineHeight: 18,
     marginBottom: 12,
   },
+  articleActions: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
   readButton: {
-    alignSelf: 'flex-start',
+    flex: 1,
+  },
+  bookmarkButton: {
+    paddingHorizontal: 12,
   },
   loadMoreContainer: {
     paddingVertical: 16,

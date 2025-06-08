@@ -80,8 +80,8 @@ export class FeedService {
       userId,
       ...(search && {
         OR: [
-          { title: { contains: search, mode: 'insensitive' as const } },
-          { description: { contains: search, mode: 'insensitive' as const } },
+          { title: { contains: search } },
+          { description: { contains: search } },
         ],
       }),
     };
@@ -91,7 +91,7 @@ export class FeedService {
         where,
         skip,
         take: limit,
-        orderBy: { publishedAt: 'desc' },
+        orderBy: { createdAt: 'desc' },
         include: {
           _count: {
             select: { articles: true },
@@ -390,8 +390,8 @@ export class FeedService {
       feed: { userId },
       ...(search && {
         OR: [
-          { title: { contains: search, mode: 'insensitive' as const } },
-          { description: { contains: search, mode: 'insensitive' as const } },
+          { title: { contains: search } },
+          { description: { contains: search } },
         ],
       }),
     };

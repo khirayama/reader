@@ -103,8 +103,9 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
         <Button
           title="パスワードを忘れた場合"
           onPress={() => navigation.navigate('ForgotPassword')}
-          variant="secondary"
+          variant="outline"
           style={styles.forgotButton}
+          disabled={isLoading}
         />
       </Card>
 
@@ -113,7 +114,8 @@ export function LoginScreen({ navigation }: LoginScreenProps) {
         <Button
           title="新規登録"
           onPress={() => navigation.navigate('Register')}
-          variant="secondary"
+          variant="outline"
+          disabled={isLoading}
         />
       </View>
     </ScrollView>

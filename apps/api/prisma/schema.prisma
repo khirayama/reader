@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -14,8 +14,8 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
-  theme     Theme    @default(SYSTEM)
-  language  Language @default(JA)
+  theme     String   @default("SYSTEM")
+  language  String   @default("JA")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -67,7 +67,7 @@ model Article {
   title       String
   url         String   @unique
   description String?
-  publishedAt DateTime @map("published_at")
+  publishedAt DateTime? @map("published_at")
   feedId      String   @map("feed_id")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -111,12 +111,6 @@ model ArticleBookmark {
   @@map("article_bookmarks")
 }
 
-enum Theme {
-  SYSTEM
-  LIGHT
-  DARK
-}
-
 model CronLog {
   id           String   @id @default(cuid())
   jobName      String   @map("job_name")
@@ -132,7 +126,3 @@ model CronLog {
   @@map("cron_logs")
 }
 
-enum Language {
-  JA
-  EN
-}

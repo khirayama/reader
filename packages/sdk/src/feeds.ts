@@ -7,6 +7,7 @@ import type {
   FeedsResponse,
   ArticlesResponse,
   GetArticlesQuery,
+  ApiResponse,
 } from './types';
 
 export class FeedsService {
@@ -14,7 +15,7 @@ export class FeedsService {
 
   // フィード作成
   async createFeed(data: CreateFeedRequest): Promise<Feed> {
-    const response = await this.client.post<any>('/api/feeds', data);
+    const response = await this.client.post<ApiResponse<Feed>>('/api/feeds', data);
     
     // FeedControllerはApiResponse形式で{success: true, data: result}を返す
     if (response.success && response.data) {
@@ -26,7 +27,7 @@ export class FeedsService {
 
   // フィード一覧取得
   async getFeeds(query?: GetFeedsQuery): Promise<FeedsResponse> {
-    const response = await this.client.get<any>('/api/feeds', query);
+    const response = await this.client.get<ApiResponse<FeedsResponse>>('/api/feeds', query);
     
     // FeedControllerはApiResponse形式で{success: true, data: result}を返す
     if (response.success && response.data) {
@@ -119,5 +120,9 @@ export class FeedsService {
 
   async refresh(feedId: string): Promise<Feed> {
     return this.refreshFeed(feedId);
+  }
+
+  async refreshAll(): Promise<{ success: number; errors: string[] }> {
+    return this.refreshAllFeeds();
   }
 }

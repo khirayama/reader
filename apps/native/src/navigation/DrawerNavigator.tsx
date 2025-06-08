@@ -1,11 +1,12 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import {
   createDrawerNavigator,
   DrawerContentScrollView,
   type DrawerContentComponentProps,
 } from '@react-navigation/drawer';
 import { useAuth } from '../contexts/AuthContext';
+import { useResponsive } from '../hooks/useResponsive';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { FeedsScreen } from '../screens/FeedsScreen';
 import { ArticlesScreen } from '../screens/ArticlesScreen';
@@ -73,30 +74,59 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 }
 
 export function DrawerNavigator() {
+  const { isTablet } = useResponsive();
+
+  // タブレット用の設定
+  const tabletScreenOptions = useMemo(() => ({
+    headerShown: true,
+    headerStyle: {
+      backgroundColor: '#FFFFFF',
+      borderBottomWidth: 1,
+      borderBottomColor: '#E5E7EB',
+      elevation: 0,
+      shadowOpacity: 0,
+    },
+    headerTintColor: '#1F2937',
+    headerTitleStyle: {
+      fontWeight: '600',
+    },
+    drawerStyle: {
+      width: 320,
+      backgroundColor: '#FFFFFF',
+    },
+    drawerType: 'permanent' as const,
+    drawerPosition: 'left' as const,
+    swipeEnabled: false,
+  }), []);
+
+  // モバイル用の設定
+  const mobileScreenOptions = useMemo(() => ({
+    headerShown: true,
+    headerStyle: {
+      backgroundColor: '#FFFFFF',
+      borderBottomWidth: 1,
+      borderBottomColor: '#E5E7EB',
+      elevation: 0,
+      shadowOpacity: 0,
+    },
+    headerTintColor: '#1F2937',
+    headerTitleStyle: {
+      fontWeight: '600',
+    },
+    drawerStyle: {
+      width: '100%' as const,
+      backgroundColor: '#FFFFFF',
+    },
+    drawerType: 'front' as const,
+    drawerPosition: 'left' as const,
+    swipeEnabled: true,
+  }), []);
+  
   return (
     <Drawer.Navigator
+      key={isTablet ? 'tablet' : 'mobile'} // 強制的にナビゲーターを再作成
       drawerContent={(props) => <CustomDrawerContent {...props} />}
-      screenOptions={{
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: '#FFFFFF',
-          borderBottomWidth: 1,
-          borderBottomColor: '#E5E7EB',
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-        headerTintColor: '#1F2937',
-        headerTitleStyle: {
-          fontWeight: '600',
-        },
-        drawerStyle: {
-          width: Platform.isPad ? 320 : '100%',
-          backgroundColor: '#FFFFFF',
-        },
-        drawerType: Platform.isPad ? 'permanent' : 'front',
-        drawerPosition: 'left',
-        swipeEnabled: !Platform.isPad,
-      }}
+      screenOptions={isTablet ? tabletScreenOptions : mobileScreenOptions}
     >
       <Drawer.Screen
         name="Dashboard"

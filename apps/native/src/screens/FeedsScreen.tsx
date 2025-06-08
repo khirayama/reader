@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Alert, Modal } from 'react-native';
 import { sdk } from '../lib/sdk';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
+import { OpmlManager } from '../components/feeds/OpmlManager';
 import type { AppTabNavigationProp } from '../types/navigation';
 import type { Feed } from '../../../../packages/sdk/src/types';
 
@@ -18,6 +19,7 @@ export function FeedsScreen({ navigation }: FeedsScreenProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newFeedUrl, setNewFeedUrl] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [showOpmlModal, setShowOpmlModal] = useState(false);
 
   useEffect(() => {
     loadFeeds();
@@ -106,20 +108,34 @@ export function FeedsScreen({ navigation }: FeedsScreenProps) {
     });
   };
 
+  const handleOpmlImportComplete = async () => {
+    setShowOpmlModal(false);
+    await loadFeeds(); // フィード一覧を再読み込み
+  };
+
   return (
     <View style={styles.container}>
       {/* ヘッダー */}
       <View style={styles.header}>
         <Text style={styles.title}>フィード</Text>
-        <Button
-          title={showAddForm ? 'キャンセル' : '追加'}
-          onPress={() => {
-            setShowAddForm(!showAddForm);
-            setNewFeedUrl('');
-          }}
-          variant={showAddForm ? 'outline' : 'primary'}
-          size="small"
-        />
+        <View style={styles.headerButtons}>
+          <Button
+            title="OPML"
+            onPress={() => setShowOpmlModal(true)}
+            variant="outline"
+            size="small"
+            style={styles.headerButton}
+          />
+          <Button
+            title={showAddForm ? 'キャンセル' : '追加'}
+            onPress={() => {
+              setShowAddForm(!showAddForm);
+              setNewFeedUrl('');
+            }}
+            variant={showAddForm ? 'outline' : 'primary'}
+            size="small"
+          />
+        </View>
       </View>
 
       {/* フィード追加フォーム */}
@@ -214,6 +230,29 @@ export function FeedsScreen({ navigation }: FeedsScreenProps) {
           ))
         )}
       </ScrollView>
+
+      {/* OPMLモーダル */}
+      <Modal
+        visible={showOpmlModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowOpmlModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>OPML管理</Text>
+            <Button
+              title="閉じる"
+              onPress={() => setShowOpmlModal(false)}
+              variant="outline"
+              size="small"
+            />
+          </View>
+          <ScrollView style={styles.modalContent}>
+            <OpmlManager onImportComplete={handleOpmlImportComplete} />
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -233,6 +272,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  headerButton: {
+    paddingHorizontal: 12,
   },
   title: {
     fontSize: 24,
@@ -316,6 +362,29 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionButton: {
+    flex: 1,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 60,
+    paddingBottom: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  modalContent: {
     flex: 1,
   },
 });

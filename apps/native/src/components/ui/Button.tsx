@@ -4,7 +4,7 @@ import { TouchableOpacity, Text, StyleSheet, type ViewStyle, type TextStyle } fr
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: 'primary' | 'secondary' | 'danger' | 'outline';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   style?: ViewStyle;
@@ -53,6 +53,11 @@ const styles = StyleSheet.create({
   danger: {
     backgroundColor: '#EF4444',
   },
+  outline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
   disabled: {
     opacity: 0.5,
   },
@@ -79,6 +84,9 @@ const styles = StyleSheet.create({
   },
   dangerText: {
     color: '#FFFFFF',
+  },
+  outlineText: {
+    color: '#374151',
   },
   smallText: {
     fontSize: 14,

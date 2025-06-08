@@ -14,7 +14,8 @@
     "all": "Todos",
     "settings": "Configuración",
     "logout": "Cerrar sesión",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "back": "Volver"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -118,5 +119,11 @@
     "en": "English",
     "zh": "中文",
     "es": "Español"
+  },
+  "navigation": {
+    "dashboard": "Inicio",
+    "feeds": "Feeds",
+    "articles": "Artículos",
+    "profile": "Perfil"
   }
 }

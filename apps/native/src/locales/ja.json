@@ -35,7 +35,10 @@
     "emailRequired": "メールアドレスは必須です",
     "passwordRequired": "パスワードは必須です",
     "passwordMinLength": "パスワードは6文字以上で入力してください",
-    "emailInvalid": "有効なメールアドレスを入力してください"
+    "emailInvalid": "有効なメールアドレスを入力してください",
+    "passwordResetSent": "パスワードリセットメールを送信しました",
+    "invalidCredentials": "メールアドレスまたはパスワードが正しくありません",
+    "passwordMismatch": "パスワードが一致しません"
   },
   "feeds": {
     "feeds": "フィード",
@@ -99,7 +102,17 @@
     "newEmail": "新しいメールアドレス",
     "saveChanges": "変更を保存",
     "updateSuccess": "設定を更新しました",
-    "updateError": "設定の更新に失敗しました"
+    "updateError": "設定の更新に失敗しました",
+    "passwordChangeSuccess": "パスワードを変更しました",
+    "passwordChangeError": "パスワードの変更に失敗しました",
+    "emailChangeSuccess": "メールアドレスを変更しました",
+    "emailChangeError": "メールアドレスの変更に失敗しました",
+    "deleteAccountError": "アカウントの削除に失敗しました",
+    "deleteAccountConfirm": "アカウントを削除すると、すべてのデータが失われます。この操作は取り消せません。",
+    "deleteAccountButton": "アカウントを削除する",
+    "dataManagement": "データ管理",
+    "opmlDescription": "フィードリストのバックアップやインポートができます。",
+    "opmlImportSuccess": "フィードが正常にインポートされました"
   },
   "languages": {
     "ja": "日本語",

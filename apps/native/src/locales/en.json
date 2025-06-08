@@ -35,7 +35,10 @@
     "emailRequired": "Email is required",
     "passwordRequired": "Password is required",
     "passwordMinLength": "Password must be at least 6 characters",
-    "emailInvalid": "Please enter a valid email address"
+    "emailInvalid": "Please enter a valid email address",
+    "passwordResetSent": "Password reset email sent",
+    "invalidCredentials": "Invalid email or password",
+    "passwordMismatch": "Passwords do not match"
   },
   "feeds": {
     "feeds": "Feeds",
@@ -99,7 +102,17 @@
     "newEmail": "New Email",
     "saveChanges": "Save Changes",
     "updateSuccess": "Settings updated successfully",
-    "updateError": "Failed to update settings"
+    "updateError": "Failed to update settings",
+    "passwordChangeSuccess": "Password changed successfully",
+    "passwordChangeError": "Failed to change password",
+    "emailChangeSuccess": "Email changed successfully",
+    "emailChangeError": "Failed to change email",
+    "deleteAccountError": "Failed to delete account",
+    "deleteAccountConfirm": "Deleting your account will remove all your data. This action cannot be undone.",
+    "deleteAccountButton": "Delete Account",
+    "dataManagement": "Data Management",
+    "opmlDescription": "You can backup and import your feed lists.",
+    "opmlImportSuccess": "Feeds have been successfully imported"
   },
   "languages": {
     "ja": "日本語",

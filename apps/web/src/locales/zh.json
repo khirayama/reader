@@ -14,7 +14,8 @@
     "all": "全部",
     "settings": "设置",
     "logout": "退出登录",
-    "close": "关闭"
+    "close": "关闭",
+    "back": "返回"
   },
   "auth": {
     "login": "登录",
@@ -118,5 +119,11 @@
     "en": "English",
     "zh": "中文",
     "es": "Español"
+  },
+  "navigation": {
+    "dashboard": "主页",
+    "feeds": "订阅源",
+    "articles": "文章",
+    "profile": "个人中心"
   }
 }

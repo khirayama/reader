@@ -64,7 +64,7 @@ export default function DashboardPage() {
           {/* サイドバー */}
           <div className={`${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } md:translate-x-0 transition-transform duration-200 ease-in-out fixed md:static inset-y-0 left-0 z-30 w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700`}>
+          } md:translate-x-0 transition-transform duration-200 ease-in-out fixed md:static inset-y-0 left-0 z-30 w-full md:w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700`}>
             <FeedSidebar
               selectedFeedId={selectedFeedId || undefined}
               onFeedSelect={handleFeedSelect}

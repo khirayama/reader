@@ -32,4 +32,16 @@ export class OpmlService {
     });
     return response.data;
   }
+
+  async importOpmlFromFormData(formData: FormData): Promise<ImportOpmlResponse> {
+    const response = await this.client.request<ImportOpmlResponse>('/opml/import', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      data: formData,
+      timeout: 5 * 60 * 1000, // OPML処理専用の5分タイムアウト
+    });
+    return response.data;
+  }
 }

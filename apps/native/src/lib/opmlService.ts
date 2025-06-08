@@ -57,28 +57,35 @@ export class NativeOpmlService {
     try {
       // ファイル選択ダイアログを表示
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/xml', 'text/xml', '*/*'],
+        type: ['application/xml', 'text/xml', 'application/opml+xml', '*/*'],
         copyToCacheDirectory: true,
+        multiple: false,
       });
 
       if (result.canceled) {
         throw new Error('ファイル選択がキャンセルされました');
       }
 
-      const asset = result.assets[0];
-      if (!asset) {
+      const asset = result.assets?.[0];
+      if (!asset || !asset.uri) {
         throw new Error('ファイルが選択されませんでした');
       }
 
-      // ファイルの内容を読み取り
-      const fileContent = await FileSystem.readAsStringAsync(asset.uri);
+      // ファイルサイズの確認（5MB制限）
+      if (asset.size && asset.size > 5 * 1024 * 1024) {
+        throw new Error('ファイルサイズが大きすぎます（5MB以下にしてください）');
+      }
 
-      // FormDataを作成（Web互換性のために）
-      const blob = new Blob([fileContent], { type: 'application/xml' });
-      const file = new File([blob], asset.name || 'imported.opml', { type: 'application/xml' });
+      // React NativeのFormDataでファイルアップロード
+      const formData = new FormData();
+      formData.append('file', {
+        uri: asset.uri,
+        type: asset.mimeType || 'application/xml',
+        name: asset.name || 'imported.opml',
+      } as unknown as Blob);
 
       // SDKを使用してインポート
-      const importResult = await sdk.opml.importOpml(file);
+      const importResult = await sdk.opml.importOpmlFromFormData(formData);
 
       return importResult;
     } catch (error) {

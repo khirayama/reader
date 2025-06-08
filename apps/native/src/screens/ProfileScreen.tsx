@@ -44,7 +44,7 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
   const [isChangingEmail, setIsChangingEmail] = useState(false);
   const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState<'SYSTEM' | 'LIGHT' | 'DARK'>(user?.theme || 'SYSTEM');
-  const [selectedLanguage, setSelectedLanguage] = useState<'JA' | 'EN'>(user?.language || 'JA');
+  const [selectedLanguage, setSelectedLanguage] = useState<'JA' | 'EN'>((user?.language as 'JA' | 'EN') || 'JA');
 
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),

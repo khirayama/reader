@@ -4,11 +4,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { sdk } from '../lib/sdk';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import type { AppTabNavigationProp } from '../types/navigation';
+import type { AppDrawerNavigationProp as DrawerNavigationProp } from '../types/navigation';
 import type { Feed, Article } from '../../../../packages/sdk/src/types';
 
 interface DashboardScreenProps {
-  navigation: AppTabNavigationProp;
+  navigation: DrawerNavigationProp;
 }
 
 export function DashboardScreen({ navigation }: DashboardScreenProps) {
@@ -78,17 +78,6 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
 
   return (
     <View style={styles.container}>
-      {/* ヘッダー */}
-      <View style={styles.header}>
-        <Text style={styles.title}>RSS Reader</Text>
-        <Button
-          title="ログアウト"
-          onPress={handleLogout}
-          variant="outline"
-          size="small"
-          style={styles.logoutButton}
-        />
-      </View>
 
       <ScrollView
         style={styles.content}
@@ -197,25 +186,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1F2937',
-  },
-  logoutButton: {
-    paddingHorizontal: 12,
   },
   content: {
     flex: 1,

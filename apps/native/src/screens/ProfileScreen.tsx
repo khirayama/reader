@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
-import type { AppTabNavigationProp } from '../types/navigation';
+import type { AppDrawerNavigationProp as DrawerNavigationProp } from '../types/navigation';
 
 const profileSchema = z.object({
   name: z.string().min(1, '名前を入力してください'),
@@ -32,7 +32,7 @@ type PasswordFormData = z.infer<typeof passwordSchema>;
 type EmailFormData = z.infer<typeof emailSchema>;
 
 interface ProfileScreenProps {
-  navigation: AppTabNavigationProp;
+  navigation: DrawerNavigationProp;
 }
 
 export function ProfileScreen({ navigation }: ProfileScreenProps) {
@@ -137,9 +137,6 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>プロフィール設定</Text>
-      </View>
 
       <Card>
         <Text style={styles.sectionTitle}>基本情報</Text>
@@ -394,15 +391,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
     padding: 16,
-  },
-  header: {
-    paddingTop: 60,
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1F2937',
   },
   sectionTitle: {
     fontSize: 20,

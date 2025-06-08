@@ -5,11 +5,11 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { OpmlManager } from '../components/feeds/OpmlManager';
-import type { AppTabNavigationProp } from '../types/navigation';
+import type { AppDrawerNavigationProp as DrawerNavigationProp } from '../types/navigation';
 import type { Feed } from '../../../../packages/sdk/src/types';
 
 interface FeedsScreenProps {
-  navigation: AppTabNavigationProp;
+  navigation: DrawerNavigationProp;
 }
 
 export function FeedsScreen({ navigation }: FeedsScreenProps) {
@@ -115,27 +115,24 @@ export function FeedsScreen({ navigation }: FeedsScreenProps) {
 
   return (
     <View style={styles.container}>
-      {/* ヘッダー */}
-      <View style={styles.header}>
-        <Text style={styles.title}>フィード</Text>
-        <View style={styles.headerButtons}>
-          <Button
-            title="OPML"
-            onPress={() => setShowOpmlModal(true)}
-            variant="outline"
-            size="small"
-            style={styles.headerButton}
-          />
-          <Button
-            title={showAddForm ? 'キャンセル' : '追加'}
-            onPress={() => {
-              setShowAddForm(!showAddForm);
-              setNewFeedUrl('');
-            }}
-            variant={showAddForm ? 'outline' : 'primary'}
-            size="small"
-          />
-        </View>
+      {/* ヘッダーボタン */}
+      <View style={styles.headerButtons}>
+        <Button
+          title="OPML"
+          onPress={() => setShowOpmlModal(true)}
+          variant="outline"
+          size="small"
+          style={styles.headerButton}
+        />
+        <Button
+          title={showAddForm ? 'キャンセル' : '追加'}
+          onPress={() => {
+            setShowAddForm(!showAddForm);
+            setNewFeedUrl('');
+          }}
+          variant={showAddForm ? 'outline' : 'primary'}
+          size="small"
+        />
       </View>
 
       {/* フィード追加フォーム */}
@@ -262,28 +259,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
-  header: {
+  headerButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: 8,
     paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 16,
+    paddingVertical: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
   headerButton: {
     paddingHorizontal: 12,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1F2937',
   },
   addFormContainer: {
     flexDirection: 'row',

@@ -83,12 +83,12 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    width: 280,
+    width: '100%',
     zIndex: 1000,
     elevation: 5,
   },
   sidebarHidden: {
-    transform: [{ translateX: -280 }],
+    transform: [{ translateX: '-100%' }],
   },
   main: {
     flex: 1,

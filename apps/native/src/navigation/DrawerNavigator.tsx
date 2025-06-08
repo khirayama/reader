@@ -90,7 +90,7 @@ export function DrawerNavigator() {
           fontWeight: '600',
         },
         drawerStyle: {
-          width: Platform.isPad ? 320 : 280,
+          width: Platform.isPad ? 320 : '100%',
           backgroundColor: '#FFFFFF',
         },
         drawerType: Platform.isPad ? 'permanent' : 'front',

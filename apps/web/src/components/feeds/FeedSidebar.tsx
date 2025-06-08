@@ -22,6 +22,7 @@ interface Feed {
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card } from '@/components/ui/Card'
+import { useToast } from '@/components/ui/Toast'
 import OpmlImportExport from './OpmlImportExport'
 
 interface FeedSidebarProps {
@@ -31,6 +32,7 @@ interface FeedSidebarProps {
 }
 
 export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: FeedSidebarProps) {
+  const { addToast } = useToast()
   const [feeds, setFeeds] = useState<Feed[]>([])
   const [newFeedUrl, setNewFeedUrl] = useState('')
   const [loading, setLoading] = useState(false)
@@ -44,8 +46,8 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
   const loadFeeds = async () => {
     try {
       setLoading(true)
-      const response = await sdk.feeds.getFeeds({ limit: 100 })
-      setFeeds(response.feeds)
+      const response = await sdk.feeds.getAll()
+      setFeeds(response)
     } catch (error) {
       console.error('フィード読み込みエラー:', error)
     } finally {
@@ -59,13 +61,22 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
 
     try {
       setAddingFeed(true)
-      await sdk.feeds.createFeed({ url: newFeedUrl.trim() })
+      await sdk.feeds.create({ url: newFeedUrl.trim() })
       setNewFeedUrl('')
       await loadFeeds()
       onFeedRefresh()
+      addToast({
+        type: 'success',
+        title: 'フィード追加完了',
+        message: 'フィードが正常に追加されました。'
+      })
     } catch (error) {
       console.error('フィード追加エラー:', error)
-      alert('フィードの追加に失敗しました')
+      addToast({
+        type: 'error',
+        title: 'フィード追加エラー',
+        message: 'フィードの追加に失敗しました。URLを確認してください。'
+      })
     } finally {
       setAddingFeed(false)
     }
@@ -75,7 +86,7 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
     if (!confirm('このフィードを削除しますか？')) return
 
     try {
-      await sdk.feeds.deleteFeed(feedId)
+      await sdk.feeds.delete(feedId)
       await loadFeeds()
       if (selectedFeedId === feedId) {
         onFeedSelect(null)
@@ -83,19 +94,32 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
       onFeedRefresh()
     } catch (error) {
       console.error('フィード削除エラー:', error)
-      alert('フィードの削除に失敗しました')
+      addToast({
+        type: 'error',
+        title: 'フィード削除エラー',
+        message: 'フィードの削除に失敗しました。'
+      })
     }
   }
 
   const handleRefreshAll = async () => {
     try {
       setRefreshingAll(true)
-      await sdk.feeds.refreshAllFeeds()
+      await sdk.feeds.refreshAll()
       await loadFeeds()
       onFeedRefresh()
+      addToast({
+        type: 'success',
+        title: 'フィード更新完了',
+        message: 'すべてのフィードが更新されました。'
+      })
     } catch (error) {
       console.error('全フィード更新エラー:', error)
-      alert('フィードの更新に失敗しました')
+      addToast({
+        type: 'error',
+        title: 'フィード更新エラー',
+        message: 'フィードの更新に失敗しました。'
+      })
     } finally {
       setRefreshingAll(false)
     }

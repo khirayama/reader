@@ -309,17 +309,36 @@ class FeedsService {
     const response = await this.client.get<ArticleListResponse>(path)
     return response.data || response as any
   }
+
+  // Compatibility aliases
+  async getAll(query?: { page?: number; limit?: number; search?: string }): Promise<Feed[]> {
+    const response = await this.getFeeds(query)
+    return response.feeds
+  }
+
+  async create(data: { url: string }) {
+    return this.createFeed(data)
+  }
+
+  async delete(feedId: string) {
+    return this.deleteFeed(feedId)
+  }
+
+  async refreshAll() {
+    return this.refreshAllFeeds()
+  }
 }
 
 // 記事サービス
 class ArticlesService {
   constructor(private client: SimpleApiClient) {}
 
-  async getArticles(query?: { page?: number; limit?: number; search?: string }): Promise<{ articles: Article[], pagination: Pagination }> {
+  async getArticles(query?: { page?: number; limit?: number; search?: string; feedId?: string }): Promise<{ articles: Article[], pagination: Pagination }> {
     const params = new URLSearchParams()
     if (query?.page) params.append('page', query.page.toString())
     if (query?.limit) params.append('limit', query.limit.toString())
     if (query?.search) params.append('search', query.search)
+    if (query?.feedId) params.append('feedId', query.feedId)
     
     const path = `/api/articles${params.toString() ? '?' + params.toString() : ''}`
     const response = await this.client.get<ArticleListResponse>(path)
@@ -353,6 +372,23 @@ class ArticlesService {
     
     const path = `/api/articles/bookmarks/list${params.toString() ? '?' + params.toString() : ''}`
     return await this.client.get(path)
+  }
+
+  // Compatibility aliases
+  async getAll(query?: { page?: number; limit?: number; search?: string; feedId?: string }) {
+    return this.getArticles(query)
+  }
+
+  async markRead(articleId: string) {
+    return this.markAsRead(articleId)
+  }
+
+  async bookmark(articleId: string) {
+    return this.addBookmark(articleId)
+  }
+
+  async unbookmark(articleId: string) {
+    return this.removeBookmark(articleId)
   }
 }
 

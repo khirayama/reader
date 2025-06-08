@@ -30,13 +30,14 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
 
       let response
       if (selectedFeedId) {
-        response = await sdk.feeds.getFeedArticles(selectedFeedId, {
+        response = await sdk.articles.getAll({
           page: currentPage,
           limit: 20,
+          feedId: selectedFeedId,
           search: searchTerm || undefined,
         })
       } else {
-        response = await sdk.articles.getArticles({
+        response = await sdk.articles.getAll({
           page: currentPage,
           limit: 20,
           search: searchTerm || undefined,
@@ -66,7 +67,7 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
 
   const handleMarkAsRead = async (articleId: string) => {
     try {
-      await sdk.articles.markAsRead(articleId)
+      await sdk.articles.markRead(articleId)
       setArticles((prev) =>
         prev.map((article) =>
           article.id === articleId
@@ -82,9 +83,9 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
   const handleToggleBookmark = async (articleId: string, isBookmarked: boolean) => {
     try {
       if (isBookmarked) {
-        await sdk.articles.removeBookmark(articleId)
+        await sdk.articles.unbookmark(articleId)
       } else {
-        await sdk.articles.addBookmark(articleId)
+        await sdk.articles.bookmark(articleId)
       }
 
       setArticles((prev) =>

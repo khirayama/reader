@@ -106,7 +106,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         <p className="text-sm text-gray-600 dark:text-gray-400">
           <Link
             href="/forgot-password"
-            className="text-primary-600 hover:text-primary-500 dark:text-primary-400"
+            className="text-blue-600 hover:text-blue-500 dark:text-blue-400 focus-visible"
           >
             パスワードを忘れた場合
           </Link>
@@ -115,7 +115,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           アカウントをお持ちでない方は{' '}
           <Link
             href="/register"
-            className="text-primary-600 hover:text-primary-500 dark:text-primary-400"
+            className="text-blue-600 hover:text-blue-500 dark:text-blue-400 focus-visible"
           >
             新規登録
           </Link>

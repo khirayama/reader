@@ -122,7 +122,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           すでにアカウントをお持ちの方は{' '}
           <Link
             href="/login"
-            className="text-primary-600 hover:text-primary-500 dark:text-primary-400"
+            className="text-blue-600 hover:text-blue-500 dark:text-blue-400 focus-visible"
           >
             ログイン
           </Link>

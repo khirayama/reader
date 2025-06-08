@@ -3,12 +3,13 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { I18nProvider } from '@/components/I18nProvider'
+import { ToastProvider } from '@/components/ui/Toast'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'RSS Reader',
-  description: 'Modern RSS feed reader application',
+  title: 'RSS Reader - 現代的なRSSフィードリーダー',
+  description: 'シンプルで使いやすいRSSフィードリーダーアプリケーション',
 }
 
 export default function RootLayout({
@@ -20,7 +21,11 @@ export default function RootLayout({
     <html lang="ja" suppressHydrationWarning>
       <body className={inter.className}>
         <I18nProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <ToastProvider>
+              {children}
+            </ToastProvider>
+          </AuthProvider>
         </I18nProvider>
       </body>
     </html>

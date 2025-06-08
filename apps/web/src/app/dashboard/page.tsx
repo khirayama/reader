@@ -32,11 +32,16 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
-              aria-label="メニューを開く"
+              className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md touch-target focus-visible transition-colors"
+              aria-label={sidebarOpen ? "メニューを閉じる" : "メニューを開く"}
+              aria-expanded={sidebarOpen}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                {sidebarOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
               </svg>
             </button>
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">RSS Reader</h1>
@@ -70,10 +75,11 @@ export default function DashboardPage() {
           {/* オーバーレイ (モバイルのみ) */}
           {sidebarOpen && (
             <div
-              className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20"
+              className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20 cursor-pointer"
               onClick={() => setSidebarOpen(false)}
               onKeyDown={(e) => {
-                if (e.key === 'Escape') {
+                if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
                   setSidebarOpen(false)
                 }
               }}

@@ -291,6 +291,26 @@ export default function SettingsPage() {
             }} />
           </Card>
 
+          {/* ログアウト */}
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">{t('auth.logout', 'ログアウト')}</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              {t('settings.logoutDescription', 'アカウントからログアウトします。')}
+            </p>
+            <Button
+              variant="outline"
+              onClick={logout}
+              icon={
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              }
+              className="w-full sm:w-auto"
+            >
+              {t('auth.logout', 'ログアウト')}
+            </Button>
+          </Card>
+
           {/* アカウント削除 */}
           <Card className="p-6 border-red-200 dark:border-red-800">
             <h2 className="text-lg font-semibold mb-4 text-red-600 dark:text-red-400">{t('settings.deleteAccount')}</h2>

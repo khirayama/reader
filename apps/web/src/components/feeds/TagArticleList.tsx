@@ -59,24 +59,6 @@ export function TagArticleList({
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
-      {/* ヘッダー */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            {group.color && (
-              <div 
-                className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: group.color }}
-              />
-            )}
-            {group.name}
-            <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-              ({group.articles.length}件)
-            </span>
-          </h3>
-        </div>
-      </div>
-
       {/* 記事一覧 */}
       <div className="flex-1 overflow-y-auto surface">
         <div className="divide-y divide-neutral-200 dark:divide-neutral-700">

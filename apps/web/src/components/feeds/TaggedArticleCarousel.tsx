@@ -129,83 +129,101 @@ export function TaggedArticleCarousel({ selectedFeedId, searchTerm }: TaggedArti
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
-      {/* タグタブナビゲーション */}
-      <div className="relative bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        {/* 左側のフェードシャドウ */}
-        {showLeftShadow && (
-          <div className="absolute left-0 top-0 h-full w-8 bg-gradient-to-r from-white dark:from-gray-800 to-transparent z-10 pointer-events-none" />
-        )}
-        
-        {/* 右側のフェードシャドウ */}
-        {showRightShadow && (
-          <div className="absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-white dark:from-gray-800 to-transparent z-10 pointer-events-none" />
-        )}
+      {/* タグタブナビゲーション - フィード選択時は非表示 */}
+      {!selectedFeedId && (
+        <div className="relative bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          {/* 左側のフェードシャドウ */}
+          {showLeftShadow && (
+            <div className="absolute left-0 top-0 h-full w-8 bg-gradient-to-r from-white dark:from-gray-800 to-transparent z-10 pointer-events-none" />
+          )}
+          
+          {/* 右側のフェードシャドウ */}
+          {showRightShadow && (
+            <div className="absolute right-0 top-0 h-full w-8 bg-gradient-to-l from-white dark:from-gray-800 to-transparent z-10 pointer-events-none" />
+          )}
 
-        <div
-          ref={scrollContainerRef}
-          className="flex gap-1 p-3 overflow-x-auto scrollbar-hide scroll-smooth"
-          style={{ 
-            scrollbarWidth: 'none', 
-            msOverflowStyle: 'none',
-          }}
-          onScroll={updateShadows}
-        >
-          {articleGroups.map((group, index) => (
-            <button
-              key={group.id}
-              onClick={() => handleGroupChange(index)}
-              className={`px-4 py-2 rounded-lg whitespace-nowrap text-sm font-medium transition-all duration-200 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 flex items-center gap-2 ${
-                currentGroupIndex === index
-                  ? 'bg-blue-500 text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-            >
-              {group.color && currentGroupIndex === index && (
-                <div 
-                  className="w-2 h-2 rounded-full bg-white"
-                />
-              )}
-              {group.color && currentGroupIndex !== index && (
-                <div 
-                  className="w-2 h-2 rounded-full" 
-                  style={{ backgroundColor: group.color }}
-                />
-              )}
-              {group.name}
-              {group.articles.length > 0 && (
-                <span className="text-xs">
-                  ({group.articles.length})
-                </span>
-              )}
-            </button>
-          ))}
+          <div
+            ref={scrollContainerRef}
+            className="flex gap-1 p-3 overflow-x-auto scrollbar-hide scroll-smooth"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+            }}
+            onScroll={updateShadows}
+          >
+            {articleGroups.map((group, index) => (
+              <button
+                key={group.id}
+                onClick={() => handleGroupChange(index)}
+                className={`px-4 py-2 rounded-lg whitespace-nowrap text-sm font-medium transition-all duration-200 flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 flex items-center gap-2 ${
+                  currentGroupIndex === index
+                    ? 'bg-blue-500 text-white shadow-md'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                {group.color && currentGroupIndex === index && (
+                  <div 
+                    className="w-2 h-2 rounded-full bg-white"
+                  />
+                )}
+                {group.color && currentGroupIndex !== index && (
+                  <div 
+                    className="w-2 h-2 rounded-full" 
+                    style={{ backgroundColor: group.color }}
+                  />
+                )}
+                {group.name}
+                {group.articles.length > 0 && (
+                  <span className="text-xs">
+                    ({group.articles.length})
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* カルーセルコンテンツ */}
       <div 
         ref={carouselRef}
-        className="flex-1 flex overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth scrollbar-hide"
+        className={`flex-1 flex ${selectedFeedId ? 'overflow-y-auto' : 'overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth scrollbar-hide'}`}
         style={{ 
           scrollbarWidth: 'none',
           msOverflowStyle: 'none'
         }}
-        onScroll={onCarouselScroll}
+        onScroll={selectedFeedId ? undefined : onCarouselScroll}
       >
-        {articleGroups.map((group, index) => (
-          <div 
-            key={group.id} 
-            className="w-full flex-shrink-0 snap-start"
-          >
-            <TagArticleList
-              group={group}
-              onLoadMore={loadMoreArticles}
-              onMarkAsRead={markArticleAsRead}
-              onToggleBookmark={toggleBookmark}
-              onArticleClick={handleArticleClick}
-            />
-          </div>
-        ))}
+        {selectedFeedId ? (
+          // フィード選択時は最初のグループのみ表示
+          articleGroups.length > 0 && (
+            <div className="w-full">
+              <TagArticleList
+                group={articleGroups[0]}
+                onLoadMore={loadMoreArticles}
+                onMarkAsRead={markArticleAsRead}
+                onToggleBookmark={toggleBookmark}
+                onArticleClick={handleArticleClick}
+              />
+            </div>
+          )
+        ) : (
+          // 全体表示時はカルーセル
+          articleGroups.map((group, index) => (
+            <div 
+              key={group.id} 
+              className="w-full flex-shrink-0 snap-start"
+            >
+              <TagArticleList
+                group={group}
+                onLoadMore={loadMoreArticles}
+                onMarkAsRead={markArticleAsRead}
+                onToggleBookmark={toggleBookmark}
+                onArticleClick={handleArticleClick}
+              />
+            </div>
+          ))
+        )}
       </div>
     </div>
   )

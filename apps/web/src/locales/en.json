@@ -65,6 +65,31 @@
       "processing": "Processing..."
     }
   },
+  "tags": {
+    "all": "All",
+    "noTags": "No tags yet",
+    "tagFilter": "Tag Filter",
+    "addTag": "Add Tag",
+    "createTag": "Create Tag",
+    "editTag": "Edit Tag",
+    "deleteTag": "Delete Tag",
+    "tagName": "Tag Name",
+    "tagColor": "Tag Color",
+    "assignToFeed": "Add tag to feed",
+    "removeFromFeed": "Remove tag from feed",
+    "tagCreateSuccess": "Tag created successfully",
+    "tagCreateError": "Failed to create tag",
+    "tagUpdateSuccess": "Tag updated successfully",
+    "tagUpdateError": "Failed to update tag",
+    "tagDeleteSuccess": "Tag deleted successfully",
+    "tagDeleteError": "Failed to delete tag",
+    "tagDeleteConfirm": "Are you sure you want to delete this tag?",
+    "tagAssignSuccess": "Tag added to feed",
+    "tagAssignError": "Failed to add tag",
+    "tagRemoveSuccess": "Tag removed from feed",
+    "tagRemoveError": "Failed to remove tag",
+    "feedCount": "{{count}} feeds"
+  },
   "articles": {
     "articles": "Articles",
     "searchArticles": "Search articles...",
@@ -125,5 +150,21 @@
     "feeds": "Feeds",
     "articles": "Articles",
     "profile": "Profile"
+  },
+  "tags": {
+    "tags": "Tags",
+    "all": "All",
+    "noTags": "No tags available",
+    "createTag": "Create New Tag",
+    "tagName": "Tag Name",
+    "tagColor": "Tag Color",
+    "manageTags": "Manage Tags",
+    "availableTags": "Available Tags",
+    "assignTag": "Assign Tag",
+    "removeTag": "Remove Tag",
+    "tagCreated": "Tag created successfully",
+    "tagDeleted": "Tag deleted successfully",
+    "tagAssigned": "Tag assigned successfully",
+    "tagRemoved": "Tag removed successfully"
   }
 }

@@ -73,16 +73,23 @@ export class FeedService {
 
   // ユーザーのフィード一覧取得
   static async getUserFeeds(userId: string, query: GetFeedsQuery) {
-    const { page, limit, search } = query;
+    const { page, limit, search, tagId } = query;
     const skip = (page - 1) * limit;
 
-    const where = {
+    const where: any = {
       userId,
       ...(search && {
         OR: [
           { title: { contains: search } },
           { description: { contains: search } },
         ],
+      }),
+      ...(tagId && {
+        feedTags: {
+          some: {
+            tagId,
+          },
+        },
       }),
     };
 
@@ -96,13 +103,26 @@ export class FeedService {
           _count: {
             select: { articles: true },
           },
+          feedTags: {
+            include: {
+              tag: true,
+            },
+          },
         },
       }),
       prisma.feed.count({ where }),
     ]);
 
+    const feedsWithTags = feeds.map((feed: any) => ({
+      ...feed,
+      tags: feed.feedTags.map((ft: any) => ft.tag),
+      articleCount: feed._count.articles,
+      feedTags: undefined,
+      _count: undefined,
+    }));
+
     return {
-      feeds,
+      feeds: feedsWithTags,
       pagination: {
         page,
         limit,
@@ -125,10 +145,23 @@ export class FeedService {
         _count: {
           select: { articles: true },
         },
+        feedTags: {
+          include: {
+            tag: true,
+          },
+        },
       },
     });
 
-    return feed;
+    if (!feed) return null;
+
+    return {
+      ...feed,
+      tags: feed.feedTags.map((ft: any) => ft.tag),
+      articleCount: feed._count.articles,
+      feedTags: undefined,
+      _count: undefined,
+    };
   }
 
   // フィード更新

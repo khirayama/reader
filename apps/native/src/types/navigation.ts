@@ -17,8 +17,6 @@ export type AppTabParamList = {
 
 export type DrawerParamList = {
   Dashboard: undefined;
-  Feeds: undefined;
-  Articles: { feedId?: string } | undefined;
   Profile: undefined;
 };
 

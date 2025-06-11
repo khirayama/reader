@@ -32,12 +32,12 @@
     "dontHaveAccount": "アカウントをお持ちでない場合",
     "loginFailed": "ログインに失敗しました",
     "registerSuccess": "アカウントを作成しました",
+    "passwordResetSent": "パスワードリセットメールを送信しました",
+    "invalidCredentials": "メールアドレスまたはパスワードが正しくありません",
     "emailRequired": "メールアドレスは必須です",
     "passwordRequired": "パスワードは必須です",
     "passwordMinLength": "パスワードは6文字以上で入力してください",
     "emailInvalid": "有効なメールアドレスを入力してください",
-    "passwordResetSent": "パスワードリセットメールを送信しました",
-    "invalidCredentials": "メールアドレスまたはパスワードが正しくありません",
     "passwordMismatch": "パスワードが一致しません"
   },
   "feeds": {
@@ -64,6 +64,31 @@
       "selectFile": "ファイルを選択",
       "processing": "処理中..."
     }
+  },
+  "tags": {
+    "all": "すべて",
+    "noTags": "タグはまだありません",
+    "tagFilter": "タグフィルター",
+    "addTag": "タグを追加",
+    "createTag": "タグを作成",
+    "editTag": "タグを編集",
+    "deleteTag": "タグを削除",
+    "tagName": "タグ名",
+    "tagColor": "タグの色",
+    "assignToFeed": "フィードにタグを追加",
+    "removeFromFeed": "フィードからタグを削除",
+    "tagCreateSuccess": "タグを作成しました",
+    "tagCreateError": "タグの作成に失敗しました",
+    "tagUpdateSuccess": "タグを更新しました",
+    "tagUpdateError": "タグの更新に失敗しました",
+    "tagDeleteSuccess": "タグを削除しました",
+    "tagDeleteError": "タグの削除に失敗しました",
+    "tagDeleteConfirm": "このタグを削除しますか？",
+    "tagAssignSuccess": "タグをフィードに追加しました",
+    "tagAssignError": "タグの追加に失敗しました",
+    "tagRemoveSuccess": "タグをフィードから削除しました",
+    "tagRemoveError": "タグの削除に失敗しました",
+    "feedCount": "{{count}}件のフィード"
   },
   "articles": {
     "articles": "記事",
@@ -125,5 +150,21 @@
     "feeds": "フィード",
     "articles": "記事",
     "profile": "プロフィール"
+  },
+  "tags": {
+    "tags": "タグ",
+    "all": "すべて",
+    "noTags": "タグがありません",
+    "createTag": "新しいタグを作成",
+    "tagName": "タグ名",
+    "tagColor": "タグの色",
+    "manageTags": "タグ管理",
+    "availableTags": "利用可能なタグ",
+    "assignTag": "タグを追加",
+    "removeTag": "タグを削除",
+    "tagCreated": "タグを作成しました",
+    "tagDeleted": "タグを削除しました",
+    "tagAssigned": "タグを追加しました",
+    "tagRemoved": "タグを削除しました"
   }
 }

@@ -8,10 +8,9 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useResponsive } from '../hooks/useResponsive';
 import { DashboardScreen } from '../screens/DashboardScreen';
-import { FeedsScreen } from '../screens/FeedsScreen';
-import { ArticlesScreen } from '../screens/ArticlesScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import type { DrawerParamList } from '../types/navigation';
+import { colors } from '../constants/colors';
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
 
@@ -21,10 +20,26 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
   const { state, navigation } = props;
 
   const menuItems = [
-    { name: 'Dashboard', label: 'ダッシュボード', icon: '🏠' },
-    { name: 'Feeds', label: 'フィード', icon: '📡' },
-    { name: 'Articles', label: '記事', icon: '📄' },
-    { name: 'Profile', label: 'プロフィール', icon: '👤' },
+    { 
+      name: 'Dashboard', 
+      label: 'RSS Reader', 
+      icon: (
+        <View style={styles.iconContainer}>
+          <Text style={styles.iconText}>📡</Text>
+        </View>
+      ),
+      description: 'フィード・記事管理'
+    },
+    { 
+      name: 'Profile', 
+      label: '設定', 
+      icon: (
+        <View style={styles.iconContainer}>
+          <Text style={styles.iconText}>⚙️</Text>
+        </View>
+      ),
+      description: 'アカウント・環境設定'
+    },
   ] as const;
 
   const handleLogout = async () => {
@@ -39,8 +54,15 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
     <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
       {/* ヘッダー */}
       <View style={styles.drawerHeader}>
-        <Text style={styles.appTitle}>RSS Reader</Text>
-        <Text style={styles.userEmail}>{user?.email}</Text>
+        <View style={styles.appIconWrapper}>
+          <View style={styles.appIcon}>
+            <Text style={styles.appIconText}>📰</Text>
+          </View>
+          <View style={styles.appInfo}>
+            <Text style={styles.appTitle}>RSS Reader</Text>
+            <Text style={styles.userEmail}>{user?.email}</Text>
+          </View>
+        </View>
       </View>
 
       {/* メニューアイテム */}
@@ -53,10 +75,15 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
               style={[styles.menuItem, isActive && styles.menuItemActive]}
               onPress={() => navigation.navigate(item.name)}
             >
-              <Text style={styles.menuIcon}>{item.icon}</Text>
-              <Text style={[styles.menuLabel, isActive && styles.menuLabelActive]}>
-                {item.label}
-              </Text>
+              {item.icon}
+              <View style={styles.menuItemContent}>
+                <Text style={[styles.menuLabel, isActive && styles.menuLabelActive]}>
+                  {item.label}
+                </Text>
+                <Text style={styles.menuDescription}>
+                  {item.description}
+                </Text>
+              </View>
             </Pressable>
           );
         })}
@@ -65,7 +92,9 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
       {/* フッター */}
       <View style={styles.drawerFooter}>
         <Pressable style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutIcon}>🚪</Text>
+          <View style={styles.logoutIconContainer}>
+            <Text style={styles.logoutIconText}>🚪</Text>
+          </View>
           <Text style={styles.logoutLabel}>ログアウト</Text>
         </Pressable>
       </View>
@@ -132,32 +161,16 @@ export function DrawerNavigator() {
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          title: 'ダッシュボード',
-          drawerLabel: 'ダッシュボード',
-        }}
-      />
-      <Drawer.Screen
-        name="Feeds"
-        component={FeedsScreen}
-        options={{
-          title: 'フィード',
-          drawerLabel: 'フィード',
-        }}
-      />
-      <Drawer.Screen
-        name="Articles"
-        component={ArticlesScreen}
-        options={{
-          title: '記事',
-          drawerLabel: '記事',
+          title: 'RSS Reader',
+          drawerLabel: 'RSS Reader',
         }}
       />
       <Drawer.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          title: 'プロフィール',
-          drawerLabel: 'プロフィール',
+          title: '設定',
+          drawerLabel: '設定',
         }}
       />
     </Drawer.Navigator>
@@ -167,69 +180,113 @@ export function DrawerNavigator() {
 const styles = StyleSheet.create({
   drawerContent: {
     flex: 1,
+    backgroundColor: colors.white,
   },
   drawerHeader: {
-    padding: 20,
+    padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    marginBottom: 8,
+    borderBottomColor: colors.gray[200],
+  },
+  appIconWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  appIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    backgroundColor: `${colors.primary[600]}`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  appIconText: {
+    fontSize: 16,
+    color: colors.white,
+  },
+  appInfo: {
+    flex: 1,
   },
   appTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 8,
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.gray[900],
+    marginBottom: 2,
   },
   userEmail: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.gray[600],
   },
   menuContainer: {
     flex: 1,
-    paddingHorizontal: 8,
+    paddingTop: 8,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
+    marginHorizontal: 8,
     borderRadius: 8,
     marginBottom: 4,
   },
   menuItemActive: {
-    backgroundColor: '#EBF5FF',
+    backgroundColor: colors.primary[50],
+    borderLeftWidth: 2,
+    borderLeftColor: colors.primary[500],
   },
-  menuIcon: {
-    fontSize: 20,
-    marginRight: 16,
+  iconContainer: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  iconText: {
+    fontSize: 16,
+  },
+  menuItemContent: {
+    flex: 1,
   },
   menuLabel: {
     fontSize: 16,
-    color: '#4B5563',
+    color: colors.gray[900],
     fontWeight: '500',
+    marginBottom: 2,
   },
   menuLabelActive: {
-    color: '#3B82F6',
+    color: colors.primary[700],
     fontWeight: '600',
   },
+  menuDescription: {
+    fontSize: 12,
+    color: colors.gray[500],
+  },
   drawerFooter: {
-    padding: 20,
+    padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: colors.gray[200],
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
+    borderRadius: 8,
   },
-  logoutIcon: {
-    fontSize: 20,
-    marginRight: 16,
+  logoutIconContainer: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  logoutIconText: {
+    fontSize: 16,
   },
   logoutLabel: {
     fontSize: 16,
-    color: '#EF4444',
+    color: colors.red[600],
     fontWeight: '500',
   },
 });

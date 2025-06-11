@@ -32,12 +32,12 @@
     "dontHaveAccount": "还没有账户？",
     "loginFailed": "登录失败",
     "registerSuccess": "账户创建成功",
+    "passwordResetSent": "密码重置邮件已发送",
+    "invalidCredentials": "邮箱或密码错误",
     "emailRequired": "邮箱是必填项",
     "passwordRequired": "密码是必填项",
     "passwordMinLength": "密码必须至少6个字符",
     "emailInvalid": "请输入有效的邮箱地址",
-    "passwordResetSent": "密码重置邮件已发送",
-    "invalidCredentials": "邮箱或密码错误",
     "passwordMismatch": "密码不匹配"
   },
   "feeds": {
@@ -64,6 +64,31 @@
       "selectFile": "选择文件",
       "processing": "处理中..."
     }
+  },
+  "tags": {
+    "all": "全部",
+    "noTags": "还没有标签",
+    "tagFilter": "标签筛选",
+    "addTag": "添加标签",
+    "createTag": "创建标签",
+    "editTag": "编辑标签",
+    "deleteTag": "删除标签",
+    "tagName": "标签名称",
+    "tagColor": "标签颜色",
+    "assignToFeed": "为订阅源添加标签",
+    "removeFromFeed": "从订阅源移除标签",
+    "tagCreateSuccess": "标签创建成功",
+    "tagCreateError": "标签创建失败",
+    "tagUpdateSuccess": "标签更新成功",
+    "tagUpdateError": "标签更新失败",
+    "tagDeleteSuccess": "标签删除成功",
+    "tagDeleteError": "标签删除失败",
+    "tagDeleteConfirm": "您确定要删除这个标签吗？",
+    "tagAssignSuccess": "标签已添加到订阅源",
+    "tagAssignError": "添加标签失败",
+    "tagRemoveSuccess": "标签已从订阅源移除",
+    "tagRemoveError": "移除标签失败",
+    "feedCount": "{{count}}个订阅源"
   },
   "articles": {
     "articles": "文章",

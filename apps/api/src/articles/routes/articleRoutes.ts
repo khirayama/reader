@@ -11,6 +11,8 @@ const GetArticlesQuerySchema = z.object({
   page: z.string().optional().transform(val => val ? Number.parseInt(val, 10) : 1),
   limit: z.string().optional().transform(val => val ? Math.min(Number.parseInt(val, 10), 100) : 20),
   search: z.string().optional(),
+  tagId: z.string().optional(),
+  feedId: z.string().optional(),
 });
 
 // ブックマーク記事一覧取得（具体的なルートを先に定義）
@@ -43,11 +45,13 @@ router.get('/', requireAuth, async (req, res) => {
     const query = GetArticlesQuerySchema.parse(req.query);
     const userId = req.user!.id;
 
-    const result = await FeedService.getAllUserArticles(
+    const result = await ArticleService.getAllUserArticles(
       userId,
       query.page,
       query.limit,
-      query.search
+      query.search,
+      query.tagId,
+      query.feedId
     );
 
     res.json({

@@ -2,7 +2,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { prisma } from '../lib/prisma';
+import { testPrisma as prisma } from './prisma';
 import { User } from '../../node_modules/.prisma/test-client';
 
 // JWT ペイロード型定義
@@ -312,4 +312,15 @@ export class TestAuthService {
 
     return 'アカウントが正常に削除されました';
   }
+
+  // テスト用ユーザー作成（テスト専用）
+  static async createTestUser(email?: string, password?: string): Promise<AuthResponse> {
+    const testEmail = email || `test${Date.now()}@example.com`;
+    const testPassword = password || 'TestPassword123';
+
+    return this.register(testEmail, testPassword);
+  }
 }
+
+// エクスポート用のインスタンス
+export const authService = TestAuthService;

@@ -1,38 +1,68 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { AuthGuard } from '@/components/auth/AuthGuard'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { FeedSidebar } from '@/components/feeds/FeedSidebar'
 import { ArticleList } from '@/components/feeds/ArticleList'
+import { TagCarousel } from '@/components/feeds/TagCarousel'
 import Link from 'next/link'
+import { sdk } from '@/lib/sdk'
+import type { Tag } from '@/lib/rss-sdk'
 
 export default function DashboardPage() {
   const { user, logout } = useAuth()
   const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null)
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null)
+  const [tags, setTags] = useState<Tag[]>([])
+  const [tagsLoading, setTagsLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // タグ読み込み
+  useEffect(() => {
+    loadTags()
+  }, [])
+
+  const loadTags = async () => {
+    try {
+      setTagsLoading(true)
+      const response = await sdk.tags.getTags({ limit: 50 })
+      setTags(response.data.tags)
+    } catch (error) {
+      console.error('タグの取得に失敗しました:', error)
+    } finally {
+      setTagsLoading(false)
+    }
+  }
+
   const handleFeedSelect = (feedId: string | null) => {
     setSelectedFeedId(feedId)
+    setSelectedTagId(null) // フィード選択時はタグ選択をクリア
     setSidebarOpen(false) // モバイルでフィード選択時にサイドバーを閉じる
+  }
+
+  const handleTagSelect = (tagId: string | null) => {
+    setSelectedTagId(tagId)
+    setSelectedFeedId(null) // タグ選択時はフィード選択をクリア
   }
 
   const handleFeedRefresh = () => {
     setRefreshKey((prev) => prev + 1)
+    loadTags() // タグも更新
   }
 
   return (
     <AuthGuard>
-      <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+      <div className="h-screen flex flex-col surface">
         {/* ヘッダー */}
-        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
+        <header className="surface-elevated border-b divider px-4 py-3 flex items-center justify-between shadow-soft">
           <div className="flex items-center space-x-3">
             <button
               type="button"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md touch-target focus-visible transition-colors"
+              className="md:hidden p-1.5 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded touch-target focus-visible transition-all duration-200"
               aria-label={sidebarOpen ? "メニューを閉じる" : "メニューを開く"}
               aria-expanded={sidebarOpen}
             >
@@ -44,16 +74,41 @@ export default function DashboardPage() {
                 )}
               </svg>
             </button>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">RSS Reader</h1>
+            <div className="flex items-center space-x-2">
+              <div className="w-7 h-7 bg-gradient-to-br from-primary-500 to-primary-600 rounded flex items-center justify-center shadow-soft">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                </svg>
+              </div>
+              <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">RSS Reader</h1>
+            </div>
           </div>
-          <div className="flex items-center space-x-3">
-            <span className="hidden sm:block text-sm text-gray-600 dark:text-gray-300">{user?.email}</span>
+          <div className="flex items-center space-x-2">
+            <span className="hidden sm:block text-sm text-neutral-600 dark:text-neutral-400">{user?.email}</span>
             <Link href="/settings">
-              <Button variant="outline" size="sm" className="text-sm">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                icon={
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                }
+              >
                 設定
               </Button>
             </Link>
-            <Button variant="outline" size="sm" onClick={logout} className="text-sm">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={logout}
+              icon={
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              }
+            >
               ログアウト
             </Button>
           </div>
@@ -64,7 +119,7 @@ export default function DashboardPage() {
           {/* サイドバー */}
           <div className={`${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } md:translate-x-0 transition-transform duration-200 ease-in-out fixed md:static inset-y-0 left-0 z-30 w-full md:w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700`}>
+          } md:translate-x-0 transition-transform duration-300 ease-out fixed md:static inset-y-0 left-0 z-30 w-full md:w-80 surface-elevated border-r divider shadow-lg md:shadow-none`}>
             <FeedSidebar
               selectedFeedId={selectedFeedId || undefined}
               onFeedSelect={handleFeedSelect}
@@ -75,7 +130,7 @@ export default function DashboardPage() {
           {/* オーバーレイ (モバイルのみ) */}
           {sidebarOpen && (
             <div
-              className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20 cursor-pointer"
+              className="md:hidden fixed inset-0 bg-neutral-900/50 backdrop-blur-sm z-20 cursor-pointer animate-fade-in"
               onClick={() => setSidebarOpen(false)}
               onKeyDown={(e) => {
                 if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
@@ -90,11 +145,23 @@ export default function DashboardPage() {
           )}
 
           {/* 記事一覧 */}
-          <div className="flex-1 overflow-hidden">
-            <ArticleList
-              key={`${selectedFeedId}-${refreshKey}`}
-              selectedFeedId={selectedFeedId || undefined}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            {/* タグカルーセル */}
+            <TagCarousel
+              tags={tags}
+              selectedTagId={selectedTagId}
+              onTagSelect={handleTagSelect}
+              isLoading={tagsLoading}
             />
+            
+            {/* 記事リスト */}
+            <div className="flex-1 overflow-hidden">
+              <ArticleList
+                key={`${selectedFeedId}-${selectedTagId}-${refreshKey}`}
+                selectedFeedId={selectedFeedId || undefined}
+                selectedTagId={selectedTagId || undefined}
+              />
+            </div>
           </div>
         </div>
       </div>

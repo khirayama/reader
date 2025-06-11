@@ -7,6 +7,7 @@ import { authRouter } from './auth/routes/authRoutes';
 import { feedRouter } from './feeds/routes/feedRoutes';
 import { articleRouter } from './articles/routes/articleRoutes';
 import { adminRouter } from './admin/routes/adminRoutes';
+import { tagRoutes } from './tags/routes/tagRoutes';
 import opmlRouter from './opml/routes/opmlRoutes';
 import { corsOptions } from './config/cors';
 import {
@@ -60,9 +61,10 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/forgot-password', passwordResetLimiter);
 app.use('/api/auth', authRouter);
 
-// フィード・記事管理ルート
+// フィード・記事・タグ管理ルート
 app.use('/api/feeds', feedRouter);
 app.use('/api/articles', articleRouter);
+app.use('/api/tags', tagRoutes);
 
 // OPML機能ルート
 app.use('/api/opml', opmlRouter);
@@ -113,6 +115,7 @@ if (process.env.NODE_ENV !== 'test') {
     console.log(`🔐 Auth API: http://localhost:${PORT}/api/auth`);
     console.log(`📰 Feed API: http://localhost:${PORT}/api/feeds`);
     console.log(`📄 Article API: http://localhost:${PORT}/api/articles`);
+    console.log(`🏷️  Tag API: http://localhost:${PORT}/api/tags`);
     console.log(`📤 OPML API: http://localhost:${PORT}/api/opml`);
     console.log(`🛡️  Admin API: http://localhost:${PORT}/api/admin`);
   });

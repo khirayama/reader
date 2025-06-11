@@ -255,4 +255,97 @@ export class ArticleService {
       },
     };
   }
+
+  // ユーザーの全記事を取得（タグフィルタリング対応）
+  static async getAllUserArticles(
+    userId: string,
+    page: number = 1,
+    limit: number = 20,
+    search?: string,
+    tagId?: string,
+    feedId?: string
+  ) {
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      feed: { userId },
+      ...(search && {
+        OR: [
+          { title: { contains: search } },
+          { description: { contains: search } },
+        ],
+      }),
+      ...(feedId && {
+        feedId,
+      }),
+      ...(tagId && {
+        feed: {
+          userId,
+          feedTags: {
+            some: {
+              tagId,
+            },
+          },
+        },
+      }),
+    };
+
+    const [articles, total] = await Promise.all([
+      prisma.article.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { publishedAt: 'desc' },
+        include: {
+          feed: {
+            select: {
+              id: true,
+              title: true,
+              favicon: true,
+              feedTags: {
+                include: {
+                  tag: true,
+                },
+              },
+            },
+          },
+          readStatus: {
+            where: { userId },
+            select: { isRead: true, readAt: true },
+          },
+          bookmarks: {
+            where: { userId },
+            select: { id: true },
+          },
+        },
+      }),
+      prisma.article.count({ where }),
+    ]);
+
+    const articlesWithStatus = articles.map((article: any) => ({
+      ...article,
+      feed: {
+        ...article.feed,
+        tags: article.feed.feedTags.map((ft: any) => ft.tag),
+        feedTags: undefined,
+      },
+      isRead: article.readStatus.length > 0 ? article.readStatus[0].isRead : false,
+      readAt: article.readStatus.length > 0 ? article.readStatus[0].readAt : null,
+      isBookmarked: article.bookmarks.length > 0,
+      readStatus: undefined,
+      bookmarks: undefined,
+    }));
+
+    return {
+      articles: articlesWithStatus,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNext: skip + limit < total,
+        hasPrev: page > 1,
+      },
+    };
+  }
 }

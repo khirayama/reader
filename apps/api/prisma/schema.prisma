@@ -24,6 +24,8 @@ model User {
   passwordResetTokens PasswordResetToken[]
   articleReadStatus  ArticleReadStatus[]
   articleBookmarks   ArticleBookmark[]
+  tags               Tag[]
+  feedTags           FeedTag[]
 
   @@map("users")
 }
@@ -57,6 +59,7 @@ model Feed {
   // Relations
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   articles Article[]
+  feedTags FeedTag[]
 
   @@unique([userId, url])
   @@map("feeds")
@@ -124,5 +127,37 @@ model CronLog {
 
   @@index([jobName, executedAt])
   @@map("cron_logs")
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String
+  color     String?  // HEX color code (e.g., #3B82F6)
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedTags FeedTag[]
+
+  @@unique([userId, name]) // Prevent duplicate tag names per user
+  @@map("tags")
+}
+
+model FeedTag {
+  id     String @id @default(cuid())
+  feedId String @map("feed_id")
+  tagId  String @map("tag_id")
+  userId String @map("user_id") // For security and data consistency
+
+  // Relations
+  feed Feed @relation(fields: [feedId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([feedId, tagId]) // Prevent duplicate tag assignments per feed
+  @@index([userId, tagId])   // Optimize tag filtering queries
+  @@map("feed_tags")
 }
 

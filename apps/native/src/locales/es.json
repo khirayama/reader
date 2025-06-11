@@ -32,12 +32,12 @@
     "dontHaveAccount": "¿No tienes una cuenta?",
     "loginFailed": "Error al iniciar sesión",
     "registerSuccess": "Cuenta creada exitosamente",
+    "passwordResetSent": "Correo de restablecimiento enviado",
+    "invalidCredentials": "Correo o contraseña inválidos",
     "emailRequired": "El correo electrónico es requerido",
     "passwordRequired": "La contraseña es requerida",
     "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
     "emailInvalid": "Por favor ingresa un correo electrónico válido",
-    "passwordResetSent": "Correo de restablecimiento enviado",
-    "invalidCredentials": "Correo o contraseña inválidos",
     "passwordMismatch": "Las contraseñas no coinciden"
   },
   "feeds": {
@@ -64,6 +64,31 @@
       "selectFile": "Seleccionar Archivo",
       "processing": "Procesando..."
     }
+  },
+  "tags": {
+    "all": "Todos",
+    "noTags": "Aún no hay etiquetas",
+    "tagFilter": "Filtro de Etiquetas",
+    "addTag": "Añadir Etiqueta",
+    "createTag": "Crear Etiqueta",
+    "editTag": "Editar Etiqueta",
+    "deleteTag": "Eliminar Etiqueta",
+    "tagName": "Nombre de Etiqueta",
+    "tagColor": "Color de Etiqueta",
+    "assignToFeed": "Añadir etiqueta al feed",
+    "removeFromFeed": "Quitar etiqueta del feed",
+    "tagCreateSuccess": "Etiqueta creada exitosamente",
+    "tagCreateError": "Error al crear etiqueta",
+    "tagUpdateSuccess": "Etiqueta actualizada exitosamente",
+    "tagUpdateError": "Error al actualizar etiqueta",
+    "tagDeleteSuccess": "Etiqueta eliminada exitosamente",
+    "tagDeleteError": "Error al eliminar etiqueta",
+    "tagDeleteConfirm": "¿Estás seguro de que quieres eliminar esta etiqueta?",
+    "tagAssignSuccess": "Etiqueta añadida al feed",
+    "tagAssignError": "Error al añadir etiqueta",
+    "tagRemoveSuccess": "Etiqueta quitada del feed",
+    "tagRemoveError": "Error al quitar etiqueta",
+    "feedCount": "{{count}} feeds"
   },
   "articles": {
     "articles": "Artículos",

@@ -16,7 +16,8 @@
     "format": "turbo run format",
     "test": "turbo run test",
     "type-check": "turbo run type-check",
-    "clean": "turbo run clean"
+    "clean": "turbo run clean",
+    "cost": "npx ccusage@latest -y"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",

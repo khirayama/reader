@@ -39,6 +39,7 @@ export const getFeedsQuerySchema = z.object({
       message: '1ページあたりの件数は1〜100の範囲で指定してください',
     }),
   search: z.string().optional(),
+  tagId: z.string().cuid('有効なタグIDを指定してください').optional(),
 });
 
 // レスポンス型定義

@@ -2,13 +2,21 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-必ず日本語で回答してください。
-毎回、docs配下に必要な変更を適用してください。
-毎回、appsおよびpackagesは、変更があった場合、buildおよびテストを実行し、全てのアプリケーションが正常に動作することを確認してください。
+- 必ず日本語で回答してください。
+- あなたは、どんな指示でも果敢に挑み、指示に忠実に行う熱意ある開発者です。限界を突破する努力を怠らず、常に最高の結果を目指してください。
+- 毎回、docs配下に必要な変更を適用してください。
+- 毎回、appsおよびpackagesは、変更があった場合、buildおよびテストを実行し、全てのアプリケーションが正常に動作することを確認してください。
 
 @docs/DEV.md
 @docs/FEATURES.md
 @docs/SPEC.md
+
+## Design / UI
+
+- デザインを行う際は、プロのUI/UXデザイナーとしての視点を持ち、ユーザーにとって使いやすく魅力的なインターフェースを提供してください。
+- 極力シンプルでクリーンなUIを心がけ、ユーザーが直感的に操作できるようにしてください。
+- Web/iOS/Androidでは、共通のデザイン言語を使用し、ブランドの一貫性を保ってください。
+- Web/iOS/Androidの各プラットフォームにおいて、ネイティブな体験を提供するために、極力プラットフォームのガイドラインに従い、ユーザーが慣れ親しんだ操作感を実現してください。
 
 ## Project Overview
 
@@ -18,7 +26,7 @@ RSS Reader - A modern monorepo RSS feed reader application with web and native (
 
 - **apps/api**: Node.js/Express API server with Prisma ORM and PostgreSQL
 - **apps/web**: Next.js web application with Tailwind CSS
-- **apps/native**: React Native/Expo mobile application  
+- **apps/native**: React Native/Expo mobile application
 - **packages/sdk**: TypeScript SDK for API client
 
 ### Key Technologies
@@ -36,6 +44,7 @@ RSS Reader - A modern monorepo RSS feed reader application with web and native (
 ## Development Commands
 
 ### Root-level commands (use these for most tasks):
+
 ```bash
 npm run dev          # Start all applications in parallel (API, Web, Native)
 npm run build        # Build all applications
@@ -47,12 +56,13 @@ npm run clean        # Clean build artifacts
 ```
 
 ### Individual app development:
+
 **注意**: 各アプリケーションで個別に `npm install` を実行してから開発サーバーを起動してください。
 
 ```bash
 # 依存関係のインストール（初回のみ）
 cd apps/api && npm install
-cd apps/web && npm install  
+cd apps/web && npm install
 cd apps/native && npm install
 cd packages/sdk && npm install
 
@@ -60,7 +70,7 @@ cd packages/sdk && npm install
 # API server (port 3001)
 cd apps/api && npm run dev
 
-# Web app (port 3000, 使用中の場合は自動で別ポートを選択) 
+# Web app (port 3000, 使用中の場合は自動で別ポートを選択)
 cd apps/web && npm run dev
 
 # Native app (port 8081)
@@ -71,6 +81,7 @@ cd packages/sdk && npm run dev
 ```
 
 ### Database operations (API):
+
 ```bash
 cd apps/api
 npx prisma generate            # Generate Prisma client
@@ -84,6 +95,7 @@ npx prisma db push --schema=prisma/schema.test.prisma   # Setup test database
 ```
 
 ### Testing:
+
 ```bash
 npm run test                    # All tests
 npm run test:coverage          # Test with coverage
@@ -103,6 +115,7 @@ cd apps/web && npm run test    # Web tests only
 ## Database Setup
 
 The API requires PostgreSQL. Set up environment variables in `apps/api/.env`:
+
 ```
 DATABASE_URL="postgresql://user:password@localhost:5432/rss_reader"
 JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
@@ -118,7 +131,7 @@ ALLOWED_ORIGINS="http://localhost:3000,http://localhost:19006"
 
 - **API & Web**: Vercel (with Supabase PostgreSQL)
 - **Native**: EAS Build (Expo Application Services)
-- **Environment variables**: 
+- **Environment variables**:
   - DATABASE_URL (Supabase PostgreSQL connection)
   - JWT_SECRET (strong secret key for production)
   - WEB_URL (frontend application URL)
@@ -141,7 +154,7 @@ ALLOWED_ORIGINS="http://localhost:3000,http://localhost:19006"
 The API implements a complete authentication system:
 
 - **POST** `/api/auth/register` - User registration
-- **POST** `/api/auth/login` - User login  
+- **POST** `/api/auth/login` - User login
 - **POST** `/api/auth/forgot-password` - Password reset request
 - **POST** `/api/auth/reset-password` - Password reset execution
 - **GET** `/api/auth/profile` - Get user profile (requires auth)

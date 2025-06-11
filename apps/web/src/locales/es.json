@@ -65,6 +65,31 @@
       "processing": "Procesando..."
     }
   },
+  "tags": {
+    "all": "Todos",
+    "noTags": "Aún no hay etiquetas",
+    "tagFilter": "Filtro de Etiquetas",
+    "addTag": "Añadir Etiqueta",
+    "createTag": "Crear Etiqueta",
+    "editTag": "Editar Etiqueta",
+    "deleteTag": "Eliminar Etiqueta",
+    "tagName": "Nombre de Etiqueta",
+    "tagColor": "Color de Etiqueta",
+    "assignToFeed": "Añadir etiqueta al feed",
+    "removeFromFeed": "Quitar etiqueta del feed",
+    "tagCreateSuccess": "Etiqueta creada exitosamente",
+    "tagCreateError": "Error al crear etiqueta",
+    "tagUpdateSuccess": "Etiqueta actualizada exitosamente",
+    "tagUpdateError": "Error al actualizar etiqueta",
+    "tagDeleteSuccess": "Etiqueta eliminada exitosamente",
+    "tagDeleteError": "Error al eliminar etiqueta",
+    "tagDeleteConfirm": "¿Estás seguro de que quieres eliminar esta etiqueta?",
+    "tagAssignSuccess": "Etiqueta añadida al feed",
+    "tagAssignError": "Error al añadir etiqueta",
+    "tagRemoveSuccess": "Etiqueta quitada del feed",
+    "tagRemoveError": "Error al quitar etiqueta",
+    "feedCount": "{{count}} feeds"
+  },
   "articles": {
     "articles": "Artículos",
     "searchArticles": "Buscar artículos...",

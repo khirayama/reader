@@ -50,6 +50,16 @@ export interface Article {
   bookmarkedAt?: string
 }
 
+export interface Tag {
+  id: string
+  name: string
+  color?: string
+  userId: string
+  createdAt: string
+  updatedAt: string
+  feedCount?: number
+}
+
 export interface Feed {
   id: string
   url: string
@@ -61,6 +71,8 @@ export interface Feed {
   lastFetchedAt: string
   createdAt: string
   updatedAt: string
+  tags?: Tag[]
+  articleCount?: number
   _count?: {
     articles: number
   }
@@ -96,6 +108,31 @@ export interface ImportOpmlResponse {
   imported: number
   failed: number
   errors: string[]
+}
+
+export interface TagListResponse {
+  success: boolean
+  data: {
+    tags: Tag[]
+    total: number
+    hasMore: boolean
+  }
+}
+
+export interface CreateTagRequest {
+  name: string
+  color?: string
+}
+
+export interface UpdateTagRequest {
+  name?: string
+  color?: string
+}
+
+export interface AssignTagRequest {
+  tagId?: string
+  tagName?: string
+  color?: string
 }
 
 
@@ -273,11 +310,12 @@ class AuthService {
 class FeedsService {
   constructor(private client: SimpleApiClient) {}
 
-  async getFeeds(query?: { page?: number; limit?: number; search?: string }): Promise<{ feeds: Feed[], pagination: Pagination }> {
+  async getFeeds(query?: { page?: number; limit?: number; search?: string; tagId?: string }): Promise<{ feeds: Feed[], pagination: Pagination }> {
     const params = new URLSearchParams()
     if (query?.page) params.append('page', query.page.toString())
     if (query?.limit) params.append('limit', query.limit.toString())
     if (query?.search) params.append('search', query.search)
+    if (query?.tagId) params.append('tagId', query.tagId)
     
     const path = `/api/feeds${params.toString() ? '?' + params.toString() : ''}`
     const response = await this.client.get<FeedListResponse>(path)
@@ -327,18 +365,31 @@ class FeedsService {
   async refreshAll() {
     return this.refreshAllFeeds()
   }
+
+  async refresh(feedId: string) {
+    return await this.client.post(`/api/feeds/${feedId}/refresh`, {})
+  }
+
+  async assignTagToFeed(feedId: string, data: AssignTagRequest): Promise<{ success: boolean; data: { feedTag: any } }> {
+    return await this.client.post(`/api/feeds/${feedId}/tags`, data)
+  }
+
+  async removeTagFromFeed(feedId: string, tagId: string): Promise<{ success: boolean; message: string }> {
+    return await this.client.delete(`/api/feeds/${feedId}/tags/${tagId}`)
+  }
 }
 
 // 記事サービス
 class ArticlesService {
   constructor(private client: SimpleApiClient) {}
 
-  async getArticles(query?: { page?: number; limit?: number; search?: string; feedId?: string }): Promise<{ articles: Article[], pagination: Pagination }> {
+  async getArticles(query?: { page?: number; limit?: number; search?: string; feedId?: string; tagId?: string }): Promise<{ articles: Article[], pagination: Pagination }> {
     const params = new URLSearchParams()
     if (query?.page) params.append('page', query.page.toString())
     if (query?.limit) params.append('limit', query.limit.toString())
     if (query?.search) params.append('search', query.search)
     if (query?.feedId) params.append('feedId', query.feedId)
+    if (query?.tagId) params.append('tagId', query.tagId)
     
     const path = `/api/articles${params.toString() ? '?' + params.toString() : ''}`
     const response = await this.client.get<ArticleListResponse>(path)
@@ -375,7 +426,7 @@ class ArticlesService {
   }
 
   // Compatibility aliases
-  async getAll(query?: { page?: number; limit?: number; search?: string; feedId?: string }) {
+  async getAll(query?: { page?: number; limit?: number; search?: string; feedId?: string; tagId?: string }) {
     return this.getArticles(query)
   }
 
@@ -407,6 +458,54 @@ class OpmlService {
   }
 }
 
+// タグサービス
+class TagsService {
+  constructor(private client: SimpleApiClient) {}
+
+  async getTags(query?: { search?: string; limit?: number; offset?: number }): Promise<TagListResponse> {
+    const params = new URLSearchParams()
+    if (query?.search) params.append('search', query.search)
+    if (query?.limit) params.append('limit', query.limit.toString())
+    if (query?.offset) params.append('offset', query.offset.toString())
+    
+    const path = `/api/tags${params.toString() ? '?' + params.toString() : ''}`
+    return await this.client.get<TagListResponse>(path)
+  }
+
+  async getTag(tagId: string): Promise<{ success: boolean; data: { tag: Tag } }> {
+    return await this.client.get(`/api/tags/${tagId}`)
+  }
+
+  async createTag(data: CreateTagRequest): Promise<{ success: boolean; data: { tag: Tag } }> {
+    return await this.client.post(`/api/tags`, data)
+  }
+
+  async updateTag(tagId: string, data: UpdateTagRequest): Promise<{ success: boolean; data: { tag: Tag } }> {
+    return await this.client.put(`/api/tags/${tagId}`, data)
+  }
+
+  async deleteTag(tagId: string): Promise<{ success: boolean; message: string }> {
+    return await this.client.delete(`/api/tags/${tagId}`)
+  }
+
+  async assignTagToFeed(feedId: string, data: AssignTagRequest): Promise<{ success: boolean; data: { feedTag: any } }> {
+    return await this.client.post(`/api/feeds/${feedId}/tags`, data)
+  }
+
+  async removeTagFromFeed(feedId: string, tagId: string): Promise<{ success: boolean; message: string }> {
+    return await this.client.delete(`/api/feeds/${feedId}/tags/${tagId}`)
+  }
+
+  async getFeedsByTag(tagId: string, query?: { limit?: number; offset?: number }) {
+    const params = new URLSearchParams()
+    if (query?.limit) params.append('limit', query.limit.toString())
+    if (query?.offset) params.append('offset', query.offset.toString())
+    
+    const path = `/api/tags/${tagId}/feeds${params.toString() ? '?' + params.toString() : ''}`
+    return await this.client.get(path)
+  }
+}
+
 // RSS Reader SDK クラス
 export class RSSReaderSDK {
   private client: SimpleApiClient
@@ -414,6 +513,7 @@ export class RSSReaderSDK {
   public feeds: FeedsService
   public articles: ArticlesService
   public opml: OpmlService
+  public tags: TagsService
 
   constructor(config: SdkConfig) {
     this.client = new SimpleApiClient(config)
@@ -421,6 +521,7 @@ export class RSSReaderSDK {
     this.feeds = new FeedsService(this.client)
     this.articles = new ArticlesService(this.client)
     this.opml = new OpmlService(this.client)
+    this.tags = new TagsService(this.client)
   }
 
   setToken(token: string): void {

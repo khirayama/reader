@@ -5,8 +5,31 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { OpmlManager } from '../components/feeds/OpmlManager';
+import { TagCarousel } from '../components/feeds/TagCarousel';
+import { FeedTagManager } from '../components/feeds/FeedTagManager';
 import type { AppDrawerNavigationProp as DrawerNavigationProp } from '../types/navigation';
-import type { Feed } from '../../../../packages/sdk/src/types';
+
+interface Tag {
+  id: string;
+  name: string;
+  color?: string;
+  feedCount?: number;
+}
+
+interface Feed {
+  id: string;
+  title: string;
+  url: string;
+  siteUrl?: string;
+  description?: string;
+  favicon?: string;
+  userId: string;
+  lastFetchedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  tags?: Tag[];
+  articleCount?: number;
+}
 
 interface FeedsScreenProps {
   navigation: DrawerNavigationProp;
@@ -14,22 +37,33 @@ interface FeedsScreenProps {
 
 export function FeedsScreen({ navigation }: FeedsScreenProps) {
   const [feeds, setFeeds] = useState<Feed[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [selectedTag, setSelectedTag] = useState<Tag | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [tagsLoading, setTagsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newFeedUrl, setNewFeedUrl] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [showOpmlModal, setShowOpmlModal] = useState(false);
+  const [managingFeed, setManagingFeed] = useState<Feed | null>(null);
 
   useEffect(() => {
     loadFeeds();
+    loadTags();
   }, []);
+
+  useEffect(() => {
+    loadFeeds();
+  }, [selectedTag]);
 
   const loadFeeds = async () => {
     try {
       setIsLoading(true);
-      const feedsData = await sdk.feeds.getAll();
-      setFeeds(feedsData);
+      const response = await sdk.feeds.getFeeds({
+        tagId: selectedTag?.id
+      });
+      setFeeds(response.feeds);
     } catch (error: unknown) {
       Alert.alert('エラー', 'フィードの読み込みに失敗しました。');
     } finally {
@@ -37,9 +71,21 @@ export function FeedsScreen({ navigation }: FeedsScreenProps) {
     }
   };
 
+  const loadTags = async () => {
+    try {
+      setTagsLoading(true);
+      const response = await sdk.tags.getTags();
+      setTags(response.data.tags);
+    } catch (error: unknown) {
+      console.error('タグ読み込みエラー:', error);
+    } finally {
+      setTagsLoading(false);
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadFeeds();
+    await Promise.all([loadFeeds(), loadTags()]);
     setRefreshing(false);
   };
 
@@ -51,10 +97,10 @@ export function FeedsScreen({ navigation }: FeedsScreenProps) {
 
     try {
       setIsAdding(true);
-      await sdk.feeds.create({ url: newFeedUrl.trim() });
+      await sdk.feeds.createFeed({ url: newFeedUrl.trim() });
       setNewFeedUrl('');
       setShowAddForm(false);
-      await loadFeeds();
+      await Promise.all([loadFeeds(), loadTags()]);
       Alert.alert('成功', 'フィードを追加しました。');
     } catch (error: unknown) {
       Alert.alert('エラー', error instanceof Error ? error.message : 'フィードの追加に失敗しました。');
@@ -74,8 +120,8 @@ export function FeedsScreen({ navigation }: FeedsScreenProps) {
           style: 'destructive',
           onPress: async () => {
             try {
-              await sdk.feeds.delete(feedId);
-              await loadFeeds();
+              await sdk.feeds.deleteFeed(feedId);
+              await Promise.all([loadFeeds(), loadTags()]);
               Alert.alert('成功', 'フィードを削除しました。');
             } catch (error: unknown) {
               Alert.alert('エラー', 'フィードの削除に失敗しました。');
@@ -110,7 +156,19 @@ export function FeedsScreen({ navigation }: FeedsScreenProps) {
 
   const handleOpmlImportComplete = async () => {
     setShowOpmlModal(false);
-    await loadFeeds(); // フィード一覧を再読み込み
+    await Promise.all([loadFeeds(), loadTags()]); // フィード一覧を再読み込み
+  };
+
+  const handleTagSelect = (tag: Tag | null) => {
+    setSelectedTag(tag);
+  };
+
+  const handleManageTags = (feed: Feed) => {
+    setManagingFeed(feed);
+  };
+
+  const handleTagsUpdated = async () => {
+    await Promise.all([loadFeeds(), loadTags()]);
   };
 
   return (
@@ -134,6 +192,14 @@ export function FeedsScreen({ navigation }: FeedsScreenProps) {
           size="small"
         />
       </View>
+
+      {/* タグフィルター */}
+      <TagCarousel
+        tags={tags}
+        selectedTag={selectedTag}
+        onTagSelect={handleTagSelect}
+        isLoading={tagsLoading}
+      />
 
       {/* フィード追加フォーム */}
       {showAddForm && (
@@ -194,11 +260,37 @@ export function FeedsScreen({ navigation }: FeedsScreenProps) {
                 </Text>
               )}
 
+              {feed.tags && feed.tags.length > 0 && (
+                <View style={styles.tagsContainer}>
+                  {feed.tags.slice(0, 3).map((tag) => (
+                    <View
+                      key={tag.id}
+                      style={[
+                        styles.tagChip,
+                        { backgroundColor: tag.color || '#6B7280' },
+                      ]}
+                    >
+                      <Text style={styles.tagText}>{tag.name}</Text>
+                    </View>
+                  ))}
+                  {feed.tags.length > 3 && (
+                    <Text style={styles.moreTagsText}>+{feed.tags.length - 3}</Text>
+                  )}
+                </View>
+              )}
+
               <Text style={styles.feedMeta}>
                 最終更新: {formatDate(feed.lastFetchedAt)}
               </Text>
 
               <View style={styles.feedActions}>
+                <Button
+                  title="タグ"
+                  onPress={() => handleManageTags(feed)}
+                  variant="outline"
+                  size="small"
+                  style={styles.actionButton}
+                />
                 <Button
                   title="更新"
                   onPress={() => handleRefreshFeed(feed.id)}
@@ -250,6 +342,16 @@ export function FeedsScreen({ navigation }: FeedsScreenProps) {
           </ScrollView>
         </View>
       </Modal>
+
+      {/* フィードタグ管理モーダル */}
+      {managingFeed && (
+        <FeedTagManager
+          feed={managingFeed}
+          isVisible={!!managingFeed}
+          onClose={() => setManagingFeed(null)}
+          onTagsUpdated={handleTagsUpdated}
+        />
+      )}
     </View>
   );
 }
@@ -337,6 +439,28 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginBottom: 8,
     lineHeight: 18,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 8,
+  },
+  tagChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: '#6B7280',
+  },
+  tagText: {
+    fontSize: 11,
+    color: '#FFFFFF',
+    fontWeight: '500',
+  },
+  moreTagsText: {
+    fontSize: 11,
+    color: '#6B7280',
+    alignSelf: 'center',
   },
   feedMeta: {
     fontSize: 12,

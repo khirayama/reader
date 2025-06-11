@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  TextInput,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { FeedSidebar } from '../components/feeds/FeedSidebar';
 import { TaggedArticleCarousel } from '../components/feeds/TaggedArticleCarousel';
 import { colors, shadows } from '../constants/colors';
@@ -17,10 +11,10 @@ interface ArticlesMobileScreenProps {
   onFeedRefresh?: () => void;
 }
 
-export function ArticlesMobileScreen({ 
-  selectedFeedId, 
-  onFeedSelect, 
-  onFeedRefresh 
+export function ArticlesMobileScreen({
+  selectedFeedId,
+  onFeedSelect,
+  onFeedRefresh,
 }: ArticlesMobileScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFeedSidebar, setShowFeedSidebar] = useState(false);
@@ -29,13 +23,10 @@ export function ArticlesMobileScreen({
     <View style={styles.container}>
       {/* ヘッダー */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => setShowFeedSidebar(true)}
-        >
+        <TouchableOpacity style={styles.menuButton} onPress={() => setShowFeedSidebar(true)}>
           <Text style={styles.menuIcon}>☰</Text>
         </TouchableOpacity>
-        
+
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
@@ -53,10 +44,7 @@ export function ArticlesMobileScreen({
       {/* フィードフィルターチップ */}
       {selectedFeedId && (
         <View style={styles.filterChipContainer}>
-          <TouchableOpacity
-            style={styles.filterChip}
-            onPress={() => onFeedSelect?.(null)}
-          >
+          <TouchableOpacity style={styles.filterChip} onPress={() => onFeedSelect?.(null)}>
             <Text style={styles.filterChipText}>フィードフィルター中</Text>
             <Text style={styles.filterChipClose}>×</Text>
           </TouchableOpacity>
@@ -64,10 +52,9 @@ export function ArticlesMobileScreen({
       )}
 
       {/* タグ別記事カルーセル */}
-      <TaggedArticleCarousel 
-        selectedFeedId={selectedFeedId}
-        searchTerm={searchQuery}
-      />
+      <View style={{ flex: 1 }}>
+        <TaggedArticleCarousel selectedFeedId={selectedFeedId} searchTerm={searchQuery} />
+      </View>
 
       {/* フィードサイドバー モーダル */}
       {showFeedSidebar && (

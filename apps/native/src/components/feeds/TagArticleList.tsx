@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { colors } from '../../constants/colors';
 import { spacing, fontSize } from '../../constants/spacing';
@@ -32,7 +34,7 @@ export function TagArticleList({
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 1) {
       return '今日';
     } else if (diffDays === 2) {
@@ -51,7 +53,7 @@ export function TagArticleList({
     try {
       // 記事を既読にマーク
       await onMarkAsRead(article.id);
-      
+
       // 外部ブラウザで開く
       const supported = await Linking.canOpenURL(article.url);
       if (supported) {
@@ -66,10 +68,7 @@ export function TagArticleList({
 
   const renderArticle = ({ item: article }: { item: Article }) => (
     <TouchableOpacity
-      style={[
-        styles.articleItem,
-        article.isRead && styles.articleItemRead
-      ]}
+      style={[styles.articleItem, article.isRead && styles.articleItemRead]}
       onPress={() => handleOpenArticle(article)}
       activeOpacity={0.7}
     >
@@ -78,39 +77,28 @@ export function TagArticleList({
           <Text style={styles.feedTitle} numberOfLines={1}>
             {article.feed?.title || 'フィード'}
           </Text>
-          <Text style={styles.publishDate}>
-            {formatDate(article.publishedAt)}
-          </Text>
+          <Text style={styles.publishDate}>{formatDate(article.publishedAt)}</Text>
         </View>
-        
+
         <TouchableOpacity
           style={styles.bookmarkButton}
           onPress={() => onToggleBookmark(article.id, !!article.isBookmarked)}
         >
-          <Text style={[
-            styles.bookmarkIcon,
-            article.isBookmarked && styles.bookmarkIconActive
-          ]}>
+          <Text style={[styles.bookmarkIcon, article.isBookmarked && styles.bookmarkIconActive]}>
             {article.isBookmarked ? '★' : '☆'}
           </Text>
         </TouchableOpacity>
       </View>
 
       <Text
-        style={[
-          styles.articleTitle,
-          article.isRead && styles.articleTitleRead
-        ]}
+        style={[styles.articleTitle, article.isRead && styles.articleTitleRead]}
         numberOfLines={2}
       >
         {article.title}
       </Text>
 
       {article.description && (
-        <Text
-          style={styles.articleDescription}
-          numberOfLines={2}
-        >
+        <Text style={styles.articleDescription} numberOfLines={2}>
           {article.description}
         </Text>
       )}
@@ -120,15 +108,9 @@ export function TagArticleList({
   const renderHeader = () => (
     <View style={styles.header}>
       <View style={styles.headerContent}>
-        {group.color && (
-          <View 
-            style={[styles.colorIndicator, { backgroundColor: group.color }]}
-          />
-        )}
+        {group.color && <View style={[styles.colorIndicator, { backgroundColor: group.color }]} />}
         <Text style={styles.groupTitle}>{group.name}</Text>
-        <Text style={styles.articleCount}>
-          ({group.articles.length}件)
-        </Text>
+        <Text style={styles.articleCount}>({group.articles.length}件)</Text>
       </View>
     </View>
   );
@@ -160,10 +142,9 @@ export function TagArticleList({
         {group.id === '__all__' ? '記事がありません' : `「${group.name}」の記事がありません`}
       </Text>
       <Text style={styles.emptyDescription}>
-        {group.id === '__all__' 
+        {group.id === '__all__'
           ? 'フィードを追加して記事を読み始めましょう'
-          : 'このタグの記事が更新されるまでお待ちください'
-        }
+          : 'このタグの記事が更新されるまでお待ちください'}
       </Text>
     </View>
   );
@@ -195,8 +176,20 @@ export function TagArticleList({
         onEndReachedThreshold={0.3}
         contentContainerStyle={[
           styles.listContent,
-          group.articles.length === 0 && styles.emptyListContent
+          group.articles.length === 0 && styles.emptyListContent,
         ]}
+        scrollEnabled={true}
+        removeClippedSubviews={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={21}
+        updateCellsBatchingPeriod={50}
+        disableVirtualization={false}
+        getItemLayout={(data, index) => ({
+          length: 120, // 推定される記事アイテムの高さ
+          offset: 120 * index,
+          index,
+        })}
       />
     </View>
   );
@@ -206,9 +199,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.gray[50],
+    overflow: 'hidden',
   },
   listContent: {
     padding: spacing.sm,
+    paddingBottom: spacing.xl * 2, // 下部に余裕を持たせる
   },
   emptyListContent: {
     flex: 1,

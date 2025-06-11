@@ -7,6 +7,8 @@ import {
   FlatList,
   ActivityIndicator,
   Dimensions,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { colors } from '../../constants/colors';
 import { spacing, fontSize } from '../../constants/spacing';
@@ -35,9 +37,16 @@ export function TaggedArticleCarousel({ selectedFeedId, searchTerm }: TaggedArti
   const carouselRef = useRef<FlatList>(null);
   const tabScrollRef = useRef<FlatList>(null);
 
+  const [flatListHeight, setFlatListHeight] = useState(0);
+
+  const onLayout = (event) => {
+    const { height } = event.nativeEvent.layout;
+    setFlatListHeight(height);
+  };
+
   const handleGroupChange = (index: number) => {
     changeGroup(index);
-    
+
     // カルーセルを該当のページにスクロール
     carouselRef.current?.scrollToIndex({
       index,
@@ -57,39 +66,37 @@ export function TaggedArticleCarousel({ selectedFeedId, searchTerm }: TaggedArti
       const index = viewableItems[0].index;
       if (index !== currentGroupIndex) {
         changeGroup(index);
+        // タブを中央に表示
+        tabScrollRef.current?.scrollToIndex({
+          index,
+          animated: true,
+          viewPosition: 0.5,
+        });
       }
     }
   }).current;
 
   const renderTabItem = ({ item, index }: { item: any; index: number }) => {
     const isSelected = currentGroupIndex === index;
-    
+
     return (
       <TouchableOpacity
         style={[
           styles.tabButton,
-          isSelected && [
-            styles.selectedTabButton,
-            item.color && { backgroundColor: item.color },
-          ],
+          isSelected && [styles.selectedTabButton, item.color && { backgroundColor: item.color }],
         ]}
         onPress={() => handleGroupChange(index)}
         activeOpacity={0.7}
       >
         {item.color && (
-          <View 
+          <View
             style={[
-              styles.tabColorIndicator, 
-              { backgroundColor: isSelected ? 'white' : item.color }
+              styles.tabColorIndicator,
+              { backgroundColor: isSelected ? 'white' : item.color },
             ]}
           />
         )}
-        <Text
-          style={[
-            styles.tabText,
-            isSelected && styles.selectedTabText,
-          ]}
-        >
+        <Text style={[styles.tabText, isSelected && styles.selectedTabText]}>
           {item.name}
           {item.articles.length > 0 && (
             <Text style={styles.tabCountText}> ({item.articles.length})</Text>
@@ -100,14 +107,14 @@ export function TaggedArticleCarousel({ selectedFeedId, searchTerm }: TaggedArti
   };
 
   const renderCarouselItem = ({ item }: { item: any }) => (
-    <View style={styles.carouselItem}>
+    <ScrollView style={[styles.carouselItem, { width: screenWidth, height: flatListHeight }]}>
       <TagArticleList
         group={item}
         onLoadMore={loadMoreArticles}
         onMarkAsRead={markArticleAsRead}
         onToggleBookmark={toggleBookmark}
       />
-    </View>
+    </ScrollView>
   );
 
   if (tagsLoading) {
@@ -134,9 +141,7 @@ export function TaggedArticleCarousel({ selectedFeedId, searchTerm }: TaggedArti
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyIcon}>📰</Text>
         <Text style={styles.emptyTitle}>タグがありません</Text>
-        <Text style={styles.emptyDescription}>
-          フィードにタグを設定してください
-        </Text>
+        <Text style={styles.emptyDescription}>フィードにタグを設定してください</Text>
       </View>
     );
   }
@@ -167,26 +172,32 @@ export function TaggedArticleCarousel({ selectedFeedId, searchTerm }: TaggedArti
       </View>
 
       {/* カルーセルコンテンツ */}
-      <FlatList
-        ref={carouselRef}
-        data={articleGroups}
-        renderItem={renderCarouselItem}
-        keyExtractor={(item) => item.id}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={{
-          itemVisiblePercentThreshold: 50,
-        }}
-        getItemLayout={(data, index) => ({
-          length: screenWidth,
-          offset: screenWidth * index,
-          index,
-        })}
-        scrollEventThrottle={16}
-        bounces={false}
-      />
+      <View style={styles.carouselContainer} onLayout={onLayout}>
+        <FlatList
+          ref={carouselRef}
+          data={articleGroups}
+          renderItem={renderCarouselItem}
+          keyExtractor={(item) => item.id}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={{
+            itemVisiblePercentThreshold: 50,
+          }}
+          getItemLayout={(data, index) => ({
+            length: screenWidth,
+            offset: screenWidth * index,
+            index,
+          })}
+          scrollEventThrottle={16}
+          bounces={false}
+          removeClippedSubviews={false}
+          disableIntervalMomentum={true}
+          decelerationRate="fast"
+          style={styles.carousel}
+        />
+      </View>
     </View>
   );
 }
@@ -302,7 +313,12 @@ const styles = StyleSheet.create({
     fontWeight: 'normal',
   },
   carouselItem: {
-    width: screenWidth,
+    flex: 1,
+  },
+  carouselContainer: {
+    flex: 1,
+  },
+  carousel: {
     flex: 1,
   },
 });

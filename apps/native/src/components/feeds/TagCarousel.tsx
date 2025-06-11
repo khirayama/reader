@@ -24,7 +24,12 @@ interface TagCarouselProps {
   isLoading?: boolean;
 }
 
-export function TagCarousel({ tags, selectedTagId, onTagSelect, isLoading = false }: TagCarouselProps) {
+export function TagCarousel({
+  tags,
+  selectedTagId,
+  onTagSelect,
+  isLoading = false,
+}: TagCarouselProps) {
   const { t } = useTranslation();
   if (isLoading) {
     return (
@@ -58,10 +63,10 @@ export function TagCarousel({ tags, selectedTagId, onTagSelect, isLoading = fals
   // 「全て」タグを含むデータ配列を作成
   const allTags = [
     { id: '__all__', name: t('tags.all'), feedCount: totalFeedCount, isAll: true },
-    ...tags.map(tag => ({ ...tag, isAll: false }))
+    ...tags.map((tag) => ({ ...tag, isAll: false })),
   ];
 
-  const renderTag: ListRenderItem<typeof allTags[0]> = ({ item }) => {
+  const renderTag: ListRenderItem<(typeof allTags)[0]> = ({ item }) => {
     const isSelected = item.isAll ? selectedTagId === null : selectedTagId === item.id;
     const tagId = item.isAll ? null : item.id;
 
@@ -77,12 +82,7 @@ export function TagCarousel({ tags, selectedTagId, onTagSelect, isLoading = fals
         ]}
         activeOpacity={0.7}
       >
-        <Text
-          style={[
-            styles.tagText,
-            isSelected && styles.selectedTagText,
-          ]}
-        >
+        <Text style={[styles.tagText, isSelected && styles.selectedTagText]}>
           {item.name}
           {item.feedCount !== undefined && item.feedCount > 0 && (
             <Text style={styles.countText}> ({item.feedCount})</Text>

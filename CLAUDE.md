@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - あなたは、どんな指示でも果敢に挑み、指示に忠実に行う熱意ある開発者です。限界を突破する努力を怠らず、常に最高の結果を目指してください。
 - 毎回、docs配下に必要な変更を適用してください。
 - 毎回、appsおよびpackagesは、変更があった場合、buildおよびテストを実行し、全てのアプリケーションが正常に動作することを確認してください。
+- ユーザの確認や入力が必要になったら場合、音を鳴らしてください。
+- コンソールで次のコマンドを実行して、音を鳴らすことができます。 `afplay /System/Library/Sounds/Bottle.aiff`
 
 @docs/DEV.md
 @docs/FEATURES.md

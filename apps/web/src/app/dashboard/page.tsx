@@ -6,51 +6,22 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { FeedSidebar } from '@/components/feeds/FeedSidebar'
 import { ArticleList } from '@/components/feeds/ArticleList'
-import { TagCarousel } from '@/components/feeds/TagCarousel'
 import Link from 'next/link'
-import { sdk } from '@/lib/sdk'
-import type { Tag } from '@/lib/rss-sdk'
 
 export default function DashboardPage() {
   const { user, logout } = useAuth()
   const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null)
-  const [selectedTagId, setSelectedTagId] = useState<string | null>(null)
-  const [tags, setTags] = useState<Tag[]>([])
-  const [tagsLoading, setTagsLoading] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  // タグ読み込み
-  useEffect(() => {
-    loadTags()
-  }, [])
-
-  const loadTags = async () => {
-    try {
-      setTagsLoading(true)
-      const response = await sdk.tags.getTags({ limit: 50 })
-      setTags(response.data.tags)
-    } catch (error) {
-      console.error('タグの取得に失敗しました:', error)
-    } finally {
-      setTagsLoading(false)
-    }
-  }
 
   const handleFeedSelect = (feedId: string | null) => {
     setSelectedFeedId(feedId)
-    setSelectedTagId(null) // フィード選択時はタグ選択をクリア
     setSidebarOpen(false) // モバイルでフィード選択時にサイドバーを閉じる
-  }
-
-  const handleTagSelect = (tagId: string | null) => {
-    setSelectedTagId(tagId)
-    setSelectedFeedId(null) // タグ選択時はフィード選択をクリア
   }
 
   const handleFeedRefresh = () => {
     setRefreshKey((prev) => prev + 1)
-    loadTags() // タグも更新
   }
 
   return (
@@ -145,23 +116,11 @@ export default function DashboardPage() {
           )}
 
           {/* 記事一覧 */}
-          <div className="flex-1 overflow-hidden flex flex-col">
-            {/* タグカルーセル */}
-            <TagCarousel
-              tags={tags}
-              selectedTagId={selectedTagId}
-              onTagSelect={handleTagSelect}
-              isLoading={tagsLoading}
+          <div className="flex-1 overflow-hidden">
+            <ArticleList
+              key={`${selectedFeedId}-${refreshKey}`}
+              selectedFeedId={selectedFeedId || undefined}
             />
-            
-            {/* 記事リスト */}
-            <div className="flex-1 overflow-hidden">
-              <ArticleList
-                key={`${selectedFeedId}-${selectedTagId}-${refreshKey}`}
-                selectedFeedId={selectedFeedId || undefined}
-                selectedTagId={selectedTagId || undefined}
-              />
-            </div>
           </div>
         </div>
       </div>

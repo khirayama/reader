@@ -8,10 +8,9 @@ import { Button } from '@/components/ui/Button'
 
 interface ArticleListProps {
   selectedFeedId?: string
-  selectedTagId?: string
 }
 
-export function ArticleList({ selectedFeedId, selectedTagId }: ArticleListProps) {
+export function ArticleList({ selectedFeedId }: ArticleListProps) {
   const [searchTerm, setSearchTerm] = useState('')
 
   const handleSearch = (e: React.FormEvent) => {
@@ -25,7 +24,7 @@ export function ArticleList({ selectedFeedId, selectedTagId }: ArticleListProps)
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {selectedTagId ? 'タグ記事' : selectedFeedId ? 'フィード記事' : 'すべての記事'}
+            {selectedFeedId ? 'フィード記事' : 'すべての記事'}
           </h2>
           <form onSubmit={handleSearch} className="flex gap-2 max-w-md">
             <Input

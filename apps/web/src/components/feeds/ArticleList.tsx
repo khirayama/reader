@@ -12,6 +12,7 @@ interface ArticleListProps {
 
 export function ArticleList({ selectedFeedId }: ArticleListProps) {
   const [searchTerm, setSearchTerm] = useState('')
+  const [currentTagName, setCurrentTagName] = useState('すべての記事')
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -24,7 +25,7 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {selectedFeedId ? 'フィード記事' : 'すべての記事'}
+            {selectedFeedId ? 'フィード記事' : currentTagName}
           </h2>
           <form onSubmit={handleSearch} className="flex gap-2 max-w-md">
             <Input
@@ -44,6 +45,7 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
       <TaggedArticleCarousel 
         selectedFeedId={selectedFeedId}
         searchTerm={searchTerm}
+        onCurrentTagChange={setCurrentTagName}
       />
     </div>
   )

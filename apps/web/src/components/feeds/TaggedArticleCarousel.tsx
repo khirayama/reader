@@ -7,12 +7,14 @@ import { TagArticleList } from './TagArticleList'
 interface TaggedArticleCarouselProps {
   selectedFeedId?: string
   searchTerm?: string
+  onCurrentTagChange?: (tagName: string) => void
 }
 
-export function TaggedArticleCarousel({ selectedFeedId, searchTerm }: TaggedArticleCarouselProps) {
+export function TaggedArticleCarousel({ selectedFeedId, searchTerm, onCurrentTagChange }: TaggedArticleCarouselProps) {
   const {
     articleGroups,
     currentGroupIndex,
+    currentTagName,
     tagsLoading,
     changeGroup,
     loadMoreArticles,
@@ -39,6 +41,13 @@ export function TaggedArticleCarousel({ selectedFeedId, searchTerm }: TaggedArti
   useEffect(() => {
     updateShadows()
   }, [articleGroups])
+
+  // 現在のタグ名を親コンポーネントに通知
+  useEffect(() => {
+    if (onCurrentTagChange) {
+      onCurrentTagChange(currentTagName)
+    }
+  }, [currentTagName, onCurrentTagChange])
 
   // カルーセルのスクロール処理（スロットリング付き）
   const handleCarouselScroll = useRef<NodeJS.Timeout | null>(null)

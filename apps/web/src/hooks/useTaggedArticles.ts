@@ -220,9 +220,13 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
     }
   }, [])
 
+  // 現在のタグ名を取得
+  const currentTagName = articleGroups[currentGroupIndex]?.name || 'すべての記事'
+
   return {
     articleGroups,
     currentGroupIndex,
+    currentTagName,
     tagsLoading,
     changeGroup,
     loadMoreArticles,

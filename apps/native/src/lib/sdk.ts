@@ -194,7 +194,7 @@ class FeedsService {
   async getFeeds(query?: { page?: number; limit?: number; search?: string; tagId?: string }): Promise<{ feeds: Feed[], pagination: Pagination }> {
     const params = new URLSearchParams();
     if (query?.page) params.append('page', query.page.toString());
-    if (query?.limit) params.append('limit', query.limit.toString());
+    params.append('limit', (query?.limit || 1000).toString());
     if (query?.search) params.append('search', query.search);
     if (query?.tagId) params.append('tagId', query.tagId);
     

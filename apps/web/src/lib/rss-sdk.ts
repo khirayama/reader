@@ -184,16 +184,20 @@ class SimpleApiClient {
     }
 
     try {
+      console.log('[SDK] API呼び出し開始:', method, url, config)
       const response = await fetch(url, config)
       
       if (!response.ok) {
+        console.error('[SDK] APIエラー:', response.status, response.statusText)
         const errorData = await response.json()
         throw new Error(errorData.error || `HTTP ${response.status}`)
       }
       
       const result = await response.json()
+      console.log('[SDK] API呼び出し成功:', result)
       return result
     } catch (error) {
+      console.error('[SDK] API呼び出しエラー:', error)
       if (error instanceof Error) {
         throw error
       }

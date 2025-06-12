@@ -20,17 +20,22 @@ interface UseTaggedArticlesOptions {
 export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArticlesOptions = {}) {
   const [tags, setTags] = useState<Tag[]>([])
   const [articleGroups, setArticleGroups] = useState<TaggedArticleGroup[]>([])
-  const [tagsLoading, setTagsLoading] = useState(false)
+  const [tagsLoading, setTagsLoading] = useState(true)
   const [currentGroupIndex, setCurrentGroupIndex] = useState(0)
+  const [initialized, setInitialized] = useState(false)
 
   // タグ一覧の読み込み
   const loadTags = useCallback(async () => {
     try {
       setTagsLoading(true)
+      console.log('[loadTags] タグ読み込み開始')
       const response = await sdk.tags.getTags({ limit: 50 })
+      console.log('[loadTags] タグ読み込み完了:', response.data.tags.length, '件')
       setTags(response.data.tags)
     } catch (error) {
       console.error('タグ読み込みエラー:', error)
+      // タグ読み込み失敗時も空配列で初期化を継続
+      setTags([])
     } finally {
       setTagsLoading(false)
     }
@@ -39,7 +44,6 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
   // 特定のタググループの記事を読み込み
   const loadArticlesForGroup = useCallback(async (groupId: string, page = 1, reset = false) => {
     try {
-      // デバッグログ
       console.log(`[loadArticlesForGroup] グループ: ${groupId}, ページ: ${page}, リセット: ${reset}`)
       
       setArticleGroups(prev => 
@@ -73,13 +77,14 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
         params.search = searchTerm
       }
 
+      console.log('[loadArticlesForGroup] APIコール開始:', params)
       const response = await sdk.articles.getAll(params)
+      console.log(`[loadArticlesForGroup] APIコール完了: ${response.articles.length}件取得`)
 
       setArticleGroups(prev => 
         prev.map(group => {
           if (group.id === groupId) {
-            const newPage = reset ? 2 : Math.min(page + 1, 10) // ページ上限を10に制限
-            console.log(`[loadArticlesForGroup] 更新後ページ: ${newPage}, 記事数: ${reset ? response.articles.length : group.articles.length + response.articles.length}`)
+            const newPage = reset ? 2 : Math.min(page + 1, 10)
             return {
               ...group,
               articles: reset ? response.articles : [...group.articles, ...response.articles],
@@ -103,8 +108,10 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
     }
   }, [selectedFeedId, searchTerm])
 
-  // 記事グループの初期化（グループ作成のみ）
+  // 記事グループの初期化
   const initializeArticleGroups = useCallback(() => {
+    console.log('[initializeArticleGroups] 記事グループを初期化中...')
+    
     // 「全ての記事」グループを最初に追加
     const allGroup: TaggedArticleGroup = {
       id: '__all__',
@@ -127,68 +134,35 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
     }))
 
     const groups = [allGroup, ...tagGroups]
+    console.log(`[initializeArticleGroups] ${groups.length}個のグループを作成`)
     setArticleGroups(groups)
-    
-    // 初期記事読み込みは遅延実行
-    setTimeout(() => {
-      if (groups.length > 0) {
-        loadArticlesForGroup(groups[0].id, 1, true)
-      }
-    }, 50)
+    setInitialized(true)
   }, [tags])
 
-  // タグの読み込み
-  useEffect(() => {
-    loadTags()
-  }, [loadTags])
-
-  // タグが変更されたら記事グループを再初期化
-  useEffect(() => {
-    if (tags.length > 0) {
-      initializeArticleGroups()
+  // 初期データ読み込み
+  const loadInitialData = useCallback(async () => {
+    if (initialized && articleGroups.length > 0) {
+      const firstGroup = articleGroups[0]
+      if (firstGroup.articles.length === 0 && !firstGroup.loading) {
+        console.log('[loadInitialData] 初期記事データを読み込み開始')
+        await loadArticlesForGroup(firstGroup.id, 1, true)
+      }
     }
-  }, [tags, initializeArticleGroups])
-
-  // 検索条件が変更されたら現在のグループの記事をリセット
-  useEffect(() => {
-    if (articleGroups.length > 0) {
-      // 現在表示中のグループの記事をクリアしてページをリセット
-      setArticleGroups(prev => 
-        prev.map(group => 
-          group.id === prev[currentGroupIndex]?.id
-            ? { ...group, articles: [], page: 1, hasMore: true, loading: false }
-            : group
-        )
-      )
-      
-      // 遅延実行で記事を再読み込み（状態更新完了後）
-      const timeoutId = setTimeout(() => {
-        const currentGroup = articleGroups[currentGroupIndex]
-        if (currentGroup) {
-          loadArticlesForGroup(currentGroup.id, 1, true)
-        }
-      }, 100)
-      
-      return () => clearTimeout(timeoutId)
-    }
-  }, [searchTerm, selectedFeedId])
+  }, [initialized, articleGroups.length, articleGroups[0]?.articles?.length, articleGroups[0]?.loading])
 
   // グループ変更時の記事読み込み
   const changeGroup = useCallback(async (index: number) => {
     console.log(`[changeGroup] グループ変更: インデックス ${index}`)
     setCurrentGroupIndex(index)
     
-    // 遅延実行で記事読み込み（状態更新完了後）
-    setTimeout(() => {
-      setArticleGroups(prev => {
-        const group = prev[index]
-        if (group && group.articles.length === 0 && !group.loading) {
-          loadArticlesForGroup(group.id, 1, true)
-        }
-        return prev
-      })
-    }, 10)
-  }, [])
+    if (articleGroups[index]) {
+      const targetGroup = articleGroups[index]
+      if (targetGroup.articles.length === 0 && !targetGroup.loading) {
+        console.log(`[changeGroup] グループ ${targetGroup.name} の記事を読み込み`)
+        await loadArticlesForGroup(targetGroup.id, 1, true)
+      }
+    }
+  }, [articleGroups])
 
   // 追加読み込み
   const loadMoreArticles = useCallback(async () => {
@@ -196,10 +170,8 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
     if (currentGroup && currentGroup.hasMore && !currentGroup.loading && currentGroup.page <= 10) {
       console.log(`[loadMoreArticles] 追加読み込み実行: グループ ${currentGroup.id}, ページ ${currentGroup.page}`)
       await loadArticlesForGroup(currentGroup.id, currentGroup.page, false)
-    } else if (currentGroup?.page > 10) {
-      console.log(`[loadMoreArticles] ページ制限に達しました: ${currentGroup.page}`)
     }
-  }, [articleGroups, currentGroupIndex, loadArticlesForGroup])
+  }, [articleGroups, currentGroupIndex])
 
   // 記事の既読マーク
   const markArticleAsRead = useCallback(async (articleId: string) => {
@@ -247,6 +219,75 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
       console.error('ブックマーク操作エラー:', error)
     }
   }, [])
+
+  // 検索・フィルタ条件変更時のリセット
+  const refreshCurrentGroup = useCallback(async () => {
+    if (articleGroups.length > 0 && currentGroupIndex >= 0) {
+      const currentGroup = articleGroups[currentGroupIndex]
+      if (currentGroup) {
+        console.log('[refreshCurrentGroup] 現在のグループを再読み込み:', currentGroup.name)
+        setArticleGroups(prev => 
+          prev.map(group => 
+            group.id === currentGroup.id
+              ? { ...group, articles: [], page: 1, hasMore: true, loading: false }
+              : group
+          )
+        )
+        // 少し遅延させてから記事読み込み
+        setTimeout(() => {
+          loadArticlesForGroup(currentGroup.id, 1, true)
+        }, 100)
+      }
+    }
+  }, [articleGroups, currentGroupIndex, loadArticlesForGroup])
+
+  // タグ読み込み
+  useEffect(() => {
+    console.log('[useEffect] タグ読み込み開始')
+    loadTags()
+  }, [loadTags])
+
+  // タグ読み込み完了後のグループ初期化
+  useEffect(() => {
+    if (!tagsLoading) {
+      console.log(`[useEffect] タグ読み込み完了、グループ初期化開始（タグ数: ${tags.length}）`)
+      initializeArticleGroups()
+    }
+  }, [tagsLoading, tags.length])
+
+  // 初期記事データ読み込み
+  useEffect(() => {
+    if (initialized && articleGroups.length > 0) {
+      const firstGroup = articleGroups[0]
+      if (firstGroup && firstGroup.articles.length === 0 && !firstGroup.loading) {
+        console.log('[useEffect] 初期記事データを読み込み開始')
+        loadArticlesForGroup(firstGroup.id, 1, true)
+      }
+    }
+  }, [initialized, articleGroups.length])
+
+  // 検索・フィルタ条件変更時の処理
+  useEffect(() => {
+    if (initialized && articleGroups.length > 0) {
+      console.log('[useEffect] 検索・フィルタ条件変更検出、現在のグループをリセット')
+      const currentGroup = articleGroups[currentGroupIndex]
+      if (currentGroup) {
+        // 現在のグループの記事をクリア
+        setArticleGroups(prev => 
+          prev.map(group => 
+            group.id === currentGroup.id
+              ? { ...group, articles: [], page: 1, hasMore: true, loading: false }
+              : group
+          )
+        )
+        
+        // 少し遅延してから記事を再読み込み
+        setTimeout(() => {
+          loadArticlesForGroup(currentGroup.id, 1, true)
+        }, 100)
+      }
+    }
+  }, [searchTerm, selectedFeedId])
 
   return {
     articleGroups,

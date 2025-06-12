@@ -33,6 +33,8 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
       setTags(response.data.tags)
     } catch (error) {
       console.error('タグ読み込みエラー:', error)
+      // タグ取得に失敗した場合は空配列を設定
+      setTags([])
     } finally {
       setTagsLoading(false)
     }
@@ -139,10 +141,11 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
 
   // タグが変更されたら記事グループを再初期化
   useEffect(() => {
-    if (tags.length > 0) {
+    // タグの読み込みが完了したら（空配列でも）記事グループを初期化
+    if (!tagsLoading) {
       initializeArticleGroups()
     }
-  }, [tags, initializeArticleGroups])
+  }, [tags, initializeArticleGroups, tagsLoading])
 
   // 検索条件が変更されたら全グループの記事をリセット
   useEffect(() => {

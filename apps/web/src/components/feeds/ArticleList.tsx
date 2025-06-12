@@ -2,7 +2,7 @@
 
 import type React from 'react'
 import { useState, useEffect } from 'react'
-import { TaggedArticleCarousel } from './TaggedArticleCarousel'
+import { SimpleArticleList } from './SimpleArticleList'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { sdk } from '@/lib/sdk'
@@ -13,7 +13,6 @@ interface ArticleListProps {
 
 export function ArticleList({ selectedFeedId }: ArticleListProps) {
   const [searchTerm, setSearchTerm] = useState('')
-  const [currentTagName, setCurrentTagName] = useState('すべての記事')
   const [currentFeedName, setCurrentFeedName] = useState('')
 
   // フィード情報を取得
@@ -37,7 +36,7 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    // 検索は TaggedArticleCarousel 内で処理される
+    // 検索は SimpleArticleList 内で処理される
   }
 
   return (
@@ -46,7 +45,7 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-3">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {selectedFeedId ? currentFeedName : currentTagName}
+            {selectedFeedId ? currentFeedName : 'すべての記事'}
           </h2>
           <form onSubmit={handleSearch} className="flex gap-2 max-w-md">
             <Input
@@ -62,11 +61,10 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
         </div>
       </div>
 
-      {/* タグ別記事カルーセル */}
-      <TaggedArticleCarousel 
+      {/* シンプルな記事一覧 */}
+      <SimpleArticleList 
         selectedFeedId={selectedFeedId}
         searchTerm={searchTerm}
-        onCurrentTagChange={setCurrentTagName}
       />
     </div>
   )

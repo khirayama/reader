@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: spacing.md,
     backgroundColor: colors.gray[100],
-    borderRadius: 8,
+    borderRadius: 6,
     paddingHorizontal: spacing.sm,
   },
   searchInput: {
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary[100],
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
-    borderRadius: 16,
+    borderRadius: 12,
     marginHorizontal: spacing.md,
     marginBottom: spacing.sm,
   },

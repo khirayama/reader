@@ -14,7 +14,7 @@ interface ButtonProps {
   title: string;
   onPress: () => void;
   variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'success';
-  size?: 'small' | 'medium' | 'large';
+  size?: 'sm' | 'md' | 'lg';
   disabled?: boolean;
   loading?: boolean;
   icon?: React.ReactNode;
@@ -27,7 +27,7 @@ export function Button({
   title, 
   onPress, 
   variant = 'primary', 
-  size = 'medium', 
+  size = 'md', 
   disabled = false,
   loading = false,
   icon,
@@ -134,19 +134,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
     elevation: 0,
   },
-  small: {
+  sm: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 4,
   },
-  medium: {
+  md: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-  },
-  large: {
-    paddingHorizontal: 24,
-    paddingVertical: 10,
     borderRadius: 6,
+  },
+  lg: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
   },
   fullWidth: {
     width: '100%',
@@ -170,14 +171,14 @@ const styles = StyleSheet.create({
   outlineText: {
     color: colors.primary[600],
   },
-  smallText: {
+  smText: {
+    fontSize: 12,
+  },
+  mdText: {
     fontSize: 14,
   },
-  mediumText: {
+  lgText: {
     fontSize: 16,
-  },
-  largeText: {
-    fontSize: 18,
   },
   contentContainer: {
     flexDirection: 'row',

@@ -159,7 +159,9 @@ export function FeedSidebar({
       {/* ヘッダーセクション */}
       <View style={styles.header}>
         <View style={styles.headerTitle}>
-          <Text style={styles.headerIcon}>📡</Text>
+          <View style={styles.headerIconContainer}>
+            <Text style={styles.headerIcon}>📡</Text>
+          </View>
           <Text style={styles.headerText}>フィード管理</Text>
         </View>
 
@@ -183,16 +185,15 @@ export function FeedSidebar({
 
         {/* 操作ボタン */}
         <View style={styles.fullWidthButtonContainer}>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.actionButtonSecondary, styles.fullWidthButton]}
+          <Button
+            title={refreshingAll ? '更新中' : '更新'}
             onPress={handleRefreshAll}
             disabled={refreshingAll}
-          >
-            <Text style={styles.actionButtonIcon}>🔄</Text>
-            <Text style={[styles.actionButtonText, styles.actionButtonTextSecondary]}>
-              {refreshingAll ? '更新中' : '更新'}
-            </Text>
-          </TouchableOpacity>
+            loading={refreshingAll}
+            variant="secondary"
+            fullWidth
+            icon={<Text style={styles.refreshIcon}>🔄</Text>}
+          />
         </View>
       </View>
 
@@ -306,9 +307,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  headerIcon: {
-    fontSize: 20,
+  headerIconContainer: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: spacing.sm,
+  },
+  headerIcon: {
+    fontSize: 18,
+    color: colors.primary[600],
   },
   headerText: {
     fontSize: fontSize.lg,
@@ -510,5 +518,8 @@ const styles = StyleSheet.create({
   feedTitleActive: {
     color: colors.primary[700],
     fontWeight: '600',
+  },
+  refreshIcon: {
+    fontSize: 16,
   },
 });

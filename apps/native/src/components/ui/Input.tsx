@@ -49,12 +49,13 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: colors.gray[300],
-    borderRadius: 4,
+    borderRadius: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
     fontSize: 14,
     backgroundColor: colors.white,
     color: colors.gray[900],
+    minHeight: 44, // アクセシビリティ対応
     ...shadows.sm,
   },
   inputError: {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -29,6 +29,15 @@ export function TagArticleList({
   onMarkAsRead,
   onToggleBookmark,
 }: TagArticleListProps) {
+  const onEndReachedCalledDuringMomentum = useRef(false)
+  
+  const handleLoadMore = useCallback(() => {
+    if (!onEndReachedCalledDuringMomentum.current && group.hasMore && !group.loading) {
+      console.log(`[TagArticleList] ロードモア 実行: グループ ${group.id}, ページ ${group.page}`)
+      onLoadMore()
+      onEndReachedCalledDuringMomentum.current = true
+    }
+  }, [group.hasMore, group.loading, group.id, group.page, onLoadMore])
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -168,12 +177,11 @@ export function TagArticleList({
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         showsVerticalScrollIndicator={false}
-        onEndReached={() => {
-          if (group.hasMore && !group.loading) {
-            onLoadMore();
-          }
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.1}
+        onMomentumScrollBegin={() => {
+          onEndReachedCalledDuringMomentum.current = false
         }}
-        onEndReachedThreshold={0.3}
         contentContainerStyle={[
           styles.listContent,
           group.articles.length === 0 && styles.emptyListContent,

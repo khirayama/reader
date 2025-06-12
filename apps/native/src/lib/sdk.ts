@@ -234,7 +234,7 @@ class FeedsService {
 
   // Compatibility aliases
   async getAll(query?: { page?: number; limit?: number; search?: string; tagId?: string }): Promise<Feed[]> {
-    const response = await this.getFeeds(query);
+    const response = await this.getFeeds({ limit: 1000, ...query });
     return response.feeds;
   }
 

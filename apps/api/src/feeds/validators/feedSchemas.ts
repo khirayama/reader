@@ -35,8 +35,8 @@ export const getFeedsQuerySchema = z.object({
     .string()
     .optional()
     .transform((val) => (val ? Number.parseInt(val, 10) : 20))
-    .refine((val) => val > 0 && val <= 100, {
-      message: '1ページあたりの件数は1〜100の範囲で指定してください',
+    .refine((val) => val > 0 && val <= 1000, {
+      message: '1ページあたりの件数は1〜1000の範囲で指定してください',
     }),
   search: z.string().optional(),
   tagId: z.string().cuid('有効なタグIDを指定してください').optional(),

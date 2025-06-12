@@ -184,22 +184,6 @@ export function FeedSidebar({
         {/* 操作ボタン */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[
-              styles.actionButton,
-              selectedFeedId ? styles.actionButtonOutline : styles.actionButtonPrimary
-            ]}
-            onPress={() => onFeedSelect(null)}
-          >
-            <Text style={styles.actionButtonIcon}>📰</Text>
-            <Text style={[
-              styles.actionButtonText,
-              selectedFeedId ? styles.actionButtonTextOutline : styles.actionButtonTextPrimary
-            ]}>
-              すべて
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
             style={[styles.actionButton, styles.actionButtonSecondary]}
             onPress={handleRefreshAll}
             disabled={refreshingAll}
@@ -210,6 +194,32 @@ export function FeedSidebar({
             </Text>
           </TouchableOpacity>
         </View>
+      </View>
+
+      {/* すべてのフィード（Sticky） */}
+      <View style={styles.stickyAllFeeds}>
+        <TouchableOpacity
+          style={[
+            styles.feedItem,
+            styles.allFeedsItem,
+            !selectedFeedId && styles.feedItemActive
+          ]}
+          onPress={() => onFeedSelect(null)}
+        >
+          <View style={styles.feedIcon}>
+            <View style={[styles.defaultIcon, styles.allFeedsIcon]}>
+              <Text style={styles.allFeedsIconText}>全</Text>
+            </View>
+          </View>
+          <View style={styles.feedContent}>
+            <Text style={[
+              styles.feedTitle,
+              !selectedFeedId && styles.feedTitleActive
+            ]}>
+              すべてのフィード
+            </Text>
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* フィード一覧 */}
@@ -462,5 +472,37 @@ const styles = StyleSheet.create({
   feedItemCount: {
     fontSize: fontSize.xs,
     color: colors.gray[500],
+  },
+  // Sticky All Feeds styles
+  stickyAllFeeds: {
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray[200],
+    padding: spacing.sm,
+  },
+  allFeedsItem: {
+    backgroundColor: 'transparent',
+    marginBottom: 0,
+  },
+  allFeedsIcon: {
+    backgroundColor: colors.primary[600],
+  },
+  allFeedsIconText: {
+    fontSize: 10,
+    color: colors.white,
+    fontWeight: '600',
+  },
+  feedContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+  feedTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: '500',
+    color: colors.gray[900],
+  },
+  feedTitleActive: {
+    color: colors.primary[700],
+    fontWeight: '600',
   },
 });

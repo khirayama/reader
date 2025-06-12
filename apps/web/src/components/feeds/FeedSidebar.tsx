@@ -202,6 +202,35 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
         </div>
       </div>
 
+      {/* すべてのフィード（Sticky） */}
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-neutral-200 dark:border-neutral-700">
+        <div className="p-2">
+          <div
+            className={`group relative py-2 px-2 cursor-pointer transition-colors duration-200 ${
+              !selectedFeedId
+                ? 'bg-primary-50 dark:bg-primary-900/20 border-l-2 border-primary-500'
+                : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/50'
+            }`}
+            onClick={() => onFeedSelect(null)}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 flex-1 min-w-0">
+                <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-600 rounded text-white text-xs font-bold">
+                  全
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
+                      すべてのフィード
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* フィード一覧 */}
       <div className="flex-1 overflow-y-auto">
         {loading ? (
@@ -217,7 +246,7 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
           <div className="p-4 text-center">
             <div className="mb-4">
               <svg className="w-12 h-12 mx-auto text-neutral-300 dark:text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 717 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z" />
               </svg>
             </div>
             <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">フィードがありません</p>

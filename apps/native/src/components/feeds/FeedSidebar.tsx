@@ -182,9 +182,9 @@ export function FeedSidebar({
         </View>
 
         {/* 操作ボタン */}
-        <View style={styles.buttonContainer}>
+        <View style={styles.fullWidthButtonContainer}>
           <TouchableOpacity
-            style={[styles.actionButton, styles.actionButtonSecondary]}
+            style={[styles.actionButton, styles.actionButtonSecondary, styles.fullWidthButton]}
             onPress={handleRefreshAll}
             disabled={refreshingAll}
           >
@@ -327,6 +327,12 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     gap: spacing.sm,
+  },
+  fullWidthButtonContainer: {
+    width: '100%',
+  },
+  fullWidthButton: {
+    width: '100%',
   },
   actionButton: {
     flex: 1,

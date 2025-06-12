@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { FeedSidebar } from '../components/feeds/FeedSidebar';
 import { TaggedArticleCarousel } from '../components/feeds/TaggedArticleCarousel';
 import { colors, shadows } from '../constants/colors';
 import { spacing, fontSize } from '../constants/spacing';
+import { sdk } from '../lib/sdk';
 
 interface ArticlesMobileScreenProps {
   selectedFeedId?: string | null;
@@ -18,6 +19,26 @@ export function ArticlesMobileScreen({
 }: ArticlesMobileScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFeedSidebar, setShowFeedSidebar] = useState(false);
+  const [currentFeedName, setCurrentFeedName] = useState('');
+
+  // フィード情報を取得
+  useEffect(() => {
+    const fetchFeedInfo = async () => {
+      if (selectedFeedId) {
+        try {
+          const feed = await sdk.feeds.getFeed(selectedFeedId);
+          setCurrentFeedName(feed.title);
+        } catch (error) {
+          console.error('フィード情報取得エラー:', error);
+          setCurrentFeedName('フィードフィルター中');
+        }
+      } else {
+        setCurrentFeedName('');
+      }
+    };
+
+    fetchFeedInfo();
+  }, [selectedFeedId]);
 
   return (
     <View style={styles.container}>
@@ -45,7 +66,7 @@ export function ArticlesMobileScreen({
       {selectedFeedId && (
         <View style={styles.filterChipContainer}>
           <TouchableOpacity style={styles.filterChip} onPress={() => onFeedSelect?.(null)}>
-            <Text style={styles.filterChipText}>フィードフィルター中</Text>
+            <Text style={styles.filterChipText}>{currentFeedName || 'フィードフィルター中'}</Text>
             <Text style={styles.filterChipClose}>×</Text>
           </TouchableOpacity>
         </View>

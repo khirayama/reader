@@ -11,7 +11,7 @@ import { useToast } from '@/components/ui/Toast'
 import { FeedTagManager } from './FeedTagManager'
 
 interface FeedSidebarProps {
-  selectedFeedId?: string
+  selectedFeedId?: string | null
   onFeedSelect: (feedId: string | null) => void
   onFeedRefresh: () => void
 }

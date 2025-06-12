@@ -322,6 +322,11 @@ class FeedsService {
     return response.data || response as any
   }
 
+  async getFeed(feedId: string): Promise<Feed> {
+    const response = await this.client.get<{ success: boolean; data: Feed }>(`/api/feeds/${feedId}`)
+    return response.data
+  }
+
   async createFeed(data: { url: string }) {
     return await this.client.post('/api/feeds', data)
   }

@@ -13,6 +13,7 @@ import { TaggedArticleCarousel } from '../components/feeds/TaggedArticleCarousel
 import { colors, shadows } from '../constants/colors';
 import { spacing, fontSize } from '../constants/spacing';
 import type { Article } from '../lib/sdk';
+import { sdk } from '../lib/sdk';
 
 interface ArticlesTabletScreenProps {
   selectedFeedId?: string | null;
@@ -22,6 +23,26 @@ interface ArticlesTabletScreenProps {
 export function ArticlesTabletScreen({ selectedFeedId, refreshKey }: ArticlesTabletScreenProps) {
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentFeedName, setCurrentFeedName] = useState('');
+
+  // フィード情報を取得
+  useEffect(() => {
+    const fetchFeedInfo = async () => {
+      if (selectedFeedId) {
+        try {
+          const feed = await sdk.feeds.getFeed(selectedFeedId);
+          setCurrentFeedName(feed.title);
+        } catch (error) {
+          console.error('フィード情報取得エラー:', error);
+          setCurrentFeedName('フィードフィルター中');
+        }
+      } else {
+        setCurrentFeedName('');
+      }
+    };
+
+    fetchFeedInfo();
+  }, [selectedFeedId]);
 
   // refreshKeyが変更されたときに記事をリフレッシュ（将来の機能拡張用）
   useEffect(() => {
@@ -82,7 +103,7 @@ export function ArticlesTabletScreen({ selectedFeedId, refreshKey }: ArticlesTab
         {/* フィードフィルターチップ */}
         {selectedFeedId && (
           <View style={styles.filterChip}>
-            <Text style={styles.filterChipText}>フィードフィルター中</Text>
+            <Text style={styles.filterChipText}>{currentFeedName || 'フィードフィルター中'}</Text>
           </View>
         )}
 

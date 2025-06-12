@@ -5,7 +5,7 @@ import { useTaggedArticles } from '@/hooks/useTaggedArticles'
 import { TagArticleList } from './TagArticleList'
 
 interface TaggedArticleCarouselProps {
-  selectedFeedId?: string
+  selectedFeedId?: string | null
   searchTerm?: string
   onCurrentTagChange?: (tagName: string) => void
 }

@@ -16,7 +16,7 @@ export interface TaggedArticleGroup {
 
 interface UseTaggedArticlesOptions {
   searchTerm?: string
-  selectedFeedId?: string
+  selectedFeedId?: string | null
 }
 
 export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArticlesOptions = {}) {

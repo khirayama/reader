@@ -203,6 +203,11 @@ class FeedsService {
     return response.data;
   }
 
+  async getFeed(feedId: string): Promise<Feed> {
+    const response = await this.client.get<{ success: boolean; data: Feed }>(`/api/feeds/${feedId}`);
+    return response.data;
+  }
+
   async createFeed(data: { url: string }) {
     return await this.client.post('/api/feeds', data);
   }
@@ -225,6 +230,24 @@ class FeedsService {
 
   async removeTagFromFeed(feedId: string, tagId: string) {
     return await this.client.delete(`/api/feeds/${feedId}/tags/${tagId}`);
+  }
+
+  // Compatibility aliases
+  async getAll(query?: { page?: number; limit?: number; search?: string; tagId?: string }): Promise<Feed[]> {
+    const response = await this.getFeeds(query);
+    return response.feeds;
+  }
+
+  async create(data: { url: string }) {
+    return this.createFeed(data);
+  }
+
+  async delete(feedId: string) {
+    return this.deleteFeed(feedId);
+  }
+
+  async refreshAll() {
+    return this.refreshAllFeeds();
   }
 }
 

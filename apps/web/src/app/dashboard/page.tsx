@@ -80,7 +80,7 @@ export default function DashboardPage() {
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           } md:translate-x-0 transition-transform duration-300 ease-out fixed md:static inset-y-0 left-0 z-30 w-full md:w-80 surface-elevated border-r divider shadow-lg md:shadow-none`}>
             <FeedSidebar
-              selectedFeedId={selectedFeedId || undefined}
+              selectedFeedId={selectedFeedId}
               onFeedSelect={handleFeedSelect}
               onFeedRefresh={handleFeedRefresh}
             />
@@ -107,7 +107,7 @@ export default function DashboardPage() {
           <div className="flex-1 overflow-hidden">
             <ArticleList
               key={`${selectedFeedId}-${refreshKey}`}
-              selectedFeedId={selectedFeedId || undefined}
+              selectedFeedId={selectedFeedId}
             />
           </div>
         </div>

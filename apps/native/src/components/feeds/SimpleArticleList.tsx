@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,36 +8,158 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
-  Platform,
-  ScrollView,
+  RefreshControl,
 } from 'react-native';
 import { colors } from '../../constants/colors';
 import { spacing, fontSize } from '../../constants/spacing';
-import type { TaggedArticleGroup } from '../../hooks/useTaggedArticles';
+import { sdk } from '../../lib/sdk';
 import type { Article } from '../../lib/sdk';
 
-interface TagArticleListProps {
-  group: TaggedArticleGroup;
-  onLoadMore: () => void;
-  onMarkAsRead: (articleId: string) => void;
-  onToggleBookmark: (articleId: string, isBookmarked: boolean) => void;
+interface SimpleArticleListProps {
+  selectedFeedId?: string | null;
+  searchTerm?: string;
 }
 
-export function TagArticleList({
-  group,
-  onLoadMore,
-  onMarkAsRead,
-  onToggleBookmark,
-}: TagArticleListProps) {
-  const onEndReachedCalledDuringMomentum = useRef(false)
-  
-  const handleLoadMore = useCallback(() => {
-    if (!onEndReachedCalledDuringMomentum.current && group.hasMore && !group.loading) {
-      console.log(`[TagArticleList] ロードモア 実行: グループ ${group.id}, ページ ${group.page}`)
-      onLoadMore()
-      onEndReachedCalledDuringMomentum.current = true
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export function SimpleArticleList({
+  selectedFeedId,
+  searchTerm,
+}: SimpleArticleListProps) {
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+
+  // 記事取得
+  const loadArticles = async (pageNum = 1, reset = false) => {
+    try {
+      console.log('[SimpleArticleList] 記事読み込み開始:', { pageNum, reset, selectedFeedId, searchTerm });
+      if (pageNum === 1) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+
+      const params: {
+        page: number;
+        limit: number;
+        feedId?: string;
+        search?: string;
+      } = {
+        page: pageNum,
+        limit: 20,
+      };
+
+      if (selectedFeedId) {
+        params.feedId = selectedFeedId;
+      }
+
+      if (searchTerm) {
+        params.search = searchTerm;
+      }
+
+      console.log('[SimpleArticleList] API呼び出し開始:', params);
+      const response = await sdk.articles.getAll(params);
+      console.log('[SimpleArticleList] API呼び出し完了:', response.articles.length, '件取得');
+
+      setArticles(prev => reset ? response.articles : [...prev, ...response.articles]);
+      setPagination(response.pagination);
+      setPage(pageNum);
+    } catch (error) {
+      console.error('[SimpleArticleList] 記事取得エラー:', error);
+      Alert.alert('エラー', '記事の取得に失敗しました。');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-  }, [group.hasMore, group.loading, group.id, group.page, onLoadMore])
+  };
+
+  // 初期読み込みと条件変更時の再読み込み
+  useEffect(() => {
+    console.log('[SimpleArticleList] useEffect発火:', { selectedFeedId, searchTerm });
+    loadArticles(1, true);
+  }, [selectedFeedId, searchTerm]);
+
+  // さらに読み込む
+  const handleLoadMore = () => {
+    if (pagination?.hasNext && !loading && !refreshing) {
+      loadArticles(page + 1, false);
+    }
+  };
+
+  // プルリフレッシュ
+  const handleRefresh = () => {
+    loadArticles(1, true);
+  };
+
+  // 記事の既読マーク
+  const markArticleAsRead = async (articleId: string) => {
+    try {
+      await sdk.articles.markAsRead(articleId);
+      setArticles(prev =>
+        prev.map(article =>
+          article.id === articleId
+            ? { ...article, isRead: true, readAt: new Date().toISOString() }
+            : article
+        )
+      );
+    } catch (error) {
+      console.error('既読マークエラー:', error);
+    }
+  };
+
+  // ブックマーク切り替え
+  const toggleBookmark = async (articleId: string, isBookmarked: boolean) => {
+    try {
+      if (isBookmarked) {
+        await sdk.articles.removeBookmark(articleId);
+      } else {
+        await sdk.articles.addBookmark(articleId);
+      }
+
+      setArticles(prev =>
+        prev.map(article =>
+          article.id === articleId
+            ? {
+                ...article,
+                isBookmarked: !isBookmarked,
+                bookmarkedAt: !isBookmarked ? new Date().toISOString() : undefined,
+              }
+            : article
+        )
+      );
+    } catch (error) {
+      console.error('ブックマーク操作エラー:', error);
+    }
+  };
+
+  // 記事クリック処理
+  const handleArticleClick = async (articleUrl: string, articleId: string) => {
+    try {
+      // 記事を既読にマーク
+      await markArticleAsRead(articleId);
+
+      // 外部ブラウザで開く
+      const supported = await Linking.canOpenURL(articleUrl);
+      if (supported) {
+        await Linking.openURL(articleUrl);
+      } else {
+        Alert.alert('エラー', 'URLを開くことができませんでした。');
+      }
+    } catch (error) {
+      console.error('記事オープンエラー:', error);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -58,27 +180,10 @@ export function TagArticleList({
     }
   };
 
-  const handleOpenArticle = async (article: Article) => {
-    try {
-      // 記事を既読にマーク
-      await onMarkAsRead(article.id);
-
-      // 外部ブラウザで開く
-      const supported = await Linking.canOpenURL(article.url);
-      if (supported) {
-        await Linking.openURL(article.url);
-      } else {
-        Alert.alert('エラー', 'URLを開くことができませんでした。');
-      }
-    } catch (error) {
-      console.error('記事オープンエラー:', error);
-    }
-  };
-
   const renderArticle = ({ item: article }: { item: Article }) => (
     <TouchableOpacity
       style={[styles.articleItem, article.isRead && styles.articleItemRead]}
-      onPress={() => handleOpenArticle(article)}
+      onPress={() => handleArticleClick(article.url, article.id)}
       activeOpacity={0.7}
     >
       <View style={styles.articleHeader}>
@@ -91,7 +196,7 @@ export function TagArticleList({
 
         <TouchableOpacity
           style={styles.bookmarkButton}
-          onPress={() => onToggleBookmark(article.id, !!article.isBookmarked)}
+          onPress={() => toggleBookmark(article.id, !!article.isBookmarked)}
         >
           <Text style={[styles.bookmarkIcon, article.isBookmarked && styles.bookmarkIconActive]}>
             {article.isBookmarked ? '★' : '☆'}
@@ -114,27 +219,17 @@ export function TagArticleList({
     </TouchableOpacity>
   );
 
-  const renderHeader = () => (
-    <View style={styles.header}>
-      <View style={styles.headerContent}>
-        {group.color && <View style={[styles.colorIndicator, { backgroundColor: group.color }]} />}
-        <Text style={styles.groupTitle}>{group.name}</Text>
-        <Text style={styles.articleCount}>({group.articles.length}件)</Text>
-      </View>
-    </View>
-  );
-
   const renderFooter = () => {
-    if (!group.hasMore) return null;
+    if (!pagination?.hasNext) return null;
 
     return (
       <View style={styles.loadMoreContainer}>
         <TouchableOpacity
           style={styles.loadMoreButton}
-          onPress={onLoadMore}
-          disabled={group.loading}
+          onPress={handleLoadMore}
+          disabled={loading}
         >
-          {group.loading ? (
+          {loading ? (
             <ActivityIndicator size="small" color={colors.primary[600]} />
           ) : (
             <Text style={styles.loadMoreText}>さらに読み込む</Text>
@@ -147,18 +242,14 @@ export function TagArticleList({
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyIcon}>📰</Text>
-      <Text style={styles.emptyTitle}>
-        {group.id === '__all__' ? '記事がありません' : `「${group.name}」の記事がありません`}
-      </Text>
+      <Text style={styles.emptyTitle}>記事がありません</Text>
       <Text style={styles.emptyDescription}>
-        {group.id === '__all__'
-          ? 'フィードを追加して記事を読み始めましょう'
-          : 'このタグの記事が更新されるまでお待ちください'}
+        フィードを追加して記事を読み始めましょう
       </Text>
     </View>
   );
 
-  if (group.loading && group.articles.length === 0) {
+  if (refreshing && articles.length === 0) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary[600]} />
@@ -170,22 +261,26 @@ export function TagArticleList({
   return (
     <View style={styles.container}>
       <FlatList
-        data={group.articles}
+        data={articles}
         renderItem={renderArticle}
         keyExtractor={(item) => item.id}
-        ListHeaderComponent={renderHeader}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         showsVerticalScrollIndicator={false}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
-        onMomentumScrollBegin={() => {
-          onEndReachedCalledDuringMomentum.current = false
-        }}
         contentContainerStyle={[
           styles.listContent,
-          group.articles.length === 0 && styles.emptyListContent,
+          articles.length === 0 && styles.emptyListContent,
         ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[colors.primary[600]]}
+            tintColor={colors.primary[600]}
+          />
+        }
         scrollEnabled={true}
         removeClippedSubviews={false}
         initialNumToRender={10}
@@ -193,11 +288,6 @@ export function TagArticleList({
         windowSize={21}
         updateCellsBatchingPeriod={50}
         disableVirtualization={false}
-        getItemLayout={(data, index) => ({
-          length: 120, // 推定される記事アイテムの高さ
-          offset: 120 * index,
-          index,
-        })}
       />
     </View>
   );
@@ -207,43 +297,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.gray[50],
-    overflow: 'hidden',
   },
   listContent: {
     padding: spacing.sm,
-    paddingBottom: spacing.xl * 2, // 下部に余裕を持たせる
+    paddingBottom: spacing.xl * 2,
   },
   emptyListContent: {
     flex: 1,
     justifyContent: 'center',
-  },
-  header: {
-    backgroundColor: colors.white,
-    borderRadius: 8,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.gray[200],
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  colorIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: spacing.sm,
-  },
-  groupTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.gray[900],
-    flex: 1,
-  },
-  articleCount: {
-    fontSize: fontSize.sm,
-    color: colors.gray[500],
   },
   loadingContainer: {
     flex: 1,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { FeedSidebar } from '../components/feeds/FeedSidebar';
-import { TaggedArticleCarousel } from '../components/feeds/TaggedArticleCarousel';
+import { SimpleArticleList } from '../components/feeds/SimpleArticleList';
 import { colors, shadows } from '../constants/colors';
 import { spacing, fontSize } from '../constants/spacing';
 import { sdk } from '../lib/sdk';
@@ -72,9 +72,9 @@ export function ArticlesMobileScreen({
         </View>
       )}
 
-      {/* タグ別記事カルーセル */}
+      {/* 記事一覧 */}
       <View style={{ flex: 1 }}>
-        <TaggedArticleCarousel selectedFeedId={selectedFeedId} searchTerm={searchQuery} />
+        <SimpleArticleList selectedFeedId={selectedFeedId} searchTerm={searchQuery} />
       </View>
 
       {/* フィードサイドバー モーダル */}

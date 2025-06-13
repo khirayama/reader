@@ -2,7 +2,7 @@
 
 import type React from 'react'
 import { useState, useEffect } from 'react'
-import { SimpleArticleList } from './SimpleArticleList'
+import { TagCarouselArticleList } from './TagCarouselArticleList'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { sdk } from '@/lib/sdk'
@@ -61,8 +61,8 @@ export function ArticleList({ selectedFeedId }: ArticleListProps) {
         </div>
       </div>
 
-      {/* シンプルな記事一覧 */}
-      <SimpleArticleList 
+      {/* タグ別カルーセル記事一覧 */}
+      <TagCarouselArticleList 
         selectedFeedId={selectedFeedId}
         searchTerm={searchTerm}
       />

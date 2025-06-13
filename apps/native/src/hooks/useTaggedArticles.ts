@@ -41,6 +41,14 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
   // 特定のタググループの記事を読み込み
   const loadArticlesForGroup = useCallback(async (groupId: string, page = 1, reset = false) => {
     try {
+      console.log('[useTaggedArticles] loadArticlesForGroup開始:', {
+        groupId,
+        page,
+        reset,
+        selectedFeedId,
+        searchTerm
+      });
+
       setArticleGroups(prev => 
         prev.map(group => 
           group.id === groupId 
@@ -72,7 +80,9 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
         params.search = searchTerm;
       }
 
+      console.log('[useTaggedArticles] API呼び出しパラメータ:', params);
       const response = await sdk.articles.getAll(params);
+      console.log('[useTaggedArticles] API呼び出し完了:', response.articles.length, '件取得');
 
       setArticleGroups(prev => 
         prev.map(group => {
@@ -129,6 +139,16 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
     // 最初のグループ（全ての記事）の記事を読み込み
     if (groups.length > 0) {
       await loadArticlesForGroup(groups[0].id, 1, true);
+      
+      // 他のタググループも並行して最初のページをロード（パフォーマンス向上）
+      const preloadPromises = groups.slice(1, Math.min(4, groups.length)).map(group => 
+        loadArticlesForGroup(group.id, 1, true)
+      );
+      
+      // 並行して実行（エラーは無視）
+      Promise.allSettled(preloadPromises).catch(() => {
+        console.log('[useTaggedArticles] 一部のタグの事前読み込みに失敗');
+      });
     }
   }, [tags, loadArticlesForGroup]);
 
@@ -158,17 +178,43 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
 
   // グループ変更時の記事読み込み
   const changeGroup = useCallback(async (index: number) => {
+    console.log('[useTaggedArticles] changeGroup:', {
+      index,
+      currentGroupIndex,
+      groupsLength: articleGroups.length,
+      targetGroup: articleGroups[index]
+    });
+    
     setCurrentGroupIndex(index);
     const group = articleGroups[index];
     
     if (group && group.articles.length === 0 && !group.loading) {
+      console.log('[useTaggedArticles] 記事を読み込み開始:', group.name, group.id);
       await loadArticlesForGroup(group.id, 1, true);
+    } else {
+      console.log('[useTaggedArticles] 記事読み込みスキップ:', {
+        hasGroup: !!group,
+        articlesLength: group?.articles.length || 0,
+        loading: group?.loading
+      });
     }
-  }, [articleGroups, loadArticlesForGroup]);
+  }, [articleGroups, loadArticlesForGroup, currentGroupIndex]);
 
   // 追加読み込み
   const loadMoreArticles = useCallback(async () => {
     const currentGroup = articleGroups[currentGroupIndex];
+    console.log('[useTaggedArticles] loadMoreArticles:', {
+      currentGroupIndex,
+      currentGroup: currentGroup ? {
+        id: currentGroup.id,
+        name: currentGroup.name,
+        page: currentGroup.page,
+        hasMore: currentGroup.hasMore,
+        loading: currentGroup.loading,
+        articlesLength: currentGroup.articles.length
+      } : null
+    });
+    
     if (currentGroup && currentGroup.hasMore && !currentGroup.loading) {
       await loadArticlesForGroup(currentGroup.id, currentGroup.page, false);
     }

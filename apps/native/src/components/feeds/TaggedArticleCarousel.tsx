@@ -5,17 +5,15 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
   NativeScrollEvent,
   NativeSyntheticEvent,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import { useTaggedArticles } from '../../hooks/useTaggedArticles';
 import { TagArticleList } from './TagArticleList';
 import { colors } from '../../constants/colors';
 import { spacing, fontSize } from '../../constants/spacing';
-
-const screenWidth = Dimensions.get('window').width;
 
 interface TaggedArticleCarouselProps {
   selectedFeedId?: string | null;
@@ -23,10 +21,10 @@ interface TaggedArticleCarouselProps {
   onCurrentTagChange?: (tagName: string) => void;
 }
 
-export function TaggedArticleCarousel({ 
-  selectedFeedId, 
-  searchTerm, 
-  onCurrentTagChange 
+export function TaggedArticleCarousel({
+  selectedFeedId,
+  searchTerm,
+  onCurrentTagChange,
 }: TaggedArticleCarouselProps) {
   const {
     articleGroups,
@@ -41,8 +39,11 @@ export function TaggedArticleCarousel({
   } = useTaggedArticles({ selectedFeedId, searchTerm });
 
   const [isScrolling, setIsScrolling] = useState(false);
+  const [scrollViewSize, setScrollViewSize] = useState({ width: 0, height: 0 });
   const carouselRef = useRef<ScrollView>(null);
   const tabScrollRef = useRef<ScrollView>(null);
+  const [screenWidth, setScreenWidth] = useState(Dimensions.get('window').width);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 現在のタグ名を親コンポーネントに通知
   useEffect(() => {
@@ -51,32 +52,80 @@ export function TaggedArticleCarousel({
     }
   }, [currentTagName, onCurrentTagChange]);
 
+  // 画面サイズ変更の監視
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setScreenWidth(window.width);
+    });
+
+    return () => {
+      subscription?.remove();
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleScrollViewLayout = (event: any) => {
+    setScrollViewSize({
+      width: event.nativeEvent.layout.width,
+      height: event.nativeEvent.layout.height,
+    });
+  };
+
   // カルーセルのスクロール処理
   const handleCarouselScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (isScrolling) return;
+    const { contentOffset, layoutMeasurement } = event.nativeEvent;
+    const pageIndex = Math.round(contentOffset.x / layoutMeasurement.width);
 
-    const { contentOffset } = event.nativeEvent;
-    const currentIndex = Math.round(contentOffset.x / screenWidth);
-    
-    if (currentIndex !== currentGroupIndex && currentIndex >= 0 && currentIndex < articleGroups.length) {
-      changeGroup(currentIndex);
+    console.log('[TagCarousel] スクロール検知:', {
+      pageIndex,
+      currentGroupIndex,
+      contentOffsetX: contentOffset.x,
+      layoutWidth: layoutMeasurement.width,
+      articleGroupsLength: articleGroups.length,
+      isScrolling,
+    });
+
+    if (pageIndex !== currentGroupIndex && pageIndex >= 0 && pageIndex < articleGroups.length) {
+      console.log('[TagCarousel] グループ変更:', pageIndex, articleGroups[pageIndex]?.name);
+      changeGroup(pageIndex);
     }
+  };
+
+  // リアルタイムスクロール監視
+  const handleScrollProgress = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, layoutMeasurement } = event.nativeEvent;
+    const pageIndex = Math.round(contentOffset.x / layoutMeasurement.width);
+
+    // 既存のタイムアウトをクリア
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    // 少し遅延してからグループ変更を検知
+    scrollTimeoutRef.current = setTimeout(() => {
+      if (pageIndex !== currentGroupIndex && pageIndex >= 0 && pageIndex < articleGroups.length) {
+        console.log('[TagCarousel] 遅延グループ変更:', pageIndex, articleGroups[pageIndex]?.name);
+        changeGroup(pageIndex);
+      }
+    }, 150);
   };
 
   const handleGroupChange = (index: number) => {
     setIsScrolling(true);
     changeGroup(index);
-    
-    // カルーセルをスクロール
+
+    // カルーセルを該当ページにスクロール
     if (carouselRef.current) {
       carouselRef.current.scrollTo({
         x: index * screenWidth,
         animated: true,
       });
     }
-    
-    // タブナビゲーションを中央に表示
-    if (tabScrollRef.current && !selectedFeedId) {
+
+    // タブを中央に配置
+    if (tabScrollRef.current && index < articleGroups.length) {
       const tabWidth = 120; // 推定タブ幅
       const scrollToX = Math.max(0, index * tabWidth - screenWidth / 2 + tabWidth / 2);
       tabScrollRef.current.scrollTo({
@@ -85,7 +134,7 @@ export function TaggedArticleCarousel({
       });
     }
 
-    // スクロール完了後にフラグをリセット
+    // スクロール状態をリセット
     setTimeout(() => setIsScrolling(false), 500);
   };
 
@@ -146,7 +195,7 @@ export function TaggedArticleCarousel({
                 ]}
               >
                 {group.color && (
-                  <View 
+                  <View
                     style={[
                       styles.colorDot,
                       { backgroundColor: group.color },
@@ -154,7 +203,7 @@ export function TaggedArticleCarousel({
                     ]}
                   />
                 )}
-                <Text 
+                <Text
                   style={[
                     styles.tabText,
                     currentGroupIndex === index ? styles.activeTabText : styles.inactiveTabText,
@@ -164,10 +213,12 @@ export function TaggedArticleCarousel({
                   {group.name}
                 </Text>
                 {group.articles.length > 0 && (
-                  <Text style={[
-                    styles.tabCount,
-                    currentGroupIndex === index ? styles.activeTabCount : styles.inactiveTabCount,
-                  ]}>
+                  <Text
+                    style={[
+                      styles.tabCount,
+                      currentGroupIndex === index ? styles.activeTabCount : styles.inactiveTabCount,
+                    ]}
+                  >
                     ({group.articles.length})
                   </Text>
                 )}
@@ -178,10 +229,10 @@ export function TaggedArticleCarousel({
       )}
 
       {/* カルーセルコンテンツ */}
-      {selectedFeedId ? (
-        // フィード選択時は最初のグループのみ表示
-        articleGroups.length > 0 && (
-          <View style={styles.content}>
+      <View style={styles.contentContainer}>
+        {selectedFeedId ? (
+          // フィード選択時は単一表示
+          articleGroups.length > 0 && (
             <TagArticleList
               group={articleGroups[0]}
               onLoadMore={loadMoreArticles}
@@ -189,32 +240,41 @@ export function TaggedArticleCarousel({
               onToggleBookmark={toggleBookmark}
               onArticlePress={handleArticlePress}
             />
-          </View>
-        )
-      ) : (
-        // 全体表示時はカルーセル
-        <ScrollView
-          ref={carouselRef}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onScroll={handleCarouselScroll}
-          scrollEventThrottle={16}
-          style={styles.carouselScrollView}
-        >
-          {articleGroups.map((group) => (
-            <View key={group.id} style={styles.carouselPage}>
-              <TagArticleList
-                group={group}
-                onLoadMore={loadMoreArticles}
-                onMarkAsRead={markArticleAsRead}
-                onToggleBookmark={toggleBookmark}
-                onArticlePress={handleArticlePress}
-              />
-            </View>
-          ))}
-        </ScrollView>
-      )}
+          )
+        ) : (
+          // 通常時はスワイプ式カルーセル
+          <ScrollView
+            ref={carouselRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={handleCarouselScroll}
+            onScrollEndDrag={handleCarouselScroll}
+            onScroll={handleScrollProgress}
+            scrollEventThrottle={16}
+            bounces={false}
+            style={styles.carousel}
+            onLayout={handleScrollViewLayout}
+          >
+            {articleGroups.map((group, index) => (
+              <View
+                key={group.id}
+                style={{ width: scrollViewSize.width, height: scrollViewSize.height }}
+              >
+                <ScrollView style={styles.carouselPage}>
+                  <TagArticleList
+                    group={group}
+                    onLoadMore={loadMoreArticles}
+                    onMarkAsRead={markArticleAsRead}
+                    onToggleBookmark={toggleBookmark}
+                    onArticlePress={handleArticlePress}
+                  />
+                </ScrollView>
+              </View>
+            ))}
+          </ScrollView>
+        )}
+      </View>
     </View>
   );
 }
@@ -288,14 +348,16 @@ const styles = StyleSheet.create({
   inactiveTabCount: {
     color: colors.gray[500],
   },
+  contentContainer: {
+    flex: 1,
+  },
   content: {
     flex: 1,
   },
-  carouselScrollView: {
+  carousel: {
     flex: 1,
   },
   carouselPage: {
-    width: screenWidth,
     flex: 1,
   },
   loadingContainer: {

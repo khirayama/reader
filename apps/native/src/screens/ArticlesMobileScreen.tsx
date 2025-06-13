@@ -4,8 +4,6 @@ import { SimpleArticleList } from '../components/feeds/SimpleArticleList';
 import { colors, shadows } from '../constants/colors';
 import { spacing, fontSize } from '../constants/spacing';
 import { sdk } from '../lib/sdk';
-import { useNavigation } from '@react-navigation/native';
-import type { DrawerNavigationProp } from '@react-navigation/drawer';
 
 interface ArticlesMobileScreenProps {
   selectedFeedId?: string | null;
@@ -18,7 +16,6 @@ export function ArticlesMobileScreen({
   onFeedSelect,
   onFeedRefresh,
 }: ArticlesMobileScreenProps) {
-  const navigation = useNavigation<DrawerNavigationProp<any>>();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentFeedName, setCurrentFeedName] = useState('');
 
@@ -45,10 +42,6 @@ export function ArticlesMobileScreen({
     <View style={styles.container}>
       {/* ヘッダー */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.menuButton} onPress={() => navigation.openDrawer()}>
-          <Text style={styles.menuIcon}>☰</Text>
-        </TouchableOpacity>
-
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
@@ -87,8 +80,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.gray[50],
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     backgroundColor: colors.white,
@@ -96,19 +87,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.gray[200],
     ...shadows.sm,
   },
-  menuButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.sm,
-  },
-  menuIcon: {
-    fontSize: 18,
-    color: colors.gray[600],
-  },
   searchContainer: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.gray[100],

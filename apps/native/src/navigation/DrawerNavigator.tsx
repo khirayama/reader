@@ -16,7 +16,7 @@ const Drawer = createDrawerNavigator<DrawerParamList>();
 
 // カスタムドロワーコンテンツ
 function CustomDrawerContent(props: DrawerContentComponentProps) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { state, navigation } = props;
 
   const menuItems = [
@@ -32,13 +32,6 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
     },
   ] as const;
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
 
   return (
     <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
@@ -89,12 +82,6 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
             <Text style={styles.settingsIconText}>⚙️</Text>
           </View>
           <Text style={styles.settingsLabel}>設定</Text>
-        </Pressable>
-        <Pressable style={styles.logoutButton} onPress={handleLogout}>
-          <View style={styles.logoutIconContainer}>
-            <Text style={styles.logoutIconText}>🚪</Text>
-          </View>
-          <Text style={styles.logoutLabel}>ログアウト</Text>
         </Pressable>
       </View>
     </DrawerContentScrollView>
@@ -272,7 +259,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
-    marginBottom: 8,
   },
   settingsIconContainer: {
     width: 20,
@@ -287,28 +273,6 @@ const styles = StyleSheet.create({
   settingsLabel: {
     fontSize: 16,
     color: colors.gray[700],
-    fontWeight: '500',
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  logoutIconContainer: {
-    width: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  logoutIconText: {
-    fontSize: 16,
-  },
-  logoutLabel: {
-    fontSize: 16,
-    color: colors.red[600],
     fontWeight: '500',
   },
 });

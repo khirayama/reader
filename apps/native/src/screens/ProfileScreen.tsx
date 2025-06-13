@@ -26,7 +26,7 @@ interface ProfileScreenProps {
 }
 
 export function ProfileScreen({ navigation }: ProfileScreenProps) {
-  const { user, updateUser, logout } = useAuth();
+  const { user, updateSettings: updateUserSettings, changeEmail: changeUserEmail, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -82,11 +82,8 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
     setLoading(true);
 
     try {
-      const response = await sdk.auth.updateSettings({ 
-        theme, 
-        language: language as any 
-      });
-      updateUser(response.user);
+      const apiLanguage = language === 'ja' ? 'JA' : language === 'en' ? 'EN' : 'JA';
+      await updateUserSettings(theme, apiLanguage);
       Alert.alert('成功', '設定を更新しました');
     } catch (err: any) {
       Alert.alert('エラー', err.message || '設定の更新に失敗しました');
@@ -137,8 +134,7 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
     setLoading(true);
 
     try {
-      const response = await sdk.auth.changeEmail({ email: newEmail, password: emailPassword });
-      updateUser(response.user);
+      await changeUserEmail(newEmail, emailPassword);
       Alert.alert('成功', 'メールアドレスを変更しました');
       setNewEmail('');
       setEmailPassword('');
@@ -337,8 +333,38 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
         <OpmlManager />
       </Card>
 
+      {/* セッション管理 */}
+      <Card style={styles.card}>
+        <Text style={styles.sectionTitle}>セッション管理</Text>
+        <Text style={styles.description}>
+          アカウントからログアウトします。再度ログインするまでアプリを使用できません。
+        </Text>
+        <Button
+          title="ログアウト"
+          variant="outline"
+          onPress={() => {
+            Alert.alert(
+              'ログアウト確認',
+              'ログアウトしますか？',
+              [
+                {
+                  text: 'キャンセル',
+                  style: 'cancel',
+                },
+                {
+                  text: 'ログアウト',
+                  style: 'destructive',
+                  onPress: logout,
+                },
+              ]
+            );
+          }}
+          fullWidth
+        />
+      </Card>
+
       {/* アカウント削除 */}
-      <Card style={[styles.card, styles.dangerCard]}>
+      <Card style={StyleSheet.flatten([styles.card, styles.dangerCard])}>
         <Text style={[styles.sectionTitle, styles.dangerTitle]}>アカウント削除</Text>
         <Text style={styles.dangerDescription}>
           アカウントを削除すると、すべてのデータが永久に失われます。この操作は取り消すことができません。

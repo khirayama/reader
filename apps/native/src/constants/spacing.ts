@@ -21,6 +21,7 @@ export const fontSize = {
   xs: 12,   // 0.75rem
   sm: 14,   // 0.875rem
   base: 16, // 1rem
+  md: 16,   // 1rem (alias for base)
   lg: 18,   // 1.125rem
   xl: 20,   // 1.25rem
   '2xl': 24, // 1.5rem

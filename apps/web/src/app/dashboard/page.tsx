@@ -5,7 +5,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { FeedSidebar } from '@/components/feeds/FeedSidebar'
-import { ArticleList } from '@/components/feeds/ArticleList'
+import { TaggedArticleCarousel } from '@/components/feeds/TaggedArticleCarousel'
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -90,7 +90,7 @@ export default function DashboardPage() {
 
           {/* 記事一覧 */}
           <div className="flex-1 overflow-hidden">
-            <ArticleList
+            <TaggedArticleCarousel
               key={`${selectedFeedId}-${refreshKey}`}
               selectedFeedId={selectedFeedId}
             />

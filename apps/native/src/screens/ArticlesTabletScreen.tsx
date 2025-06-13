@@ -5,7 +5,7 @@ import {
   StyleSheet,
   TextInput,
 } from 'react-native';
-import { SimpleArticleList } from '../components/feeds/SimpleArticleList';
+import { TaggedArticleCarousel } from '../components/feeds/TaggedArticleCarousel';
 import { colors } from '../constants/colors';
 import { spacing, fontSize } from '../constants/spacing';
 import { sdk } from '../lib/sdk';
@@ -61,8 +61,8 @@ export function ArticlesTabletScreen({ selectedFeedId, refreshKey }: ArticlesTab
         </View>
       </View>
 
-      {/* シンプルな記事一覧 */}
-      <SimpleArticleList 
+      {/* タグ付き記事カルーセル */}
+      <TaggedArticleCarousel 
         selectedFeedId={selectedFeedId}
         searchTerm={searchQuery}
       />

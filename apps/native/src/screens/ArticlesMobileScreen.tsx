@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { SimpleArticleList } from '../components/feeds/SimpleArticleList';
+import { TaggedArticleCarousel } from '../components/feeds/TaggedArticleCarousel';
 import { colors, shadows } from '../constants/colors';
 import { spacing, fontSize } from '../constants/spacing';
 import { sdk } from '../lib/sdk';
@@ -68,7 +68,7 @@ export function ArticlesMobileScreen({
 
       {/* 記事一覧 */}
       <View style={{ flex: 1 }}>
-        <SimpleArticleList selectedFeedId={selectedFeedId} searchTerm={searchQuery} />
+        <TaggedArticleCarousel selectedFeedId={selectedFeedId} searchTerm={searchQuery} />
       </View>
     </View>
   );

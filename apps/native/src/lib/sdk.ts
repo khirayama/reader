@@ -67,15 +67,42 @@ export interface Pagination {
 const API_URL = __DEV__ ? 'http://localhost:3001' : 'https://your-api-domain.vercel.app';
 export const TOKEN_STORAGE_KEY = 'rss-reader-token';
 
-// シンプルなHTTPクライアント
+// レート制限エラーの詳細な型定義
+export interface RateLimitError {
+  error: string;
+  details: string;
+  retryAfter: number;
+  rateLimitType: string;
+  remaining: number;
+  limit: number;
+  resetTime: string;
+}
+
+// リトライ設定
+interface RetryConfig {
+  maxRetries: number;
+  baseDelay: number;
+  maxDelay: number;
+}
+
+// 指数バックオフでの待機
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// シンプルなHTTPクライアント（リトライ機能付き）
 class SimpleApiClient {
   private baseURL: string;
   private timeout: number;
   private token?: string;
+  private retryConfig: RetryConfig;
 
   constructor(config: { baseURL: string; timeout?: number }) {
     this.baseURL = config.baseURL;
     this.timeout = config.timeout || 10000;
+    this.retryConfig = {
+      maxRetries: 3,
+      baseDelay: 1000, // 1秒
+      maxDelay: 30000, // 30秒
+    };
   }
 
   setToken(token: string): void {
@@ -91,6 +118,16 @@ class SimpleApiClient {
   }
 
   private async request<T>(method: string, path: string, data?: unknown, isFormData = false): Promise<T> {
+    return this.requestWithRetry<T>(method, path, data, isFormData, 0);
+  }
+
+  private async requestWithRetry<T>(
+    method: string, 
+    path: string, 
+    data?: unknown, 
+    isFormData = false, 
+    attempt = 0
+  ): Promise<T> {
     const url = `${this.baseURL}${path}`;
     const headers: Record<string, string> = {};
     
@@ -112,21 +149,84 @@ class SimpleApiClient {
     }
 
     try {
+      console.log(`[Native SDK] API呼び出し開始 (試行 ${attempt + 1}/${this.retryConfig.maxRetries + 1}):`, method, url);
       const response = await fetch(url, config);
       
       if (!response.ok) {
+        if (response.status === 429 && attempt < this.retryConfig.maxRetries) {
+          // レート制限エラーの場合、リトライ処理
+          const errorData = await response.json() as RateLimitError;
+          console.log('[Native SDK] レート制限エラー、リトライ準備:', errorData);
+          
+          // リトライ遅延時間を計算（指数バックオフ + レスポンスの retryAfter）
+          const retryAfterMs = (errorData.retryAfter || 60) * 1000;
+          const exponentialDelay = Math.min(
+            this.retryConfig.baseDelay * Math.pow(2, attempt),
+            this.retryConfig.maxDelay
+          );
+          const delayMs = Math.max(retryAfterMs, exponentialDelay);
+          
+          console.log(`[Native SDK] ${delayMs}ms 待機後にリトライします...`);
+          
+          // React Native用のイベント発火（global event emitter）
+          // Note: React Nativeでは適切なイベント管理システムを使用することを推奨
+          console.log('[Native SDK] レート制限情報:', {
+            ...errorData,
+            attempt: attempt + 1,
+            maxRetries: this.retryConfig.maxRetries,
+            retryIn: delayMs / 1000,
+          });
+          
+          await sleep(delayMs);
+          return this.requestWithRetry<T>(method, path, data, isFormData, attempt + 1);
+        }
+        
+        console.error('[Native SDK] APIエラー:', response.status, response.statusText);
         const errorData = await response.json();
+        
+        // レート制限エラーの場合は詳細情報も含める
+        if (response.status === 429) {
+          const rateLimitError = new Error(errorData.error || 'レート制限に達しました');
+          (rateLimitError as any).rateLimitInfo = errorData;
+          throw rateLimitError;
+        }
+        
         throw new Error(errorData.error || `HTTP ${response.status}`);
       }
       
       const result = await response.json();
+      console.log('[Native SDK] API呼び出し成功:', result);
       return result;
     } catch (error) {
+      console.error('[Native SDK] API呼び出しエラー:', error);
+      
+      // ネットワークエラーや一時的なエラーの場合もリトライ
+      if (attempt < this.retryConfig.maxRetries && this.isRetryableError(error)) {
+        const delayMs = Math.min(
+          this.retryConfig.baseDelay * Math.pow(2, attempt),
+          this.retryConfig.maxDelay
+        );
+        
+        console.log(`[Native SDK] ネットワークエラー、${delayMs}ms 待機後にリトライします...`);
+        await sleep(delayMs);
+        return this.requestWithRetry<T>(method, path, data, isFormData, attempt + 1);
+      }
+      
       if (error instanceof Error) {
         throw error;
       }
       throw new Error('Network error');
     }
+  }
+
+  private isRetryableError(error: any): boolean {
+    // タイムアウトエラーやネットワークエラーはリトライ対象
+    return (
+      error instanceof TypeError || // ネットワークエラー
+      error.name === 'AbortError' || // タイムアウト
+      error.message?.includes('fetch') || // fetch関連エラー
+      error.message?.includes('network') // ネットワーク関連エラー
+    );
   }
 
   async get<T>(path: string): Promise<T> {

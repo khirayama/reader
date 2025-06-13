@@ -15,6 +15,8 @@ import {
   authLimiter,
   passwordResetLimiter,
   registrationLimiter,
+  feedUpdateLimiter,
+  articleLimiter,
   securityHeaders,
   requestSizeLimit,
 } from './middleware/security';
@@ -61,9 +63,9 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/forgot-password', passwordResetLimiter);
 app.use('/api/auth', authRouter);
 
-// フィード・記事・タグ管理ルート
-app.use('/api/feeds', feedRouter);
-app.use('/api/articles', articleRouter);
+// フィード・記事・タグ管理ルート（機能別レート制限適用）
+app.use('/api/feeds', feedUpdateLimiter, feedRouter);
+app.use('/api/articles', articleLimiter, articleRouter);
 app.use('/api/tags', tagRoutes);
 
 // OPML機能ルート

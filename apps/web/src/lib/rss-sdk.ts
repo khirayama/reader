@@ -136,16 +136,43 @@ export interface AssignTagRequest {
 }
 
 
-// シンプルなHTTPクライアント
+// レート制限エラーの詳細な型定義
+export interface RateLimitError {
+  error: string
+  details: string
+  retryAfter: number
+  rateLimitType: string
+  remaining: number
+  limit: number
+  resetTime: string
+}
+
+// リトライ設定
+interface RetryConfig {
+  maxRetries: number
+  baseDelay: number
+  maxDelay: number
+}
+
+// 指数バックオフでの待機
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+// シンプルなHTTPクライアント（リトライ機能付き）
 class SimpleApiClient {
   private baseURL: string
   private timeout: number
   private token?: string
+  private retryConfig: RetryConfig
 
   constructor(config: SdkConfig) {
     this.baseURL = config.baseURL
     this.timeout = config.timeout || 10000
     this.token = config.token
+    this.retryConfig = {
+      maxRetries: 3,
+      baseDelay: 1000, // 1秒
+      maxDelay: 30000, // 30秒
+    }
   }
 
   setToken(token: string): void {
@@ -161,6 +188,16 @@ class SimpleApiClient {
   }
 
   private async request<T>(method: string, path: string, data?: unknown, isFormData = false): Promise<T> {
+    return this.requestWithRetry<T>(method, path, data, isFormData, 0)
+  }
+
+  private async requestWithRetry<T>(
+    method: string, 
+    path: string, 
+    data?: unknown, 
+    isFormData = false, 
+    attempt = 0
+  ): Promise<T> {
     const url = `${this.baseURL}${path}`
 
     const headers: Record<string, string> = {}
@@ -184,12 +221,51 @@ class SimpleApiClient {
     }
 
     try {
-      console.log('[SDK] API呼び出し開始:', method, url, config)
+      console.log(`[SDK] API呼び出し開始 (試行 ${attempt + 1}/${this.retryConfig.maxRetries + 1}):`, method, url)
       const response = await fetch(url, config)
       
       if (!response.ok) {
+        if (response.status === 429 && attempt < this.retryConfig.maxRetries) {
+          // レート制限エラーの場合、リトライ処理
+          const errorData = await response.json() as RateLimitError
+          console.log('[SDK] レート制限エラー、リトライ準備:', errorData)
+          
+          // リトライ遅延時間を計算（指数バックオフ + レスポンスの retryAfter）
+          const retryAfterMs = (errorData.retryAfter || 60) * 1000
+          const exponentialDelay = Math.min(
+            this.retryConfig.baseDelay * Math.pow(2, attempt),
+            this.retryConfig.maxDelay
+          )
+          const delayMs = Math.max(retryAfterMs, exponentialDelay)
+          
+          console.log(`[SDK] ${delayMs}ms 待機後にリトライします...`)
+          
+          // Toast通知用のイベントを発火（カスタムイベント）
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('rateLimit', {
+              detail: {
+                ...errorData,
+                attempt: attempt + 1,
+                maxRetries: this.retryConfig.maxRetries,
+                retryIn: delayMs / 1000,
+              }
+            }))
+          }
+          
+          await sleep(delayMs)
+          return this.requestWithRetry<T>(method, path, data, isFormData, attempt + 1)
+        }
+        
         console.error('[SDK] APIエラー:', response.status, response.statusText)
         const errorData = await response.json()
+        
+        // レート制限エラーの場合は詳細情報も含める
+        if (response.status === 429) {
+          const rateLimitError = new Error(errorData.error || 'レート制限に達しました')
+          ;(rateLimitError as any).rateLimitInfo = errorData
+          throw rateLimitError
+        }
+        
         throw new Error(errorData.error || `HTTP ${response.status}`)
       }
       
@@ -198,11 +274,34 @@ class SimpleApiClient {
       return result
     } catch (error) {
       console.error('[SDK] API呼び出しエラー:', error)
+      
+      // ネットワークエラーや一時的なエラーの場合もリトライ
+      if (attempt < this.retryConfig.maxRetries && this.isRetryableError(error)) {
+        const delayMs = Math.min(
+          this.retryConfig.baseDelay * Math.pow(2, attempt),
+          this.retryConfig.maxDelay
+        )
+        
+        console.log(`[SDK] ネットワークエラー、${delayMs}ms 待機後にリトライします...`)
+        await sleep(delayMs)
+        return this.requestWithRetry<T>(method, path, data, isFormData, attempt + 1)
+      }
+      
       if (error instanceof Error) {
         throw error
       }
       throw new Error('Network error')
     }
+  }
+
+  private isRetryableError(error: any): boolean {
+    // タイムアウトエラーやネットワークエラーはリトライ対象
+    return (
+      error instanceof TypeError || // ネットワークエラー
+      error.name === 'AbortError' || // タイムアウト
+      error.message?.includes('fetch') || // fetch関連エラー
+      error.message?.includes('network') // ネットワーク関連エラー
+    )
   }
 
   private async requestBlob(method: string, path: string): Promise<Blob> {

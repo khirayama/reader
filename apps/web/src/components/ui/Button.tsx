@@ -7,6 +7,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon?: React.ReactNode
   iconPosition?: 'left' | 'right'
   fullWidth?: boolean
+  // レート制限対応
+  rateLimited?: boolean
+  rateLimitCountdown?: number
+  rateLimitMessage?: string
 }
 
 export function Button({
@@ -19,6 +23,9 @@ export function Button({
   fullWidth = false,
   className = '',
   disabled,
+  rateLimited = false,
+  rateLimitCountdown,
+  rateLimitMessage = 'レート制限中',
   ...props
 }: ButtonProps) {
   const baseClasses = 'btn'
@@ -80,6 +87,24 @@ export function Button({
       )
     }
 
+    if (rateLimited) {
+      return (
+        <div className="flex items-center">
+          <svg className="w-4 h-4 mr-1.5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" />
+          </svg>
+          <span>
+            {rateLimitMessage}
+            {rateLimitCountdown && rateLimitCountdown > 0 && (
+              <span className="ml-1 font-mono text-xs">
+                ({rateLimitCountdown}s)
+              </span>
+            )}
+          </span>
+        </div>
+      )
+    }
+
     if (!icon) {
       return children
     }
@@ -104,8 +129,9 @@ export function Button({
   return (
     <button 
       className={classes} 
-      disabled={loading || disabled} 
+      disabled={loading || disabled || rateLimited} 
       aria-busy={loading}
+      title={rateLimited ? `${rateLimitMessage}${rateLimitCountdown ? ` (あと${rateLimitCountdown}秒)` : ''}` : undefined}
       {...props}
     >
       {renderContent()}

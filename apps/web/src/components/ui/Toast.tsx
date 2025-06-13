@@ -1,13 +1,19 @@
 'use client'
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react'
+import { RateLimitHandler } from './RateLimitHandler'
 
 interface Toast {
   id: string
-  type: 'success' | 'error' | 'warning' | 'info'
+  type: 'success' | 'error' | 'warning' | 'info' | 'rateLimit'
   title: string
   message?: string
   duration?: number
+  // レート制限専用のプロパティ
+  retryIn?: number
+  showRetryButton?: boolean
+  onRetry?: () => void
+  countdown?: number
 }
 
 interface ToastContextValue {
@@ -41,6 +47,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
       {children}
+      <RateLimitHandler />
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ToastContext.Provider>
   )
@@ -77,6 +84,24 @@ interface ToastItemProps {
 }
 
 function ToastItem({ toast, onRemove }: ToastItemProps) {
+  const [countdown, setCountdown] = useState(toast.countdown || 0)
+
+  // レート制限のカウントダウン機能
+  useEffect(() => {
+    if (toast.type === 'rateLimit' && countdown > 0) {
+      const timer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+
+      return () => clearInterval(timer)
+    }
+  }, [toast.type, countdown])
   const getToastStyles = () => {
     switch (toast.type) {
       case 'success':
@@ -87,6 +112,8 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
         return 'bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-400'
       case 'info':
         return 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400'
+      case 'rateLimit':
+        return 'bg-orange-50 border-orange-200 text-orange-800 dark:bg-orange-900/20 dark:border-orange-800 dark:text-orange-400'
       default:
         return 'bg-gray-50 border-gray-200 text-gray-800 dark:bg-gray-900/20 dark:border-gray-800 dark:text-gray-400'
     }
@@ -112,11 +139,17 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
         )
+      case 'rateLimit':
+        return (
+          <svg className="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" />
+          </svg>
+        )
       case 'info':
       default:
         return (
           <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
           </svg>
         )
     }
@@ -135,6 +168,36 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
           <p className="mt-1 text-sm opacity-90">
             {toast.message}
           </p>
+        )}
+        
+        {/* レート制限専用のUI */}
+        {toast.type === 'rateLimit' && (
+          <div className="mt-2 space-y-2">
+            {countdown > 0 && (
+              <div className="flex items-center space-x-2">
+                <div className="text-xs opacity-75">
+                  自動リトライまで: <span className="font-mono font-medium">{countdown}秒</span>
+                </div>
+                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                  <div 
+                    className="bg-orange-400 h-1.5 rounded-full transition-all duration-1000"
+                    style={{ 
+                      width: `${Math.max(0, ((toast.retryIn || 60) - countdown) / (toast.retryIn || 60) * 100)}%`
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+            
+            {toast.showRetryButton && (
+              <button
+                onClick={() => toast.onRetry?.()}
+                className="text-xs px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-md hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
+              >
+                今すぐリトライ
+              </button>
+            )}
+          </div>
         )}
       </div>
       <button

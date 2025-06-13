@@ -40,11 +40,7 @@ interface FeedSidebarProps {
   onFeedRefresh: () => void;
 }
 
-export function FeedSidebar({ 
-  selectedFeedId, 
-  onFeedSelect, 
-  onFeedRefresh 
-}: FeedSidebarProps) {
+export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: FeedSidebarProps) {
   const [feeds, setFeeds] = useState<Feed[]>([]);
   const [newFeedUrl, setNewFeedUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -94,30 +90,26 @@ export function FeedSidebar({
   };
 
   const handleDeleteFeed = async (feedId: string) => {
-    Alert.alert(
-      'フィード削除',
-      'このフィードを削除しますか？',
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        {
-          text: '削除',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await sdk.feeds.delete(feedId);
-              await loadFeeds();
-              if (selectedFeedId === feedId) {
-                onFeedSelect(null);
-              }
-              onFeedRefresh();
-            } catch (error) {
-              console.error('フィード削除エラー:', error);
-              Alert.alert('エラー', 'フィードの削除に失敗しました。');
+    Alert.alert('フィード削除', 'このフィードを削除しますか？', [
+      { text: 'キャンセル', style: 'cancel' },
+      {
+        text: '削除',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await sdk.feeds.delete(feedId);
+            await loadFeeds();
+            if (selectedFeedId === feedId) {
+              onFeedSelect(null);
             }
-          },
+            onFeedRefresh();
+          } catch (error) {
+            console.error('フィード削除エラー:', error);
+            Alert.alert('エラー', 'フィードの削除に失敗しました。');
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleRefreshAll = async () => {
@@ -200,11 +192,7 @@ export function FeedSidebar({
       {/* すべてのフィード（Sticky） */}
       <View style={styles.stickyAllFeeds}>
         <TouchableOpacity
-          style={[
-            styles.feedItem,
-            styles.allFeedsItem,
-            !selectedFeedId && styles.feedItemActive
-          ]}
+          style={[styles.feedItem, styles.allFeedsItem, !selectedFeedId && styles.feedItemActive]}
           onPress={() => onFeedSelect(null)}
         >
           <View style={styles.feedIcon}>
@@ -213,10 +201,7 @@ export function FeedSidebar({
             </View>
           </View>
           <View style={styles.feedContent}>
-            <Text style={[
-              styles.feedTitle,
-              !selectedFeedId && styles.feedTitleActive
-            ]}>
+            <Text style={[styles.feedTitle, !selectedFeedId && styles.feedTitleActive]}>
               すべてのフィード
             </Text>
           </View>
@@ -226,9 +211,7 @@ export function FeedSidebar({
       {/* フィード一覧 */}
       <ScrollView
         style={styles.feedList}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
       >
         {loading ? (
@@ -246,16 +229,11 @@ export function FeedSidebar({
           </View>
         ) : (
           <View style={styles.feedsContainer}>
-            <Text style={styles.sectionTitle}>
-              フィード ({feeds.length})
-            </Text>
+            <Text style={styles.sectionTitle}>フィード ({feeds.length})</Text>
             {feeds.map((feed) => (
               <TouchableOpacity
                 key={feed.id}
-                style={[
-                  styles.feedItem,
-                  selectedFeedId === feed.id && styles.feedItemActive
-                ]}
+                style={[styles.feedItem, selectedFeedId === feed.id && styles.feedItemActive]}
                 onPress={() => onFeedSelect(feed.id)}
                 onLongPress={() => handleDeleteFeed(feed.id)}
               >
@@ -266,7 +244,7 @@ export function FeedSidebar({
                       <Text
                         style={[
                           styles.feedItemTitle,
-                          selectedFeedId === feed.id && styles.feedItemTitleActive
+                          selectedFeedId === feed.id && styles.feedItemTitleActive,
                         ]}
                         numberOfLines={1}
                       >
@@ -274,12 +252,10 @@ export function FeedSidebar({
                       </Text>
                     </View>
                   </View>
-                  
+
                   <View style={styles.feedItemRight}>
                     {feed._count && (
-                      <Text style={styles.feedItemCount}>
-                        {feed._count.articles}
-                      </Text>
+                      <Text style={styles.feedItemCount}>{feed._count.articles}</Text>
                     )}
                   </View>
                 </View>
@@ -383,7 +359,7 @@ const styles = StyleSheet.create({
     color: colors.gray[700],
   },
   feedList: {
-    flex: 1,
+    height: 0,
   },
   loadingContainer: {
     flexDirection: 'row',

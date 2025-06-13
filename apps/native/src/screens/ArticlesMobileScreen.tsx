@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { FeedSidebar } from '../components/feeds/FeedSidebar';
 import { SimpleArticleList } from '../components/feeds/SimpleArticleList';
 import { colors, shadows } from '../constants/colors';
 import { spacing, fontSize } from '../constants/spacing';
 import { sdk } from '../lib/sdk';
+import { useNavigation } from '@react-navigation/native';
+import type { DrawerNavigationProp } from '@react-navigation/drawer';
 
 interface ArticlesMobileScreenProps {
   selectedFeedId?: string | null;
@@ -17,8 +18,8 @@ export function ArticlesMobileScreen({
   onFeedSelect,
   onFeedRefresh,
 }: ArticlesMobileScreenProps) {
+  const navigation = useNavigation<DrawerNavigationProp<any>>();
   const [searchQuery, setSearchQuery] = useState('');
-  const [showFeedSidebar, setShowFeedSidebar] = useState(false);
   const [currentFeedName, setCurrentFeedName] = useState('');
 
   // フィード情報を取得
@@ -44,7 +45,7 @@ export function ArticlesMobileScreen({
     <View style={styles.container}>
       {/* ヘッダー */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.menuButton} onPress={() => setShowFeedSidebar(true)}>
+        <TouchableOpacity style={styles.menuButton} onPress={() => navigation.openDrawer()}>
           <Text style={styles.menuIcon}>☰</Text>
         </TouchableOpacity>
 
@@ -76,29 +77,6 @@ export function ArticlesMobileScreen({
       <View style={{ flex: 1 }}>
         <SimpleArticleList selectedFeedId={selectedFeedId} searchTerm={searchQuery} />
       </View>
-
-      {/* フィードサイドバー モーダル */}
-      {showFeedSidebar && (
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity
-            style={styles.modalBackground}
-            onPress={() => setShowFeedSidebar(false)}
-          />
-          <View style={styles.sidebarContainer}>
-            <FeedSidebar
-              selectedFeedId={selectedFeedId}
-              onFeedSelect={(feedId) => {
-                onFeedSelect?.(feedId);
-                setShowFeedSidebar(false);
-              }}
-              onFeedRefresh={() => {
-                onFeedRefresh?.();
-                setShowFeedSidebar(false);
-              }}
-            />
-          </View>
-        </View>
-      )}
     </View>
   );
 }
@@ -175,27 +153,5 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.primary[600],
     fontWeight: 'bold',
-  },
-  modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1000,
-  },
-  modalBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  sidebarContainer: {
-    width: '85%',
-    height: '100%',
-    backgroundColor: colors.white,
-    ...shadows.lg,
   },
 });

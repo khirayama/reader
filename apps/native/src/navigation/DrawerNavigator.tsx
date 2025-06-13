@@ -30,16 +30,6 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
       ),
       description: 'フィード・記事管理'
     },
-    { 
-      name: 'Profile', 
-      label: '設定', 
-      icon: (
-        <View style={styles.iconContainer}>
-          <Text style={styles.iconText}>⚙️</Text>
-        </View>
-      ),
-      description: 'アカウント・環境設定'
-    },
   ] as const;
 
   const handleLogout = async () => {
@@ -91,6 +81,15 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
 
       {/* フッター */}
       <View style={styles.drawerFooter}>
+        <Pressable 
+          style={styles.settingsButton} 
+          onPress={() => navigation.navigate('Profile')}
+        >
+          <View style={styles.settingsIconContainer}>
+            <Text style={styles.settingsIconText}>⚙️</Text>
+          </View>
+          <Text style={styles.settingsLabel}>設定</Text>
+        </Pressable>
         <Pressable style={styles.logoutButton} onPress={handleLogout}>
           <View style={styles.logoutIconContainer}>
             <Text style={styles.logoutIconText}>🚪</Text>
@@ -266,6 +265,29 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: colors.gray[200],
+  },
+  settingsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  settingsIconContainer: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  settingsIconText: {
+    fontSize: 16,
+  },
+  settingsLabel: {
+    fontSize: 16,
+    color: colors.gray[700],
+    fontWeight: '500',
   },
   logoutButton: {
     flexDirection: 'row',

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, StatusBar, Platform } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useResponsive } from '../hooks/useResponsive';
-import { FeedSidebar } from '../components/feeds/FeedSidebar';
 import { ArticlesMobileScreen } from '../screens/ArticlesMobileScreen';
 import { ArticlesTabletScreen } from '../screens/ArticlesTabletScreen';
 import { colors } from '../constants/colors';
@@ -10,13 +9,27 @@ import type { AppDrawerNavigationProp as DrawerNavigationProp } from '../types/n
 
 interface DashboardScreenProps {
   navigation: DrawerNavigationProp;
+  route?: {
+    params?: {
+      selectedFeedId?: string | null;
+    };
+  };
 }
 
-export function DashboardScreen({ navigation }: DashboardScreenProps) {
+export function DashboardScreen({ navigation, route }: DashboardScreenProps) {
   const { user } = useAuth();
   const { isTablet } = useResponsive();
-  const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null);
+  const [selectedFeedId, setSelectedFeedId] = useState<string | null>(
+    route?.params?.selectedFeedId || null
+  );
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // ルートパラメータの変更を監視
+  useEffect(() => {
+    if (route?.params?.selectedFeedId !== undefined) {
+      setSelectedFeedId(route.params.selectedFeedId);
+    }
+  }, [route?.params?.selectedFeedId]);
 
   const handleFeedSelect = (feedId: string | null) => {
     setSelectedFeedId(feedId);
@@ -26,7 +39,7 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
     setRefreshKey(prev => prev + 1);
   };
 
-  // タブレット表示の場合はサイドバー + 記事表示の2カラムレイアウト
+  // タブレット・モバイル共通で記事表示のみ（ドロワーナビゲーションでフィード管理）
   if (isTablet) {
     return (
       <View style={styles.container}>
@@ -35,24 +48,10 @@ export function DashboardScreen({ navigation }: DashboardScreenProps) {
           backgroundColor={colors.white}
           translucent={false}
         />
-        <View style={styles.tabletContainer}>
-          {/* フィードサイドバー */}
-          <View style={styles.sidebar}>
-            <FeedSidebar
-              selectedFeedId={selectedFeedId}
-              onFeedSelect={handleFeedSelect}
-              onFeedRefresh={handleFeedRefresh}
-            />
-          </View>
-          
-          {/* 記事表示エリア */}
-          <View style={styles.mainContent}>
-            <ArticlesTabletScreen
-              selectedFeedId={selectedFeedId}
-              refreshKey={refreshKey}
-            />
-          </View>
-        </View>
+        <ArticlesTabletScreen
+          selectedFeedId={selectedFeedId}
+          refreshKey={refreshKey}
+        />
       </View>
     );
   }
@@ -79,19 +78,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.gray[50],
-  },
-  tabletContainer: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  sidebar: {
-    width: 320,
-    backgroundColor: colors.white,
-    borderRightWidth: 1,
-    borderRightColor: colors.gray[200],
-  },
-  mainContent: {
-    flex: 1,
-    backgroundColor: colors.white,
   },
 });

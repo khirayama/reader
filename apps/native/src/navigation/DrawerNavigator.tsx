@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import {
   createDrawerNavigator,
@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useResponsive } from '../hooks/useResponsive';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { FeedSidebar } from '../components/feeds/FeedSidebar';
 import type { DrawerParamList } from '../types/navigation';
 import { colors } from '../constants/colors';
 
@@ -18,23 +19,25 @@ const Drawer = createDrawerNavigator<DrawerParamList>();
 function CustomDrawerContent(props: DrawerContentComponentProps) {
   const { user } = useAuth();
   const { state, navigation } = props;
+  const { isTablet } = useResponsive();
+  const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null);
 
-  const menuItems = [
-    { 
-      name: 'Dashboard', 
-      label: 'RSS Reader', 
-      icon: (
-        <View style={styles.iconContainer}>
-          <Text style={styles.iconText}>📡</Text>
-        </View>
-      ),
-      description: 'フィード・記事管理'
-    },
-  ] as const;
+  const handleFeedSelect = (feedId: string | null) => {
+    setSelectedFeedId(feedId);
+    // DashboardScreenに遷移してフィード選択を通知
+    navigation.navigate('Dashboard', { selectedFeedId: feedId } as any);
+    // モバイルの場合はドロワーを閉じる
+    if (!isTablet) {
+      navigation.closeDrawer();
+    }
+  };
 
+  const handleFeedRefresh = () => {
+    // フィード更新時の処理
+  };
 
   return (
-    <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
+    <View style={styles.drawerContent}>
       {/* ヘッダー */}
       <View style={styles.drawerHeader}>
         <View style={styles.appIconWrapper}>
@@ -48,28 +51,13 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
         </View>
       </View>
 
-      {/* メニューアイテム */}
-      <View style={styles.menuContainer}>
-        {menuItems.map((item, index) => {
-          const isActive = state.index === index;
-          return (
-            <Pressable
-              key={item.name}
-              style={[styles.menuItem, isActive && styles.menuItemActive]}
-              onPress={() => navigation.navigate(item.name)}
-            >
-              {item.icon}
-              <View style={styles.menuItemContent}>
-                <Text style={[styles.menuLabel, isActive && styles.menuLabelActive]}>
-                  {item.label}
-                </Text>
-                <Text style={styles.menuDescription}>
-                  {item.description}
-                </Text>
-              </View>
-            </Pressable>
-          );
-        })}
+      {/* フィード管理セクション */}
+      <View style={styles.feedSection}>
+        <FeedSidebar
+          selectedFeedId={selectedFeedId}
+          onFeedSelect={handleFeedSelect}
+          onFeedRefresh={handleFeedRefresh}
+        />
       </View>
 
       {/* フッター */}
@@ -84,7 +72,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
           <Text style={styles.settingsLabel}>設定</Text>
         </Pressable>
       </View>
-    </DrawerContentScrollView>
+    </View>
   );
 }
 
@@ -203,50 +191,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.gray[600],
   },
-  menuContainer: {
+  feedSection: {
     flex: 1,
-    paddingTop: 8,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginHorizontal: 8,
-    borderRadius: 8,
-    marginBottom: 4,
-  },
-  menuItemActive: {
-    backgroundColor: colors.primary[50],
-    borderLeftWidth: 2,
-    borderLeftColor: colors.primary[500],
-  },
-  iconContainer: {
-    width: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  iconText: {
-    fontSize: 16,
-  },
-  menuItemContent: {
-    flex: 1,
-  },
-  menuLabel: {
-    fontSize: 16,
-    color: colors.gray[900],
-    fontWeight: '500',
-    marginBottom: 2,
-  },
-  menuLabelActive: {
-    color: colors.primary[700],
-    fontWeight: '600',
-  },
-  menuDescription: {
-    fontSize: 12,
-    color: colors.gray[500],
   },
   drawerFooter: {
     padding: 16,

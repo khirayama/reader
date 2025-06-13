@@ -10,13 +10,12 @@ export type AuthStackParamList = {
 
 export type AppTabParamList = {
   Dashboard: undefined;
-  Feeds: undefined;
   Articles: { feedId?: string } | undefined;
   Profile: undefined;
 };
 
 export type DrawerParamList = {
-  Dashboard: undefined;
+  Dashboard: { selectedFeedId?: string | null } | undefined;
   Profile: undefined;
 };
 

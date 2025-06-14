@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { sdk } from '@/lib/sdk'
 import type { Article, Tag, Pagination } from '@/lib/rss-sdk'
 import { Button } from '@/components/ui/Button'
@@ -31,6 +31,7 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArt
   const [currentTagIndex, setCurrentTagIndex] = useState(0)
   const [loading, setLoading] = useState(false)
   const carouselRef = useRef<HTMLDivElement>(null)
+  const scrollPositions = useRef<Map<string, number>>(new Map())
 
   // タグ一覧を取得
   const loadTags = async () => {
@@ -269,7 +270,7 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArt
     window.open(articleUrl, '_blank')
   }
 
-  const handleLoadMore = (tagId?: string) => {
+  const handleLoadMore = useCallback((tagId?: string) => {
     if (tagId) {
       const data = tagArticles.get(tagId)
       if (data?.pagination?.hasNext && !data.loading) {
@@ -280,7 +281,31 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArt
         loadAllArticles((allPagination.page || 0) + 1, false)
       }
     }
-  }
+  }, [tagArticles, allPagination, allLoading])
+
+  // 無限スクロールハンドラー
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>, tagId?: string) => {
+    const target = e.currentTarget
+    const { scrollTop, scrollHeight, clientHeight } = target
+    
+    // スクロール位置を保存
+    const key = tagId || 'all'
+    scrollPositions.current.set(key, scrollTop)
+    
+    // 底に近づいたら次のページを読み込み（100px余裕を持たせる）
+    if (scrollHeight - scrollTop - clientHeight < 100) {
+      handleLoadMore(tagId)
+    }
+  }, [handleLoadMore])
+
+  // スクロール位置を復元
+  const restoreScrollPosition = useCallback((element: HTMLElement, tagId?: string) => {
+    const key = tagId || 'all'
+    const savedPosition = scrollPositions.current.get(key)
+    if (savedPosition !== undefined) {
+      element.scrollTop = savedPosition
+    }
+  }, [])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -294,11 +319,12 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArt
   }
 
   // 記事リストコンポーネント
-  const ArticleListContent = ({ articles, isLoading, pagination, onLoadMore }: {
+  const ArticleListContent = ({ articles, isLoading, pagination, onLoadMore, tagId }: {
     articles: Article[]
     isLoading: boolean
     pagination: Pagination | null
     onLoadMore: () => void
+    tagId?: string
   }) => {
     // 既読記事をフィルタリング
     const filteredArticles = hideReadArticles 
@@ -332,7 +358,16 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArt
 
     return (
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        <div className="flex-1 overflow-y-auto">
+        <div 
+          className="flex-1 overflow-y-auto"
+          onScroll={(e) => handleScroll(e, tagId)}
+          ref={(el) => {
+            if (el) {
+              // スクロール位置を復元（初回レンダリング時のみ）
+              setTimeout(() => restoreScrollPosition(el, tagId), 0)
+            }
+          }}
+        >
           <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
             {filteredArticles.map((article) => (
               <article 
@@ -407,16 +442,22 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArt
               </article>
             ))}
 
-            {pagination?.hasNext && (
+            {/* 無限スクロール用のローディングインジケーター */}
+            {isLoading && (
+              <div className="text-center py-4 border-t border-neutral-200 dark:border-neutral-700">
+                <div className="text-gray-500 dark:text-gray-400 text-sm">読み込み中...</div>
+              </div>
+            )}
+            
+            {/* フォールバック：手動読み込みボタン */}
+            {pagination?.hasNext && !isLoading && (
               <div className="text-center py-4 border-t border-neutral-200 dark:border-neutral-700">
                 <Button 
                   onClick={onLoadMore} 
-                  disabled={isLoading} 
-                  loading={isLoading}
                   variant="outline" 
                   size="sm"
                 >
-                  {isLoading ? '読み込み中...' : 'さらに読み込む'}
+                  さらに読み込む
                 </Button>
               </div>
             )}
@@ -442,6 +483,7 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArt
         isLoading={allLoading}
         pagination={allPagination}
         onLoadMore={() => handleLoadMore()}
+        tagId={undefined}
       />
     )
   }
@@ -514,6 +556,7 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArt
             isLoading={allLoading}
             pagination={allPagination}
             onLoadMore={() => handleLoadMore()}
+            tagId={undefined}
           />
         </div>
 
@@ -527,6 +570,7 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArt
                 isLoading={tagData?.loading || false}
                 pagination={tagData?.pagination || null}
                 onLoadMore={() => handleLoadMore(tag.id)}
+                tagId={tag.id}
               />
             </div>
           )

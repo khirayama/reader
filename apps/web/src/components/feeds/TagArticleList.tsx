@@ -1,8 +1,8 @@
 'use client'
 
 import type React from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import type { TaggedArticleGroup } from '@/hooks/useTaggedArticles'
-import { Button } from '@/components/ui/Button'
 
 interface TagArticleListProps {
   group: TaggedArticleGroup
@@ -19,6 +19,10 @@ export function TagArticleList({
   onToggleBookmark,
   onArticleClick
 }: TagArticleListProps) {
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const isLoadingRef = useRef(false)
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('ja-JP', {
@@ -29,6 +33,50 @@ export function TagArticleList({
       minute: '2-digit',
     })
   }
+
+  // 無限スクロールのための自動読み込み
+  const handleLoadMore = useCallback(() => {
+    if (isLoadingRef.current || !group.hasMore || group.loading) return
+    
+    isLoadingRef.current = true
+    onLoadMore()
+    
+    // 読み込み完了後にフラグをリセット
+    setTimeout(() => {
+      isLoadingRef.current = false
+    }, 1000)
+  }, [onLoadMore, group.hasMore, group.loading])
+
+  // Intersection Observer のセットアップ
+  useEffect(() => {
+    if (!loadMoreRef.current) return
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries
+        if (entry.isIntersecting) {
+          handleLoadMore()
+        }
+      },
+      {
+        threshold: 0.1,
+        rootMargin: '100px',
+      }
+    )
+
+    observerRef.current.observe(loadMoreRef.current)
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect()
+      }
+    }
+  }, [handleLoadMore])
+
+  // 記事リストが変更された時にロード状態をリセット
+  useEffect(() => {
+    isLoadingRef.current = false
+  }, [group.articles.length])
 
   if (group.loading && group.articles.length === 0) {
     return (
@@ -167,17 +215,24 @@ export function TagArticleList({
             </article>
           ))}
 
+          {/* 無限スクロール用のトリガー要素 */}
           {group.hasMore && (
-            <div className="text-center py-4 border-t border-neutral-200 dark:border-neutral-700">
-              <Button 
-                onClick={onLoadMore} 
-                disabled={group.loading} 
-                loading={group.loading}
-                variant="outline" 
-                size="sm"
-              >
-                {group.loading ? '読み込み中...' : 'さらに読み込む'}
-              </Button>
+            <div 
+              ref={loadMoreRef}
+              className="text-center py-4 border-t border-neutral-200 dark:border-neutral-700"
+            >
+              {group.loading ? (
+                <div className="flex items-center justify-center gap-2 text-neutral-500 dark:text-neutral-400">
+                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span className="text-sm">読み込み中...</span>
+                </div>
+              ) : (
+                <div className="text-xs text-neutral-400 dark:text-neutral-500">
+                  スクロールして続きを読み込み
+                </div>
+              )}
             </div>
           )}
         </div>

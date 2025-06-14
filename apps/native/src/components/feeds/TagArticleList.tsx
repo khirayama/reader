@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -28,6 +28,22 @@ export function TagArticleList({
   onToggleBookmark,
   onArticlePress
 }: TagArticleListProps) {
+  const lastLoadTimeRef = useRef<number>(0);
+  const isLoadingRef = useRef<boolean>(false);
+  const DEBOUNCE_DELAY = 300; // 300msのデバウンス（更に短縮）
+  const MIN_ARTICLES_FOR_INFINITE_SCROLL = 3; // 最低記事数（更に緩和）
+  const SCROLL_THRESHOLD = 0.8; // 80%スクロール時に検知（更に緩和）
+  const BOTTOM_MARGIN = 50; // 下端検知のマージン（px）増加
+  
+  // 記事数が変更された時（読み込み完了時）にロード状態をリセット
+  useEffect(() => {
+    if (!group.loading && isLoadingRef.current) {
+      console.log('[TagArticleList] 読み込み完了、ロード状態リセット');
+      isLoadingRef.current = false;
+      // タイムスタンプはリセットしない（デバウンス維持）
+    }
+  }, [group.articles.length, group.loading]);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('ja-JP', {
@@ -147,22 +163,102 @@ export function TagArticleList({
     
     return (
       <View style={styles.loadMoreContainer}>
-        <Button
-          title={group.loading ? '読み込み中...' : 'さらに読み込む'}
-          onPress={onLoadMore}
-          disabled={group.loading}
-          variant="outline"
-          size="sm"
-        />
-        {group.loading && (
-          <ActivityIndicator 
-            size="small" 
-            color={colors.primary[500]} 
-            style={styles.loadingIndicator}
-          />
+        {group.loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator 
+              size="small" 
+              color={colors.primary[500]} 
+              style={styles.loadingIndicator}
+            />
+            <Text style={styles.loadingText}>読み込み中...</Text>
+          </View>
+        ) : (
+          <Text style={styles.loadMoreText}>スクロールして続きを読み込み</Text>
         )}
       </View>
     );
+  };
+
+  // カスタム Intersection Observer (onScroll ベース)
+  const handleScroll = useCallback((event: any) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const now = Date.now();
+    
+    // スクロール位置の計算
+    const scrollPosition = contentOffset.y + layoutMeasurement.height;
+    const contentHeight = contentSize.height;
+    const scrollPercentage = scrollPosition / contentHeight;
+    const distanceFromBottom = contentHeight - scrollPosition;
+    
+    // 複数の条件で読み込みを判定
+    const isNearBottom = scrollPercentage >= SCROLL_THRESHOLD; // 80%以上
+    const isAtBottom = distanceFromBottom <= BOTTOM_MARGIN; // 下端から50px以内
+    const isVeryClose = distanceFromBottom <= 10; // 非常に近い場合（10px以内）
+    const shouldLoad = isNearBottom || isAtBottom || isVeryClose;
+    
+    console.log('[TagArticleList] スクロール監視:', {
+      scrollY: Math.round(contentOffset.y),
+      viewHeight: Math.round(layoutMeasurement.height),
+      contentHeight: Math.round(contentHeight),
+      scrollPosition: Math.round(scrollPosition),
+      scrollPercentage: Math.round(scrollPercentage * 100) + '%',
+      distanceFromBottom: Math.round(distanceFromBottom) + 'px',
+      threshold: Math.round(SCROLL_THRESHOLD * 100) + '%',
+      bottomMargin: BOTTOM_MARGIN + 'px',
+      isNearBottom,
+      isAtBottom,
+      isVeryClose,
+      shouldLoad
+    });
+    
+    // 80%以上スクロール、下端50px以内、または非常に近い場合（10px以内）に読み込み
+    if (shouldLoad) {
+      handleInfiniteLoad(now);
+    }
+  }, [group.hasMore, group.loading, group.articles.length]);
+
+  // 無限読み込み処理
+  const handleInfiniteLoad = (now: number) => {
+    console.log('[TagArticleList] 無限読み込み判定:', {
+      timestamp: now,
+      lastLoadTime: lastLoadTimeRef.current,
+      timeSinceLastLoad: now - lastLoadTimeRef.current,
+      isLoadingRef: isLoadingRef.current,
+      groupLoading: group.loading,
+      hasMore: group.hasMore,
+      articlesCount: group.articles.length
+    });
+    
+    // 既に読み込み中の場合はスキップ
+    if (isLoadingRef.current || group.loading) {
+      console.log('[TagArticleList] 読み込み中のためスキップ');
+      return;
+    }
+    
+    // デバウンス: 前回の読み込み開始から300ms以内は無視
+    if (lastLoadTimeRef.current > 0 && now - lastLoadTimeRef.current < DEBOUNCE_DELAY) {
+      console.log('[TagArticleList] デバウンス: 読み込みスキップ');
+      return;
+    }
+    
+    // 条件チェック
+    const canLoadMore = 
+      group.hasMore && 
+      group.articles.length >= MIN_ARTICLES_FOR_INFINITE_SCROLL;
+    
+    console.log('[TagArticleList] 無限スクロール判定:', {
+      hasMore: group.hasMore,
+      articlesCount: group.articles.length,
+      minRequired: MIN_ARTICLES_FOR_INFINITE_SCROLL,
+      canLoadMore
+    });
+    
+    if (canLoadMore) {
+      console.log('[TagArticleList] 追加読み込み開始');
+      lastLoadTimeRef.current = now;
+      isLoadingRef.current = true;
+      onLoadMore();
+    }
   };
 
   if (group.loading && group.articles.length === 0) {
@@ -211,6 +307,14 @@ export function TagArticleList({
         ListFooterComponent={renderFooter}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
+        // カスタム無限スクロール設定（onScroll ベース）
+        onScroll={handleScroll}
+        scrollEventThrottle={50} // 50ms間隔でスクロールイベントを受信（更に頻繁に）
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        initialNumToRender={15}
+        getItemLayout={undefined} // 動的サイズのためundefined
       />
     </View>
   );
@@ -351,5 +455,11 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.gray[400],
     textAlign: 'center',
+  },
+  loadMoreText: {
+    fontSize: fontSize.xs,
+    color: colors.gray[400],
+    textAlign: 'center',
+    paddingVertical: spacing.sm,
   },
 });

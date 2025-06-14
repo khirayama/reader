@@ -261,15 +261,13 @@ export function TaggedArticleCarousel({
                 key={group.id}
                 style={{ width: scrollViewSize.width, height: scrollViewSize.height }}
               >
-                <ScrollView style={styles.carouselPage}>
-                  <TagArticleList
-                    group={group}
-                    onLoadMore={loadMoreArticles}
-                    onMarkAsRead={markArticleAsRead}
-                    onToggleBookmark={toggleBookmark}
-                    onArticlePress={handleArticlePress}
-                  />
-                </ScrollView>
+                <TagArticleList
+                  group={group}
+                  onLoadMore={loadMoreArticles}
+                  onMarkAsRead={markArticleAsRead}
+                  onToggleBookmark={toggleBookmark}
+                  onArticlePress={handleArticlePress}
+                />
               </View>
             ))}
           </ScrollView>
@@ -355,9 +353,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   carousel: {
-    flex: 1,
-  },
-  carouselPage: {
     flex: 1,
   },
   loadingContainer: {

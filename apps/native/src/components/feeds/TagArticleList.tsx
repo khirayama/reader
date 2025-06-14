@@ -7,9 +7,11 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import type { TaggedArticleGroup } from '../../hooks/useTaggedArticles';
+import type { TaggedArticleGroup, Article } from '../../hooks/useTaggedArticles';
 import { Button } from '../ui/Button';
 import { colors } from '../../constants/colors';
 import { spacing, fontSize } from '../../constants/spacing';
@@ -93,7 +95,7 @@ export function TagArticleList({
   );
 
 
-  const renderArticleItem = ({ item: article }: { item: any }) => (
+  const renderArticleItem = ({ item: article }: { item: Article }) => (
     <TouchableOpacity
       style={[
         styles.articleItem,
@@ -170,7 +172,7 @@ export function TagArticleList({
   };
 
   // カスタム Intersection Observer (onScroll ベース)
-  const handleScroll = useCallback((event: any) => {
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
     const now = Date.now();
     

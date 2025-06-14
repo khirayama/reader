@@ -1,15 +1,22 @@
-- 視認性改善
 - 各種設定値が正しく動いているか確認
 - キーボードショートカットの追加
 - OPMLインポート時にタグの追加
 - Expo Router導入
 
-- 翻訳機能
-- Readability(https://github.com/mozilla/readability)を使った本文読み上げ
-  - https://note.com/npaka/n/n051044f421f7
 - フィード登録のリッチ化
   - URLから推測
   - すでに登録済みフィードから検索
+- 検索のリッチ化
+  - フィルタ条件の追加
+
+## プレミアム機能
+
+- 翻訳機能
+  - DeepSeekでもいけるかな？
+  - サポート言語分、タイトルを翻訳
+  - 他のプレミアムユーザが購読しているものは無料ユーザも見れる
+- Readability(https://github.com/mozilla/readability)を使った本文読み上げ
+  - https://note.com/npaka/n/n051044f421f7
 
 ```
 かつて実装していた記事一覧をタグごとのカルーセルUIにしてください。

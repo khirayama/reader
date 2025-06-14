@@ -20,7 +20,7 @@ export function ResponsiveLayout({
     return { width, height };
   });
 
-  const isTablet = windowDimensions.width >= 768 || Platform.isPad;
+  const isTablet = windowDimensions.width >= 768 || (Platform.OS === 'ios' && (windowDimensions.width >= 600 && windowDimensions.height >= 600));
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {

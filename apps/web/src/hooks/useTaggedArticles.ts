@@ -80,8 +80,25 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
         : await sdk.articles.getAll(params)
       
       // レスポンスの形式を確認（data プロパティがある場合とない場合に対応）
-      const articles = (response as any).data?.articles || (response as any).articles || []
-      const pagination = (response as any).data?.pagination || (response as any).pagination || { hasNext: false }
+      let articles: Article[] = []
+      let pagination = { hasNext: false }
+      
+      if (response && typeof response === 'object') {
+        if ('data' in response && response.data && typeof response.data === 'object') {
+          const data = response.data
+          if ('articles' in data && Array.isArray(data.articles)) {
+            articles = data.articles
+          }
+          if ('pagination' in data && data.pagination && typeof data.pagination === 'object') {
+            pagination = data.pagination as { hasNext: boolean }
+          }
+        } else if ('articles' in response && Array.isArray(response.articles)) {
+          articles = response.articles
+          if ('pagination' in response && response.pagination && typeof response.pagination === 'object') {
+            pagination = response.pagination as { hasNext: boolean }
+          }
+        }
+      }
 
       setArticleGroups(prev => 
         prev.map(group => {

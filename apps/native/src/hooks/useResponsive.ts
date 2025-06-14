@@ -25,9 +25,9 @@ export function useResponsive(): ResponsiveInfo {
   }, []);
 
   const { width, height } = dimensions;
-  // より厳密なタブレット判定: 幅768px以上、またはiPadの場合
+  // より厳密なタブレット判定: 幅768px以上、またはiOSで大画面の場合
   // 小さなiPadでも確実にタブレットとして認識させる
-  const isTablet = width >= 768 || Platform.isPad || (width >= 600 && height >= 600);
+  const isTablet = width >= 768 || (Platform.OS === 'ios' && (width >= 600 && height >= 600));
   const isPhone = !isTablet;
   const isLandscape = width > height;
   const isPortrait = !isLandscape;

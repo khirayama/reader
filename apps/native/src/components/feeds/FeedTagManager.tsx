@@ -104,7 +104,7 @@ export function FeedTagManager({
       const response = await sdk.tags.createTag({
         name: newTagName.trim(),
         color: newTagColor,
-      });
+      }) as { success: boolean; data: { tag: any } };
 
       const createdTag = response.data.tag;
       setAvailableTags((prev) => [...prev, createdTag]);

@@ -87,8 +87,9 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
       const apiLanguage = language === 'ja' ? 'JA' : language === 'en' ? 'EN' : 'JA';
       await updateUserSettings(theme, apiLanguage);
       Alert.alert('成功', '設定を更新しました');
-    } catch (err: any) {
-      Alert.alert('エラー', err.message || '設定の更新に失敗しました');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '設定の更新に失敗しました';
+      Alert.alert('エラー', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -119,8 +120,9 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (err: any) {
-      Alert.alert('エラー', err.message || 'パスワードの変更に失敗しました');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'パスワードの変更に失敗しました';
+      Alert.alert('エラー', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -140,8 +142,9 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
       Alert.alert('成功', 'メールアドレスを変更しました');
       setNewEmail('');
       setEmailPassword('');
-    } catch (err: any) {
-      Alert.alert('エラー', err.message || 'メールアドレスの変更に失敗しました');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'メールアドレスの変更に失敗しました';
+      Alert.alert('エラー', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -159,8 +162,9 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
     try {
       await sdk.auth.deleteAccount({ password: deletePassword });
       logout();
-    } catch (err: any) {
-      Alert.alert('エラー', err.message || 'アカウントの削除に失敗しました');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'アカウントの削除に失敗しました';
+      Alert.alert('エラー', errorMessage);
       setShowDeleteConfirm(false);
       setDeletePassword('');
     } finally {

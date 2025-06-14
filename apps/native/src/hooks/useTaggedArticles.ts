@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { sdk } from '../lib/sdk';
 import type { Article, Tag } from '../lib/sdk';
 
+// Article型をre-export
+export type { Article };
+
 export interface TaggedArticleGroup {
   id: string;
   name: string;

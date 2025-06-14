@@ -68,7 +68,7 @@ export function TaggedArticleCarousel({
     };
   }, []);
 
-  const handleScrollViewLayout = (event: any) => {
+  const handleScrollViewLayout = (event: NativeSyntheticEvent<{ layout: { width: number; height: number; x: number; y: number } }>) => {
     setScrollViewSize({
       width: event.nativeEvent.layout.width,
       height: event.nativeEvent.layout.height,

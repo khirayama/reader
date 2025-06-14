@@ -14,20 +14,10 @@ export class NativeOpmlService {
   async exportOpml(): Promise<void> {
     try {
       // APIからOPMLデータを取得
-      const response = await sdk.opml.exportOpml();
+      const opmlContent = await sdk.opml.export();
       
-      // BlobをBase64文字列に変換
-      const reader = new FileReader();
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const result = reader.result as string;
-          // data:application/xml;base64, プレフィックスを削除
-          const base64 = result.split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(response);
-      });
+      // XMLコンテンツをBase64エンコード
+      const base64Data = btoa(unescape(encodeURIComponent(opmlContent)));
 
       // ファイル名を生成
       const filename = `feeds-${new Date().toISOString().split('T')[0]}.opml`;
@@ -85,9 +75,9 @@ export class NativeOpmlService {
       } as unknown as Blob);
 
       // SDKを使用してインポート
-      const importResult = await sdk.opml.importOpmlFromFormData(formData);
+      const importResult = await sdk.opml.import(formData);
 
-      return importResult;
+      return importResult as ImportOpmlResponse;
     } catch (error) {
       console.error('OPML import error:', error);
       if (error instanceof Error) {

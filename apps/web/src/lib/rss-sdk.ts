@@ -135,6 +135,27 @@ export interface AssignTagRequest {
   color?: string
 }
 
+// フィードタグ関連の型定義
+export interface FeedTag {
+  id: string
+  feedId: string
+  tagId: string
+  assignedAt: string
+  feed?: Pick<Feed, 'id' | 'title'>
+  tag?: Pick<Tag, 'id' | 'name' | 'color'>
+}
+
+// API レスポンスの統一型
+export interface ApiResponse<T> {
+  success: boolean
+  data: T
+  message?: string
+}
+
+// 拡張可能なエラー型
+export interface ExtendedError extends Error {
+  rateLimitInfo?: RateLimitError
+}
 
 // レート制限エラーの詳細な型定義
 export interface RateLimitError {
@@ -261,8 +282,8 @@ class SimpleApiClient {
         
         // レート制限エラーの場合は詳細情報も含める
         if (response.status === 429) {
-          const rateLimitError = new Error(errorData.error || 'レート制限に達しました')
-          ;(rateLimitError as any).rateLimitInfo = errorData
+          const rateLimitError = new Error(errorData.error || 'レート制限に達しました') as ExtendedError
+          rateLimitError.rateLimitInfo = errorData
           throw rateLimitError
         }
         
@@ -294,14 +315,17 @@ class SimpleApiClient {
     }
   }
 
-  private isRetryableError(error: any): boolean {
+  private isRetryableError(error: unknown): boolean {
     // タイムアウトエラーやネットワークエラーはリトライ対象
-    return (
-      error instanceof TypeError || // ネットワークエラー
-      error.name === 'AbortError' || // タイムアウト
-      error.message?.includes('fetch') || // fetch関連エラー
-      error.message?.includes('network') // ネットワーク関連エラー
-    )
+    if (error instanceof TypeError) return true // ネットワークエラー
+    if (error instanceof Error) {
+      return (
+        error.name === 'AbortError' || // タイムアウト
+        error.message?.includes('fetch') || // fetch関連エラー
+        error.message?.includes('network') // ネットワーク関連エラー
+      )
+    }
+    return false
   }
 
   private async requestBlob(method: string, path: string): Promise<Blob> {
@@ -422,7 +446,7 @@ class FeedsService {
     
     const path = `/api/feeds${params.toString() ? '?' + params.toString() : ''}`
     const response = await this.client.get<FeedListResponse>(path)
-    return response.data || response as any
+    return 'data' in response ? response.data : response
   }
 
   async getFeed(feedId: string): Promise<Feed> {
@@ -453,7 +477,7 @@ class FeedsService {
     
     const path = `/api/feeds/${feedId}/articles${params.toString() ? '?' + params.toString() : ''}`
     const response = await this.client.get<ArticleListResponse>(path)
-    return response.data || response as any
+    return 'data' in response ? response.data : response
   }
 
   // Compatibility aliases
@@ -478,7 +502,7 @@ class FeedsService {
     return await this.client.post(`/api/feeds/${feedId}/refresh`, {})
   }
 
-  async assignTagToFeed(feedId: string, data: AssignTagRequest): Promise<{ success: boolean; data: { feedTag: any } }> {
+  async assignTagToFeed(feedId: string, data: AssignTagRequest): Promise<{ success: boolean; data: { feedTag: FeedTag } }> {
     return await this.client.post(`/api/feeds/${feedId}/tags`, data)
   }
 
@@ -501,7 +525,7 @@ class ArticlesService {
     
     const path = `/api/articles${params.toString() ? '?' + params.toString() : ''}`
     const response = await this.client.get<ArticleListResponse>(path)
-    return response.data || response as any
+    return 'data' in response ? response.data : response
   }
 
   async getArticleById(articleId: string) {
@@ -596,7 +620,7 @@ class TagsService {
     return await this.client.delete(`/api/tags/${tagId}`)
   }
 
-  async assignTagToFeed(feedId: string, data: AssignTagRequest): Promise<{ success: boolean; data: { feedTag: any } }> {
+  async assignTagToFeed(feedId: string, data: AssignTagRequest): Promise<{ success: boolean; data: { feedTag: FeedTag } }> {
     return await this.client.post(`/api/feeds/${feedId}/tags`, data)
   }
 

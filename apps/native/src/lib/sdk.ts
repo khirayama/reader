@@ -4,8 +4,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export interface User {
   id: string;
   email: string;
+  name: string;
   theme: 'SYSTEM' | 'LIGHT' | 'DARK';
-  language: 'JA' | 'EN';
+  language: 'JA' | 'EN' | 'ja' | 'en' | 'zh' | 'es'; // 多言語対応
   createdAt: string;
   updatedAt: string;
 }
@@ -278,6 +279,18 @@ class AuthService {
     return await this.client.put('/api/auth/email', data);
   }
 
+  async forgotPassword(data: { email: string }) {
+    return await this.client.post('/api/auth/forgot-password', data);
+  }
+
+  async resetPassword(data: { token: string; password: string }) {
+    return await this.client.post('/api/auth/reset-password', data);
+  }
+
+  async updateUser(data: { name?: string; theme?: 'SYSTEM' | 'LIGHT' | 'DARK'; language?: 'JA' | 'EN' | 'ja' | 'en' | 'zh' | 'es' }) {
+    return await this.client.put('/api/auth/profile', data);
+  }
+
   async deleteAccount(data: { password: string }) {
     return await this.client.delete('/api/auth/account', data);
   }
@@ -439,6 +452,20 @@ class TagsService {
   }
 }
 
+// OPML サービス
+class OpmlService {
+  constructor(private client: SimpleApiClient) {}
+
+  async import(formData: FormData) {
+    return await this.client.postFormData('/api/opml/import', formData);
+  }
+
+  async export(): Promise<string> {
+    const response = await this.client.get<{ success: boolean; data: string }>('/api/opml/export');
+    return response.data;
+  }
+}
+
 // RSS Reader SDK クラス
 export class RSSReaderSDK {
   private client: SimpleApiClient;
@@ -446,6 +473,7 @@ export class RSSReaderSDK {
   public feeds: FeedsService;
   public articles: ArticlesService;
   public tags: TagsService;
+  public opml: OpmlService;
 
   constructor(config: { baseURL: string; timeout?: number }) {
     this.client = new SimpleApiClient(config);
@@ -453,6 +481,7 @@ export class RSSReaderSDK {
     this.feeds = new FeedsService(this.client);
     this.articles = new ArticlesService(this.client);
     this.tags = new TagsService(this.client);
+    this.opml = new OpmlService(this.client);
   }
 
   setToken(token: string): void {

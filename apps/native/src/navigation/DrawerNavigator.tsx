@@ -25,7 +25,7 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
   const handleFeedSelect = (feedId: string | null) => {
     setSelectedFeedId(feedId);
     // DashboardScreenに遷移してフィード選択を通知
-    navigation.navigate('Dashboard', { selectedFeedId: feedId } as any);
+    navigation.navigate('Dashboard', { selectedFeedId: feedId });
     // モバイルの場合はドロワーを閉じる
     if (!isTablet) {
       navigation.closeDrawer();

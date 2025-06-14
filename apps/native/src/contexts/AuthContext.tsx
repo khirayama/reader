@@ -1,7 +1,17 @@
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { sdk } from '../lib/sdk';
-import type { User } from '../../../../packages/sdk/src/types';
+import { sdk, type User } from '../lib/sdk';
+
+// API レスポンス型
+interface LoginResponse {
+  user: User;
+  token: string;
+}
+
+interface RegisterResponse {
+  user: User;
+  token: string;
+}
 
 interface AuthContextType {
   user: User | null;
@@ -15,7 +25,7 @@ interface AuthContextType {
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   changeEmail: (newEmail: string, password: string) => Promise<void>;
   updateSettings: (theme?: 'SYSTEM' | 'LIGHT' | 'DARK', language?: 'JA' | 'EN') => Promise<void>;
-  deleteAccount: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,7 +73,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (email: string, password: string) => {
     try {
       console.log('Login attempt:', { email });
-      const response = await sdk.auth.login({ email, password });
+      const response = await sdk.auth.login({ email, password }) as LoginResponse;
       console.log('Login response:', response);
       
       const { token, user: userData } = response;
@@ -80,7 +90,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const register = async (email: string, password: string, name: string) => {
-    const response = await sdk.auth.register({ email, password, name });
+    const response = await sdk.auth.register({ email, password }) as RegisterResponse;
     const { token, user: userData } = response;
     
     await AsyncStorage.setItem(TOKEN_KEY, token);
@@ -103,7 +113,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const updateProfile = async (name: string) => {
-    const updatedUser = await sdk.auth.updateUser({ name });
+    const updatedUser = await sdk.auth.updateUser({ name }) as User;
     setUser(updatedUser);
   };
 
@@ -112,17 +122,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const changeEmail = async (newEmail: string, password: string) => {
-    await sdk.auth.changeEmail({ newEmail, password });
+    await sdk.auth.changeEmail({ email: newEmail, password });
     await loadUserProfile(); // メールアドレスが更新されたらプロフィールを再読み込み
   };
 
   const updateSettings = async (theme?: 'SYSTEM' | 'LIGHT' | 'DARK', language?: 'JA' | 'EN') => {
-    const updatedUser = await sdk.auth.updateSettings({ theme, language });
+    const updatedUser = await sdk.auth.updateSettings({ theme, language }) as User;
     setUser(updatedUser);
   };
 
-  const deleteAccount = async () => {
-    await sdk.auth.deleteAccount();
+  const deleteAccount = async (password: string) => {
+    await sdk.auth.deleteAccount({ password });
     await logout();
   };
 

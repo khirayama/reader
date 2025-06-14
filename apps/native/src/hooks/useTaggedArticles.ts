@@ -90,9 +90,18 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
       setArticleGroups(prev => 
         prev.map(group => {
           if (group.id === groupId) {
+            const newArticles = reset ? response.articles : [...group.articles, ...response.articles];
+            console.log('[useTaggedArticles] 記事更新完了:', {
+              groupId,
+              reset,
+              oldCount: group.articles.length,
+              newCount: newArticles.length,
+              hasMore: response.pagination.hasNext,
+              nextPage: reset ? 2 : page + 1
+            });
             return {
               ...group,
-              articles: reset ? response.articles : [...group.articles, ...response.articles],
+              articles: newArticles,
               hasMore: response.pagination.hasNext,
               page: reset ? 2 : page + 1,
               loading: false

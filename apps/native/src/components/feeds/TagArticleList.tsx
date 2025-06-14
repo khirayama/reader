@@ -30,17 +30,34 @@ export function TagArticleList({
 }: TagArticleListProps) {
   const lastLoadTimeRef = useRef<number>(0);
   const isLoadingRef = useRef<boolean>(false);
-  const DEBOUNCE_DELAY = 300; // 300msのデバウンス（更に短縮）
-  const MIN_ARTICLES_FOR_INFINITE_SCROLL = 3; // 最低記事数（更に緩和）
-  const SCROLL_THRESHOLD = 0.8; // 80%スクロール時に検知（更に緩和）
-  const BOTTOM_MARGIN = 50; // 下端検知のマージン（px）増加
+  const DEBOUNCE_DELAY = 200; // 200msのデバウンス（短縮）
+  const MIN_ARTICLES_FOR_INFINITE_SCROLL = 3; // 最低記事数
+  const SCROLL_THRESHOLD = 0.7; // 70%スクロール時に検知（より早い検知）
+  const BOTTOM_MARGIN = 100; // 下端検知のマージン（px）増加
   
-  // 記事数が変更された時（読み込み完了時）にロード状態をリセット
+  // 読み込み状態の監視と適切なリセット
   useEffect(() => {
+    // group.loadingがfalseになった時（読み込み完了時）
     if (!group.loading && isLoadingRef.current) {
       console.log('[TagArticleList] 読み込み完了、ロード状態リセット');
       isLoadingRef.current = false;
-      // タイムスタンプはリセットしない（デバウンス維持）
+      // lastLoadTimeRefもリセットして新たな読み込みを可能にする
+      lastLoadTimeRef.current = 0;
+    }
+    
+    // group.loadingがtrueになった時（新規読み込み開始時）
+    if (group.loading && !isLoadingRef.current) {
+      console.log('[TagArticleList] 外部から読み込み開始、内部状態を同期');
+      isLoadingRef.current = true;
+    }
+  }, [group.loading]);
+
+  // 記事数の変化を監視して確実にリセット（フォールバック）
+  useEffect(() => {
+    if (!group.loading && isLoadingRef.current) {
+      console.log('[TagArticleList] 記事数変化検知、ロード状態を強制リセット');
+      isLoadingRef.current = false;
+      lastLoadTimeRef.current = 0;
     }
   }, [group.articles.length, group.loading]);
 
@@ -156,10 +173,10 @@ export function TagArticleList({
     const scrollPercentage = scrollPosition / contentHeight;
     const distanceFromBottom = contentHeight - scrollPosition;
     
-    // 複数の条件で読み込みを判定
-    const isNearBottom = scrollPercentage >= SCROLL_THRESHOLD; // 80%以上
-    const isAtBottom = distanceFromBottom <= BOTTOM_MARGIN; // 下端から50px以内
-    const isVeryClose = distanceFromBottom <= 10; // 非常に近い場合（10px以内）
+    // 複数の条件で読み込みを判定（より柔軟に）
+    const isNearBottom = scrollPercentage >= SCROLL_THRESHOLD; // 70%以上
+    const isAtBottom = distanceFromBottom <= BOTTOM_MARGIN; // 下端から100px以内
+    const isVeryClose = distanceFromBottom <= 20; // 非常に近い場合（20px以内）
     const shouldLoad = isNearBottom || isAtBottom || isVeryClose;
     
     console.log('[TagArticleList] スクロール監視:', {
@@ -177,7 +194,7 @@ export function TagArticleList({
       shouldLoad
     });
     
-    // 80%以上スクロール、下端50px以内、または非常に近い場合（10px以内）に読み込み
+    // 70%以上スクロール、下端100px以内、または非常に近い場合（20px以内）に読み込み
     if (shouldLoad) {
       handleInfiniteLoad(now);
     }
@@ -195,36 +212,56 @@ export function TagArticleList({
       articlesCount: group.articles.length
     });
     
-    // 既に読み込み中の場合はスキップ
-    if (isLoadingRef.current || group.loading) {
-      console.log('[TagArticleList] 読み込み中のためスキップ');
+    // 基本条件チェック（読み込み可能性）
+    const canLoadMore = 
+      group.hasMore && 
+      group.articles.length >= MIN_ARTICLES_FOR_INFINITE_SCROLL;
+    
+    if (!canLoadMore) {
+      console.log('[TagArticleList] 読み込み条件未満:', {
+        hasMore: group.hasMore,
+        articlesCount: group.articles.length,
+        minRequired: MIN_ARTICLES_FOR_INFINITE_SCROLL
+      });
       return;
     }
     
-    // デバウンス: 前回の読み込み開始から300ms以内は無視
+    // 既に読み込み中の場合はスキップ（ただし情報表示のみ）
+    if (isLoadingRef.current || group.loading) {
+      console.log('[TagArticleList] 読み込み中のためスキップ (情報のみ):', {
+        isLoadingRef: isLoadingRef.current,
+        groupLoading: group.loading
+      });
+      return;
+    }
+    
+    // デバウンス: 前回の読み込み開始から指定時間以内は無視
     if (lastLoadTimeRef.current > 0 && now - lastLoadTimeRef.current < DEBOUNCE_DELAY) {
       console.log('[TagArticleList] デバウンス: 読み込みスキップ');
       return;
     }
     
-    // 条件チェック
-    const canLoadMore = 
-      group.hasMore && 
-      group.articles.length >= MIN_ARTICLES_FOR_INFINITE_SCROLL;
+    console.log('[TagArticleList] 追加読み込み開始');
+    lastLoadTimeRef.current = now;
+    isLoadingRef.current = true;
     
-    console.log('[TagArticleList] 無限スクロール判定:', {
-      hasMore: group.hasMore,
-      articlesCount: group.articles.length,
-      minRequired: MIN_ARTICLES_FOR_INFINITE_SCROLL,
-      canLoadMore
-    });
-    
-    if (canLoadMore) {
-      console.log('[TagArticleList] 追加読み込み開始');
-      lastLoadTimeRef.current = now;
-      isLoadingRef.current = true;
+    // onLoadMoreを実行（Promise化して確実にエラーハンドリング）
+    try {
       onLoadMore();
+    } catch (error) {
+      console.error('[TagArticleList] 読み込み同期エラー:', error);
+      isLoadingRef.current = false;
+      lastLoadTimeRef.current = 0;
     }
+    
+    // 念のため5秒後に強制リセット（タイムアウト対策）
+    setTimeout(() => {
+      if (isLoadingRef.current && !group.loading) {
+        console.log('[TagArticleList] タイムアウト後強制リセット');
+        isLoadingRef.current = false;
+        lastLoadTimeRef.current = 0;
+      }
+    }, 5000);
   };
 
   if (group.loading && group.articles.length === 0) {
@@ -275,7 +312,7 @@ export function TagArticleList({
         contentContainerStyle={styles.listContent}
         // カスタム無限スクロール設定（onScroll ベース）
         onScroll={handleScroll}
-        scrollEventThrottle={50} // 50ms間隔でスクロールイベントを受信（更に頻繁に）
+        scrollEventThrottle={16} // 16ms間隔でスクロールイベントを受信（60fps対応）
         removeClippedSubviews={true}
         maxToRenderPerBatch={10}
         windowSize={10}

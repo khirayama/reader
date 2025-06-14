@@ -197,15 +197,15 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
           style={[styles.feedItem, styles.allFeedsItem, !selectedFeedId && styles.feedItemActive]}
           onPress={() => onFeedSelect(null)}
         >
-          <View style={styles.feedIcon}>
+          <View style={styles.stickyFeedContent}>
             <View style={[styles.defaultIcon, styles.allFeedsIcon]}>
               <Text style={styles.allFeedsIconText}>全</Text>
             </View>
-          </View>
-          <View style={styles.feedContent}>
-            <Text style={[styles.feedTitle, !selectedFeedId && styles.feedTitleActive]}>
-              すべてのフィード
-            </Text>
+            <View style={styles.feedTextContainer}>
+              <Text style={[styles.feedTitle, !selectedFeedId && styles.feedTitleActive]}>
+                すべてのフィード
+              </Text>
+            </View>
           </View>
         </TouchableOpacity>
         
@@ -214,20 +214,19 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
           style={[styles.feedItem, styles.allFeedsItem, selectedFeedId === 'bookmarks' && styles.feedItemActive]}
           onPress={() => onFeedSelect('bookmarks')}
         >
-          <View style={styles.feedIcon}>
+          <View style={styles.stickyFeedContent}>
             <View style={[styles.defaultIcon, styles.bookmarksIcon]}>
               <Feather
                 name="bookmark"
                 size={16}
                 color={colors.yellow[500]}
-                style={styles.bookmarkIconStyle}
               />
             </View>
-          </View>
-          <View style={styles.feedContent}>
-            <Text style={[styles.feedTitle, selectedFeedId === 'bookmarks' && styles.feedTitleActive]}>
-              お気に入り記事
-            </Text>
+            <View style={styles.feedTextContainer}>
+              <Text style={[styles.feedTitle, selectedFeedId === 'bookmarks' && styles.feedTitleActive]}>
+                お気に入り記事
+              </Text>
+            </View>
           </View>
         </TouchableOpacity>
       </View>
@@ -527,5 +526,16 @@ const styles = StyleSheet.create({
   },
   bookmarkIconStyle: {
     textAlign: 'center',
+  },
+  // Sticky Feed Content styles
+  stickyFeedContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    minWidth: 0,
+  },
+  feedTextContainer: {
+    flex: 1,
+    minWidth: 0,
   },
 });

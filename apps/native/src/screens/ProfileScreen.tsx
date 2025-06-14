@@ -186,13 +186,30 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
   };
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={styles.container}>
+      {/* ヘッダー */}
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <View style={styles.headerLeft}>
+            {/* ドロワーオープンボタン */}
+            <TouchableOpacity
+              style={styles.drawerButton}
+              onPress={() => navigation?.openDrawer()}
+            >
+              <Text style={styles.drawerButtonText}>☰</Text>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>設定</Text>
+          </View>
+        </View>
+      </View>
+
+      <ScrollView 
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
+      >
       {/* 一般設定 */}
       <Card style={styles.card}>
         <Text style={styles.sectionTitle}>一般設定</Text>
@@ -412,6 +429,7 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
         )}
       </Card>
     </ScrollView>
+    </View>
   );
 }
 
@@ -419,6 +437,43 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.gray[50],
+  },
+  header: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray[200],
+    ...shadows.sm,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  drawerButton: {
+    padding: spacing.xs,
+    marginRight: spacing.sm,
+    borderRadius: 6,
+    backgroundColor: colors.gray[100],
+  },
+  drawerButtonText: {
+    fontSize: 18,
+    color: colors.gray[600],
+  },
+  headerTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: '600',
+    color: colors.gray[900],
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
   },
   card: {
     margin: spacing.md,

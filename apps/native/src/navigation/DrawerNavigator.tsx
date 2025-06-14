@@ -81,18 +81,7 @@ export function DrawerNavigator() {
 
   // タブレット用の設定
   const tabletScreenOptions = useMemo(() => ({
-    headerShown: true,
-    headerStyle: {
-      backgroundColor: '#FFFFFF',
-      borderBottomWidth: 1,
-      borderBottomColor: '#E5E7EB',
-      elevation: 0,
-      shadowOpacity: 0,
-    },
-    headerTintColor: '#1F2937',
-    headerTitleStyle: {
-      fontWeight: '600',
-    },
+    headerShown: false,
     drawerStyle: {
       width: 320,
       backgroundColor: '#FFFFFF',
@@ -104,18 +93,7 @@ export function DrawerNavigator() {
 
   // モバイル用の設定
   const mobileScreenOptions = useMemo(() => ({
-    headerShown: true,
-    headerStyle: {
-      backgroundColor: '#FFFFFF',
-      borderBottomWidth: 1,
-      borderBottomColor: '#E5E7EB',
-      elevation: 0,
-      shadowOpacity: 0,
-    },
-    headerTintColor: '#1F2937',
-    headerTitleStyle: {
-      fontWeight: '600',
-    },
+    headerShown: false,
     drawerStyle: {
       width: '100%' as const,
       backgroundColor: '#FFFFFF',

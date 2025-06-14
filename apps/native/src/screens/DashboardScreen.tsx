@@ -51,6 +51,7 @@ export function DashboardScreen({ navigation, route }: DashboardScreenProps) {
         <ArticlesTabletScreen
           selectedFeedId={selectedFeedId}
           refreshKey={refreshKey}
+          navigation={navigation}
         />
       </View>
     );
@@ -69,6 +70,7 @@ export function DashboardScreen({ navigation, route }: DashboardScreenProps) {
         selectedFeedId={selectedFeedId}
         onFeedSelect={handleFeedSelect}
         onFeedRefresh={handleFeedRefresh}
+        navigation={navigation}
       />
     </View>
   );

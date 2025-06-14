@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth'
+import { ZodError } from 'zod'
 
 interface LoginFormProps {
   onSuccess?: () => void
@@ -23,9 +24,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     try {
       loginSchema.parse({ ...formData, [name]: value })
       setFieldErrors((prev) => ({ ...prev, [name]: undefined }))
-    } catch (err: any) {
-      const message = err.errors?.[0]?.message || 'Invalid value'
-      setFieldErrors((prev) => ({ ...prev, [name]: message }))
+    } catch (err) {
+      if (err instanceof ZodError) {
+        const message = err.errors[0]?.message || 'Invalid value'
+        setFieldErrors((prev) => ({ ...prev, [name]: message }))
+      }
     }
   }
 

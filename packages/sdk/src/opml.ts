@@ -1,10 +1,10 @@
-import { ApiClient } from './client';
+import type { ApiClient } from './client'
 
 export interface ImportOpmlResponse {
-  message: string;
-  imported: number;
-  failed: number;
-  errors: string[];
+  message: string
+  imported: number
+  failed: number
+  errors: string[]
 }
 
 export class OpmlService {
@@ -14,13 +14,13 @@ export class OpmlService {
     const response = await this.client.request('/opml/export', {
       method: 'GET',
       responseType: 'blob',
-    });
-    return response.data;
+    })
+    return response.data
   }
 
   async importOpml(file: File): Promise<ImportOpmlResponse> {
-    const formData = new FormData();
-    formData.append('file', file);
+    const formData = new FormData()
+    formData.append('file', file)
 
     const response = await this.client.request<ImportOpmlResponse>('/opml/import', {
       method: 'POST',
@@ -29,8 +29,8 @@ export class OpmlService {
       },
       data: formData,
       timeout: 5 * 60 * 1000, // OPML処理専用の5分タイムアウト
-    });
-    return response.data;
+    })
+    return response.data
   }
 
   async importOpmlFromFormData(formData: FormData): Promise<ImportOpmlResponse> {
@@ -41,7 +41,7 @@ export class OpmlService {
       },
       data: formData,
       timeout: 5 * 60 * 1000, // OPML処理専用の5分タイムアウト
-    });
-    return response.data;
+    })
+    return response.data
   }
 }

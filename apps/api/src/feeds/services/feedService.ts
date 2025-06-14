@@ -1,7 +1,7 @@
-import { prisma } from '../../lib/prisma';
-import type { CreateFeedRequest, UpdateFeedRequest, GetFeedsQuery } from '../validators/feedSchemas';
-import type { Feed, Article } from '@prisma/client';
-import { RSSService } from './rssService';
+import type { Article, Feed } from '@prisma/client'
+import { prisma } from '../../lib/prisma'
+import type { CreateFeedRequest, GetFeedsQuery, UpdateFeedRequest } from '../validators/feedSchemas'
+import { RSSService } from './rssService'
 
 export class FeedService {
   // フィード作成
@@ -14,17 +14,17 @@ export class FeedService {
           url: data.url,
         },
       },
-    });
+    })
 
     if (existingFeed) {
-      throw new Error('このフィードは既に登録されています');
+      throw new Error('このフィードは既に登録されています')
     }
 
     // RSS フィードを解析
-    const parsedFeed = await RSSService.parseFeed(data.url);
-    
+    const parsedFeed = await RSSService.parseFeed(data.url)
+
     // favicon を取得
-    const favicon = await RSSService.getFaviconUrl(parsedFeed.siteUrl);
+    const favicon = await RSSService.getFaviconUrl(parsedFeed.siteUrl)
 
     // フィードをデータベースに保存
     const feed = await prisma.feed.create({
@@ -37,7 +37,7 @@ export class FeedService {
         userId,
         lastFetchedAt: new Date(),
       },
-    });
+    })
 
     // 記事をデータベースに保存
     if (parsedFeed.items.length > 0) {
@@ -45,44 +45,41 @@ export class FeedService {
       const existingArticles = await prisma.article.findMany({
         where: { feedId: feed.id },
         select: { url: true },
-      });
-      
-      const existingUrls = new Set(existingArticles.map((article: { url: string }) => article.url));
-      
+      })
+
+      const existingUrls = new Set(existingArticles.map((article: { url: string }) => article.url))
+
       // 新規記事のみをフィルタリング
       const newArticles = parsedFeed.items
-        .filter(item => !existingUrls.has(item.url))
+        .filter((item) => !existingUrls.has(item.url))
         .map((item) => ({
           title: item.title,
           url: item.url,
           description: item.description,
           publishedAt: item.publishedAt,
           feedId: feed.id,
-        }));
-      
+        }))
+
       // 新規記事が存在する場合のみ保存
       if (newArticles.length > 0) {
         await prisma.article.createMany({
           data: newArticles,
-        });
+        })
       }
     }
 
-    return feed;
+    return feed
   }
 
   // ユーザーのフィード一覧取得
   static async getUserFeeds(userId: string, query: GetFeedsQuery) {
-    const { page, limit, search, tagId } = query;
-    const skip = (page - 1) * limit;
+    const { page, limit, search, tagId } = query
+    const skip = (page - 1) * limit
 
     const where: any = {
       userId,
       ...(search && {
-        OR: [
-          { title: { contains: search } },
-          { description: { contains: search } },
-        ],
+        OR: [{ title: { contains: search } }, { description: { contains: search } }],
       }),
       ...(tagId && {
         feedTags: {
@@ -91,7 +88,7 @@ export class FeedService {
           },
         },
       }),
-    };
+    }
 
     const [feeds, total] = await Promise.all([
       prisma.feed.findMany({
@@ -111,7 +108,7 @@ export class FeedService {
         },
       }),
       prisma.feed.count({ where }),
-    ]);
+    ])
 
     const feedsWithTags = feeds.map((feed: any) => ({
       ...feed,
@@ -119,7 +116,7 @@ export class FeedService {
       articleCount: feed._count.articles,
       feedTags: undefined,
       _count: undefined,
-    }));
+    }))
 
     return {
       feeds: feedsWithTags,
@@ -131,7 +128,7 @@ export class FeedService {
         hasNext: skip + limit < total,
         hasPrev: page > 1,
       },
-    };
+    }
   }
 
   // フィード詳細取得
@@ -151,9 +148,9 @@ export class FeedService {
           },
         },
       },
-    });
+    })
 
-    if (!feed) return null;
+    if (!feed) return null
 
     return {
       ...feed,
@@ -161,25 +158,21 @@ export class FeedService {
       articleCount: feed._count.articles,
       feedTags: undefined,
       _count: undefined,
-    };
+    }
   }
 
   // フィード更新
-  static async updateFeed(
-    feedId: string,
-    userId: string,
-    data: UpdateFeedRequest
-  ): Promise<Feed> {
+  static async updateFeed(feedId: string, userId: string, data: UpdateFeedRequest): Promise<Feed> {
     // フィードの存在確認と所有者チェック
     const existingFeed = await prisma.feed.findFirst({
       where: {
         id: feedId,
         userId,
       },
-    });
+    })
 
     if (!existingFeed) {
-      throw new Error('フィードが見つかりません');
+      throw new Error('フィードが見つかりません')
     }
 
     const updatedFeed = await prisma.feed.update({
@@ -188,9 +181,9 @@ export class FeedService {
         ...data,
         updatedAt: new Date(),
       },
-    });
+    })
 
-    return updatedFeed;
+    return updatedFeed
   }
 
   // フィード削除
@@ -201,22 +194,22 @@ export class FeedService {
         id: feedId,
         userId,
       },
-    });
+    })
 
     if (!existingFeed) {
-      throw new Error('フィードが見つかりません');
+      throw new Error('フィードが見つかりません')
     }
 
     // カスケード削除で関連する記事も削除される
     await prisma.feed.delete({
       where: { id: feedId },
-    });
+    })
   }
 
   // フィードを更新
   static async refreshFeed(feedId: string, userId: string): Promise<Feed> {
-    console.log(`[FeedService] フィード更新開始: feedId=${feedId}, userId=${userId}`);
-    
+    console.log(`[FeedService] フィード更新開始: feedId=${feedId}, userId=${userId}`)
+
     try {
       // フィードの存在確認と所有者チェック
       const feed = await prisma.feed.findFirst({
@@ -224,19 +217,19 @@ export class FeedService {
           id: feedId,
           userId,
         },
-      });
+      })
 
       if (!feed) {
-        console.warn(`[FeedService] フィードが見つかりません: feedId=${feedId}`);
-        throw new Error('フィードが見つかりません');
+        console.warn(`[FeedService] フィードが見つかりません: feedId=${feedId}`)
+        throw new Error('フィードが見つかりません')
       }
 
-      console.log(`[FeedService] フィード情報: ${feed.title} (${feed.url})`);
+      console.log(`[FeedService] フィード情報: ${feed.title} (${feed.url})`)
 
       // RSS フィードを再解析
-      const parsedFeed = await RSSService.parseFeed(feed.url);
-      console.log(`[FeedService] フィード解析完了: ${parsedFeed.items.length}件の記事`);
-      
+      const parsedFeed = await RSSService.parseFeed(feed.url)
+      console.log(`[FeedService] フィード解析完了: ${parsedFeed.items.length}件の記事`)
+
       // トランザクションでフィード更新と記事追加を原子的に実行
       const result = await prisma.$transaction(async (tx: any) => {
         // フィード情報を更新
@@ -248,7 +241,7 @@ export class FeedService {
             siteUrl: parsedFeed.siteUrl,
             lastFetchedAt: new Date(),
           },
-        });
+        })
 
         // 新しい記事を追加
         if (parsedFeed.items.length > 0) {
@@ -256,136 +249,134 @@ export class FeedService {
           const existingArticles = await tx.article.findMany({
             where: { feedId: feed.id },
             select: { url: true },
-          });
-          
-          const existingUrls = new Set(existingArticles.map((article: { url: string }) => article.url));
-          
+          })
+
+          const existingUrls = new Set(
+            existingArticles.map((article: { url: string }) => article.url)
+          )
+
           // 新規記事のみをフィルタリング
           const newArticles = parsedFeed.items
-            .filter(item => !existingUrls.has(item.url))
+            .filter((item) => !existingUrls.has(item.url))
             .map((item) => ({
               title: item.title?.substring(0, 500) || 'タイトルなし', // タイトルの長さ制限
               url: item.url,
               description: item.description?.substring(0, 2000) || null, // 説明の長さ制限
               publishedAt: item.publishedAt,
               feedId: feed.id,
-            }));
-          
-          console.log(`[FeedService] ${newArticles.length}件の新規記事をデータベースに追加中...`);
-          
+            }))
+
+          console.log(`[FeedService] ${newArticles.length}件の新規記事をデータベースに追加中...`)
+
           if (newArticles.length > 0) {
             await tx.article.createMany({
               data: newArticles,
-            });
+            })
           }
-          
-          console.log(`[FeedService] 記事の追加完了`);
+
+          console.log('[FeedService] 記事の追加完了')
         }
 
-        return updatedFeed;
-      });
+        return updatedFeed
+      })
 
-      console.log(`[FeedService] フィード更新成功: ${result.title}`);
-      return result;
-      
+      console.log(`[FeedService] フィード更新成功: ${result.title}`)
+      return result
     } catch (error) {
-      console.error(`[FeedService] フィード更新エラー: feedId=${feedId}`, error);
-      
+      console.error(`[FeedService] フィード更新エラー: feedId=${feedId}`, error)
+
       // エラーの再スロー（メッセージをそのまま伝播）
-      throw error;
+      throw error
     }
   }
 
   // 全フィードを更新
   static async refreshAllUserFeeds(userId: string): Promise<void> {
-    console.log(`[FeedService] 全フィード更新開始: userId=${userId}`);
-    
+    console.log(`[FeedService] 全フィード更新開始: userId=${userId}`)
+
     try {
       const feeds = await prisma.feed.findMany({
         where: { userId },
         select: { id: true, title: true, url: true },
-      });
+      })
 
-      console.log(`[FeedService] ${feeds.length}件のフィードを更新中...`);
+      console.log(`[FeedService] ${feeds.length}件のフィードを更新中...`)
 
       const results = {
         success: 0,
         failed: 0,
         errors: [] as string[],
-      };
+      }
 
       // 並列でフィード更新を実行（制限付き並列処理）
-      const BATCH_SIZE = 3; // 同時実行数を制限（RSS取得は重い処理のため少なめ）
-      
+      const BATCH_SIZE = 3 // 同時実行数を制限（RSS取得は重い処理のため少なめ）
+
       for (let i = 0; i < feeds.length; i += BATCH_SIZE) {
-        const batch = feeds.slice(i, i + BATCH_SIZE);
-        
+        const batch = feeds.slice(i, i + BATCH_SIZE)
+
         const batchResults = await Promise.allSettled(
           batch.map(async (feed: { id: string; title: string; url: string }) => {
             try {
-              console.log(`[FeedService] フィード更新中: ${feed.title} (${feed.id})`);
-              await this.refreshFeed(feed.id, userId);
-              return { success: true, feed };
+              console.log(`[FeedService] フィード更新中: ${feed.title} (${feed.id})`)
+              await FeedService.refreshFeed(feed.id, userId)
+              return { success: true, feed }
             } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : '不明なエラー';
-              console.error(`[FeedService] フィード更新失敗 ${feed.id} (${feed.title}):`, error);
-              return { success: false, feed, error: errorMessage };
+              const errorMessage = error instanceof Error ? error.message : '不明なエラー'
+              console.error(`[FeedService] フィード更新失敗 ${feed.id} (${feed.title}):`, error)
+              return { success: false, feed, error: errorMessage }
             }
           })
-        );
-        
+        )
+
         // バッチ結果を集計
         for (const result of batchResults) {
           if (result.status === 'fulfilled') {
             if (result.value.success) {
-              results.success++;
+              results.success++
             } else {
-              results.failed++;
-              results.errors.push(`${result.value.feed.title}: ${result.value.error}`);
+              results.failed++
+              results.errors.push(`${result.value.feed.title}: ${result.value.error}`)
             }
           } else {
-            results.failed++;
-            results.errors.push(`バッチ処理エラー: ${result.reason}`);
+            results.failed++
+            results.errors.push(`バッチ処理エラー: ${result.reason}`)
           }
         }
-        
+
         // バッチ間で少し待機してサーバー負荷を軽減
         if (i + BATCH_SIZE < feeds.length) {
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise((resolve) => setTimeout(resolve, 200))
         }
       }
 
-      console.log(`[FeedService] 全フィード更新完了: 成功=${results.success}, 失敗=${results.failed}`);
-      
+      console.log(
+        `[FeedService] 全フィード更新完了: 成功=${results.success}, 失敗=${results.failed}`
+      )
+
       if (results.errors.length > 0) {
-        console.warn(`[FeedService] 更新エラーの詳細:`, results.errors);
+        console.warn('[FeedService] 更新エラーの詳細:', results.errors)
       }
     } catch (error) {
-      console.error(`[FeedService] 全フィード更新で予期しないエラー:`, error);
-      throw error;
+      console.error('[FeedService] 全フィード更新で予期しないエラー:', error)
+      throw error
     }
   }
 
   // フィードの記事取得
-  static async getFeedArticles(
-    feedId: string,
-    userId: string,
-    page: number = 1,
-    limit: number = 20
-  ) {
+  static async getFeedArticles(feedId: string, userId: string, page = 1, limit = 20) {
     // フィードの存在確認と所有者チェック
     const feed = await prisma.feed.findFirst({
       where: {
         id: feedId,
         userId,
       },
-    });
+    })
 
     if (!feed) {
-      throw new Error('フィードが見つかりません');
+      throw new Error('フィードが見つかりません')
     }
 
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit
 
     const [articles, total] = await Promise.all([
       prisma.article.findMany({
@@ -395,7 +386,7 @@ export class FeedService {
         orderBy: { publishedAt: 'desc' },
       }),
       prisma.article.count({ where: { feedId } }),
-    ]);
+    ])
 
     return {
       articles,
@@ -407,27 +398,19 @@ export class FeedService {
         hasNext: skip + limit < total,
         hasPrev: page > 1,
       },
-    };
+    }
   }
 
   // 全ての記事を取得（ユーザーの全フィードから）
-  static async getAllUserArticles(
-    userId: string,
-    page: number = 1,
-    limit: number = 20,
-    search?: string
-  ) {
-    const skip = (page - 1) * limit;
+  static async getAllUserArticles(userId: string, page = 1, limit = 20, search?: string) {
+    const skip = (page - 1) * limit
 
     const where = {
       feed: { userId },
       ...(search && {
-        OR: [
-          { title: { contains: search } },
-          { description: { contains: search } },
-        ],
+        OR: [{ title: { contains: search } }, { description: { contains: search } }],
       }),
-    };
+    }
 
     const [articles, total] = await Promise.all([
       prisma.article.findMany({
@@ -446,7 +429,7 @@ export class FeedService {
         },
       }),
       prisma.article.count({ where }),
-    ]);
+    ])
 
     return {
       articles,
@@ -458,8 +441,7 @@ export class FeedService {
         hasNext: skip + limit < total,
         hasPrev: page > 1,
       },
-    };
+    }
   }
-
 }
-export const feedService = FeedService;
+export const feedService = FeedService

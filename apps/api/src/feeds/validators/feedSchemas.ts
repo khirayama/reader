@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 // フィード作成バリデーションスキーマ
 export const createFeedSchema = z.object({
@@ -9,12 +9,12 @@ export const createFeedSchema = z.object({
     .refine(
       (url) => {
         // HTTP/HTTPSのみ許可
-        return url.startsWith('http://') || url.startsWith('https://');
+        return url.startsWith('http://') || url.startsWith('https://')
       },
       { message: 'HTTP または HTTPS URL のみ許可されています' }
     ),
   title: z.string().min(1, 'タイトルが必要です').optional(),
-});
+})
 
 // フィード更新バリデーションスキーマ
 export const updateFeedSchema = z.object({
@@ -22,7 +22,7 @@ export const updateFeedSchema = z.object({
   siteUrl: z.string().url('有効なサイトURLを入力してください').nullable().optional(),
   description: z.string().nullable().optional(),
   favicon: z.string().url('有効なfaviconURLを入力してください').nullable().optional(),
-});
+})
 
 // フィード取得クエリパラメータスキーマ
 export const getFeedsQuerySchema = z.object({
@@ -40,9 +40,9 @@ export const getFeedsQuerySchema = z.object({
     }),
   search: z.string().optional(),
   tagId: z.string().cuid('有効なタグIDを指定してください').optional(),
-});
+})
 
 // レスポンス型定義
-export type CreateFeedRequest = z.infer<typeof createFeedSchema>;
-export type UpdateFeedRequest = z.infer<typeof updateFeedSchema>;
-export type GetFeedsQuery = z.infer<typeof getFeedsQuerySchema>;
+export type CreateFeedRequest = z.infer<typeof createFeedSchema>
+export type UpdateFeedRequest = z.infer<typeof updateFeedSchema>
+export type GetFeedsQuery = z.infer<typeof getFeedsQuerySchema>

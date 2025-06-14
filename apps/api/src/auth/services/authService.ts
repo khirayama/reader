@@ -1,44 +1,44 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-import { prisma } from '../../lib/prisma';
-import { User } from '@prisma/client';
+import crypto from 'node:crypto'
+import type { User } from '@prisma/client'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+import { prisma } from '../../lib/prisma'
 
 // JWT ペイロード型定義
 export interface JWTPayload {
-  userId: string;
-  email: string;
-  iat: number;
-  exp: number;
+  userId: string
+  email: string
+  iat: number
+  exp: number
 }
 
 // ユーザー応答型（パスワードを除外）
-export type UserResponse = Omit<User, 'password'>;
+export type UserResponse = Omit<User, 'password'>
 
 // 認証応答型
 export interface AuthResponse {
-  user: UserResponse;
-  token: string;
+  user: UserResponse
+  token: string
 }
 
 // JWT設定
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = '24h';
+const JWT_SECRET = process.env.JWT_SECRET
+const JWT_EXPIRES_IN = '24h'
 
 if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is required');
+  throw new Error('JWT_SECRET environment variable is required')
 }
 
 export class AuthService {
   // パスワードをハッシュ化
   static async hashPassword(password: string): Promise<string> {
-    const saltRounds = 12;
-    return bcrypt.hash(password, saltRounds);
+    const saltRounds = 12
+    return bcrypt.hash(password, saltRounds)
   }
 
   // パスワードを検証
   static async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-    return bcrypt.compare(password, hashedPassword);
+    return bcrypt.compare(password, hashedPassword)
   }
 
   // JWTトークンを生成
@@ -46,31 +46,31 @@ export class AuthService {
     const payload: Omit<JWTPayload, 'iat' | 'exp'> = {
       userId: user.id,
       email: user.email,
-    };
+    }
 
     return jwt.sign(payload, JWT_SECRET!, {
       expiresIn: JWT_EXPIRES_IN,
-    });
+    })
   }
 
   // JWTトークンを検証
   static verifyToken(token: string): JWTPayload {
     try {
-      return jwt.verify(token, JWT_SECRET!) as JWTPayload;
+      return jwt.verify(token, JWT_SECRET!) as JWTPayload
     } catch (error) {
-      throw new Error('無効なトークンです');
+      throw new Error('無効なトークンです')
     }
   }
 
   // パスワードリセットトークンを生成
   static generateResetToken(): string {
-    return crypto.randomBytes(32).toString('hex');
+    return crypto.randomBytes(32).toString('hex')
   }
 
   // ユーザーからパスワードを除外
   static excludePassword(user: User): UserResponse {
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    const { password, ...userWithoutPassword } = user
+    return userWithoutPassword
   }
 
   // ユーザー登録
@@ -78,14 +78,14 @@ export class AuthService {
     // 既存ユーザーチェック
     const existingUser = await prisma.user.findUnique({
       where: { email },
-    });
+    })
 
     if (existingUser) {
-      throw new Error('このメールアドレスは既に登録されています');
+      throw new Error('このメールアドレスは既に登録されています')
     }
 
     // パスワードハッシュ化
-    const hashedPassword = await this.hashPassword(password);
+    const hashedPassword = await AuthService.hashPassword(password)
 
     // ユーザー作成
     const user = await prisma.user.create({
@@ -93,15 +93,15 @@ export class AuthService {
         email,
         password: hashedPassword,
       },
-    });
+    })
 
     // JWT生成
-    const token = this.generateToken(user);
+    const token = AuthService.generateToken(user)
 
     return {
-      user: this.excludePassword(user),
+      user: AuthService.excludePassword(user),
       token,
-    };
+    }
   }
 
   // ログイン
@@ -109,26 +109,26 @@ export class AuthService {
     // ユーザー検索
     const user = await prisma.user.findUnique({
       where: { email },
-    });
+    })
 
     if (!user) {
-      throw new Error('メールアドレスまたはパスワードが正しくありません');
+      throw new Error('メールアドレスまたはパスワードが正しくありません')
     }
 
     // パスワード検証
-    const isValidPassword = await this.verifyPassword(password, user.password);
+    const isValidPassword = await AuthService.verifyPassword(password, user.password)
 
     if (!isValidPassword) {
-      throw new Error('メールアドレスまたはパスワードが正しくありません');
+      throw new Error('メールアドレスまたはパスワードが正しくありません')
     }
 
     // JWT生成
-    const token = this.generateToken(user);
+    const token = AuthService.generateToken(user)
 
     return {
-      user: this.excludePassword(user),
+      user: AuthService.excludePassword(user),
       token,
-    };
+    }
   }
 
   // パスワードリセット要求
@@ -136,11 +136,11 @@ export class AuthService {
     // ユーザー検索
     const user = await prisma.user.findUnique({
       where: { email },
-    });
+    })
 
     if (!user) {
       // セキュリティ上、ユーザーが存在しない場合でも成功として扱う
-      return '有効なメールアドレスの場合、パスワードリセットのリンクを送信しました';
+      return '有効なメールアドレスの場合、パスワードリセットのリンクを送信しました'
     }
 
     // 既存の未使用トークンを削除
@@ -149,11 +149,11 @@ export class AuthService {
         userId: user.id,
         used: false,
       },
-    });
+    })
 
     // 新しいリセットトークンを生成
-    const token = this.generateResetToken();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1時間後
+    const token = AuthService.generateResetToken()
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1時間後
 
     await prisma.passwordResetToken.create({
       data: {
@@ -161,14 +161,14 @@ export class AuthService {
         userId: user.id,
         expiresAt,
       },
-    });
+    })
 
     // TODO: 実際のメール送信機能を実装
-    console.log(`パスワードリセットトークン: ${token}`);
-    console.log(`ユーザー: ${email}`);
-    console.log(`有効期限: ${expiresAt}`);
+    console.log(`パスワードリセットトークン: ${token}`)
+    console.log(`ユーザー: ${email}`)
+    console.log(`有効期限: ${expiresAt}`)
 
-    return 'パスワードリセットのリンクをメールで送信しました';
+    return 'パスワードリセットのリンクをメールで送信しました'
   }
 
   // パスワードリセット実行
@@ -177,22 +177,22 @@ export class AuthService {
     const resetToken = await prisma.passwordResetToken.findUnique({
       where: { token },
       include: { user: true },
-    });
+    })
 
     if (!resetToken) {
-      throw new Error('無効なリセットトークンです');
+      throw new Error('無効なリセットトークンです')
     }
 
     if (resetToken.used) {
-      throw new Error('このリセットトークンは既に使用されています');
+      throw new Error('このリセットトークンは既に使用されています')
     }
 
     if (resetToken.expiresAt < new Date()) {
-      throw new Error('リセットトークンの有効期限が切れています');
+      throw new Error('リセットトークンの有効期限が切れています')
     }
 
     // パスワード更新
-    const hashedPassword = await this.hashPassword(newPassword);
+    const hashedPassword = await AuthService.hashPassword(newPassword)
 
     await prisma.$transaction([
       // パスワード更新
@@ -205,82 +205,90 @@ export class AuthService {
         where: { id: resetToken.id },
         data: { used: true },
       }),
-    ]);
+    ])
 
-    return 'パスワードが正常に更新されました';
+    return 'パスワードが正常に更新されました'
   }
 
   // ユーザーIDでユーザー取得
   static async getUserById(userId: string): Promise<UserResponse | null> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-    });
+    })
 
-    return user ? this.excludePassword(user) : null;
+    return user ? AuthService.excludePassword(user) : null
   }
 
   // パスワード変更
-  static async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<string> {
+  static async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<string> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-    });
+    })
 
     if (!user) {
-      throw new Error('ユーザーが見つかりません');
+      throw new Error('ユーザーが見つかりません')
     }
 
     // 現在のパスワード検証
-    const isValidPassword = await this.verifyPassword(currentPassword, user.password);
+    const isValidPassword = await AuthService.verifyPassword(currentPassword, user.password)
 
     if (!isValidPassword) {
-      throw new Error('現在のパスワードが正しくありません');
+      throw new Error('現在のパスワードが正しくありません')
     }
 
     // 新しいパスワードをハッシュ化
-    const hashedPassword = await this.hashPassword(newPassword);
+    const hashedPassword = await AuthService.hashPassword(newPassword)
 
     // パスワード更新
     await prisma.user.update({
       where: { id: userId },
       data: { password: hashedPassword },
-    });
+    })
 
-    return 'パスワードが正常に更新されました';
+    return 'パスワードが正常に更新されました'
   }
 
   // メールアドレス変更
-  static async changeEmail(userId: string, newEmail: string, password: string): Promise<UserResponse> {
+  static async changeEmail(
+    userId: string,
+    newEmail: string,
+    password: string
+  ): Promise<UserResponse> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-    });
+    })
 
     if (!user) {
-      throw new Error('ユーザーが見つかりません');
+      throw new Error('ユーザーが見つかりません')
     }
 
     // パスワード検証
-    const isValidPassword = await this.verifyPassword(password, user.password);
+    const isValidPassword = await AuthService.verifyPassword(password, user.password)
 
     if (!isValidPassword) {
-      throw new Error('パスワードが正しくありません');
+      throw new Error('パスワードが正しくありません')
     }
 
     // メールアドレス重複チェック
     const existingUser = await prisma.user.findUnique({
       where: { email: newEmail },
-    });
+    })
 
     if (existingUser && existingUser.id !== userId) {
-      throw new Error('このメールアドレスは既に使用されています');
+      throw new Error('このメールアドレスは既に使用されています')
     }
 
     // メールアドレス更新
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { email: newEmail },
-    });
+    })
 
-    return this.excludePassword(updatedUser);
+    return AuthService.excludePassword(updatedUser)
   }
 
   // ユーザー設定更新
@@ -291,33 +299,33 @@ export class AuthService {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: settings,
-    });
+    })
 
-    return this.excludePassword(updatedUser);
+    return AuthService.excludePassword(updatedUser)
   }
 
   // アカウント削除
   static async deleteAccount(userId: string, password: string): Promise<string> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-    });
+    })
 
     if (!user) {
-      throw new Error('ユーザーが見つかりません');
+      throw new Error('ユーザーが見つかりません')
     }
 
     // パスワード検証
-    const isValidPassword = await this.verifyPassword(password, user.password);
+    const isValidPassword = await AuthService.verifyPassword(password, user.password)
 
     if (!isValidPassword) {
-      throw new Error('パスワードが正しくありません');
+      throw new Error('パスワードが正しくありません')
     }
 
     // ユーザー削除（Cascadeにより関連データも削除される）
     await prisma.user.delete({
       where: { id: userId },
-    });
+    })
 
-    return 'アカウントが正常に削除されました';
+    return 'アカウントが正常に削除されました'
   }
 }

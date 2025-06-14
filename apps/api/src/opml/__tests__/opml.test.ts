@@ -1,78 +1,76 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import request from "supertest";
-import app from "../../index";
-import { createTestUser, getAuthToken, cleanupTestData } from "../../test/helpers";
-import { prisma } from "../../lib/prisma";
-import type { User } from "@prisma/client";
+import type { User } from '@prisma/client'
+import request from 'supertest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import app from '../../index'
+import { prisma } from '../../lib/prisma'
+import { cleanupTestData, createTestUser, getAuthToken } from '../../test/helpers'
 
-describe("OPML API", () => {
-  let user: User;
-  let authToken: string;
+describe('OPML API', () => {
+  let user: User
+  let authToken: string
 
   beforeEach(async () => {
-    user = await createTestUser();
-    authToken = await getAuthToken(user.id);
-  });
+    user = await createTestUser()
+    authToken = await getAuthToken(user.id)
+  })
 
   afterEach(async () => {
-    await cleanupTestData();
-  });
+    await cleanupTestData()
+  })
 
-  describe("GET /api/opml/export", () => {
-    it("should export feeds as OPML", async () => {
+  describe('GET /api/opml/export', () => {
+    it('should export feeds as OPML', async () => {
       // テスト用フィードを作成
       await prisma.feed.createMany({
         data: [
           {
             userId: user.id,
-            url: "https://example.com/feed1.xml",
-            title: "Test Feed 1",
-            description: "Test Description 1",
-            siteUrl: "https://example.com",
+            url: 'https://example.com/feed1.xml',
+            title: 'Test Feed 1',
+            description: 'Test Description 1',
+            siteUrl: 'https://example.com',
           },
           {
             userId: user.id,
-            url: "https://example.com/feed2.xml",
-            title: "Test Feed 2",
-            description: "Test Description 2",
-            siteUrl: "https://example2.com",
+            url: 'https://example.com/feed2.xml',
+            title: 'Test Feed 2',
+            description: 'Test Description 2',
+            siteUrl: 'https://example2.com',
           },
         ],
-      });
+      })
 
       const response = await request(app)
-        .get("/api/opml/export")
-        .set("Authorization", `Bearer ${authToken}`)
+        .get('/api/opml/export')
+        .set('Authorization', `Bearer ${authToken}`)
         .expect(200)
-        .expect("Content-Type", /application\/xml/);
+        .expect('Content-Type', /application\/xml/)
 
-      expect(response.text).toContain('<?xml version="1.0" encoding="UTF-8"');
-      expect(response.text).toContain("<opml version=\"2.0\">");
-      expect(response.text).toContain("Test Feed 1");
-      expect(response.text).toContain("Test Feed 2");
-      expect(response.text).toContain("https://example.com/feed1.xml");
-      expect(response.text).toContain("https://example.com/feed2.xml");
-    });
+      expect(response.text).toContain('<?xml version="1.0" encoding="UTF-8"')
+      expect(response.text).toContain('<opml version="2.0">')
+      expect(response.text).toContain('Test Feed 1')
+      expect(response.text).toContain('Test Feed 2')
+      expect(response.text).toContain('https://example.com/feed1.xml')
+      expect(response.text).toContain('https://example.com/feed2.xml')
+    })
 
-    it("should return empty OPML when no feeds", async () => {
+    it('should return empty OPML when no feeds', async () => {
       const response = await request(app)
-        .get("/api/opml/export")
-        .set("Authorization", `Bearer ${authToken}`)
-        .expect(200);
+        .get('/api/opml/export')
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200)
 
-      expect(response.text).toContain('<?xml version="1.0" encoding="UTF-8"');
-      expect(response.text).toContain("<opml version=\"2.0\">");
-      expect(response.text).toContain("<body/>");
-    });
+      expect(response.text).toContain('<?xml version="1.0" encoding="UTF-8"')
+      expect(response.text).toContain('<opml version="2.0">')
+      expect(response.text).toContain('<body/>')
+    })
 
-    it("should require authentication", async () => {
-      await request(app)
-        .get("/api/opml/export")
-        .expect(401);
-    });
-  });
+    it('should require authentication', async () => {
+      await request(app).get('/api/opml/export').expect(401)
+    })
+  })
 
-  describe("POST /api/opml/import", () => {
+  describe('POST /api/opml/import', () => {
     const validOpml = `<?xml version="1.0" encoding="UTF-8"?>
       <opml version="2.0">
         <head>
@@ -84,55 +82,55 @@ describe("OPML API", () => {
             <outline type="rss" text="The Verge" title="The Verge" xmlUrl="https://www.theverge.com/rss/index.xml" htmlUrl="https://www.theverge.com/"/>
           </outline>
         </body>
-      </opml>`;
+      </opml>`
 
-    it("should import feeds from OPML file", async () => {
+    it('should import feeds from OPML file', async () => {
       const response = await request(app)
-        .post("/api/opml/import")
-        .set("Authorization", `Bearer ${authToken}`)
-        .attach("file", Buffer.from(validOpml), {
-          filename: "feeds.opml",
-          contentType: "text/xml",
+        .post('/api/opml/import')
+        .set('Authorization', `Bearer ${authToken}`)
+        .attach('file', Buffer.from(validOpml), {
+          filename: 'feeds.opml',
+          contentType: 'text/xml',
         })
-        .expect(200);
+        .expect(200)
 
       expect(response.body).toMatchObject({
-        message: "OPML import completed",
+        message: 'OPML import completed',
         imported: expect.any(Number),
         failed: expect.any(Number),
         errors: expect.any(Array),
-      });
-    });
+      })
+    })
 
-    it("should handle invalid OPML format", async () => {
+    it('should handle invalid OPML format', async () => {
       const invalidOpml = `<?xml version="1.0" encoding="UTF-8"?>
-        <invalid>Not an OPML file</invalid>`;
+        <invalid>Not an OPML file</invalid>`
 
       await request(app)
-        .post("/api/opml/import")
-        .set("Authorization", `Bearer ${authToken}`)
-        .attach("file", Buffer.from(invalidOpml), {
-          filename: "invalid.opml",
-          contentType: "text/xml",
+        .post('/api/opml/import')
+        .set('Authorization', `Bearer ${authToken}`)
+        .attach('file', Buffer.from(invalidOpml), {
+          filename: 'invalid.opml',
+          contentType: 'text/xml',
         })
-        .expect(400);
-    });
+        .expect(400)
+    })
 
-    it("should require a file", async () => {
+    it('should require a file', async () => {
       await request(app)
-        .post("/api/opml/import")
-        .set("Authorization", `Bearer ${authToken}`)
-        .expect(400);
-    });
+        .post('/api/opml/import')
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(400)
+    })
 
-    it("should require authentication", async () => {
+    it('should require authentication', async () => {
       await request(app)
-        .post("/api/opml/import")
-        .attach("file", Buffer.from(validOpml), {
-          filename: "feeds.opml",
-          contentType: "text/xml",
+        .post('/api/opml/import')
+        .attach('file', Buffer.from(validOpml), {
+          filename: 'feeds.opml',
+          contentType: 'text/xml',
         })
-        .expect(401);
-    });
-  });
-});
+        .expect(401)
+    })
+  })
+})

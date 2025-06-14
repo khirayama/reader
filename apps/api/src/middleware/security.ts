@@ -1,10 +1,10 @@
-import rateLimit from 'express-rate-limit';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express'
+import rateLimit from 'express-rate-limit'
 
 // テスト環境でレート制限をスキップするミドルウェア
 const skipIfTest = (req: Request, res: Response) => {
-  return process.env.NODE_ENV === 'test';
-};
+  return process.env.NODE_ENV === 'test'
+}
 
 // レート制限レスポンスを詳細化するミドルウェア
 export const enhancedRateLimit = (limiter: any) => {
@@ -12,24 +12,26 @@ export const enhancedRateLimit = (limiter: any) => {
     limiter(req, res, (err: any) => {
       if (err) {
         // レート制限エラーの場合、詳細な情報を追加
-        const retryAfter = res.getHeader('Retry-After') || res.getHeader('RateLimit-Reset');
-        const remaining = res.getHeader('RateLimit-Remaining') || 0;
-        const limit = res.getHeader('RateLimit-Limit') || 0;
-        
+        const retryAfter = res.getHeader('Retry-After') || res.getHeader('RateLimit-Reset')
+        const remaining = res.getHeader('RateLimit-Remaining') || 0
+        const limit = res.getHeader('RateLimit-Limit') || 0
+
         return res.status(429).json({
           error: err.message?.error || 'リクエストが多すぎます',
           details: err.message?.details || 'しばらく待ってから再試行してください',
           retryAfter: err.message?.retryAfter || retryAfter,
           rateLimitType: err.message?.rateLimitType || 'general',
-          remaining: parseInt(remaining.toString()),
-          limit: parseInt(limit.toString()),
-          resetTime: new Date(Date.now() + (parseInt(retryAfter?.toString() || '0') * 1000)).toISOString(),
-        });
+          remaining: Number.parseInt(remaining.toString()),
+          limit: Number.parseInt(limit.toString()),
+          resetTime: new Date(
+            Date.now() + Number.parseInt(retryAfter?.toString() || '0') * 1000
+          ).toISOString(),
+        })
       }
-      return next();
-    });
-  };
-};
+      return next()
+    })
+  }
+}
 
 // 一般的なAPIのレート制限（大幅緩和）
 export const generalLimiter = rateLimit({
@@ -44,7 +46,7 @@ export const generalLimiter = rateLimit({
   standardHeaders: true, // `RateLimit-*` ヘッダーを含める
   legacyHeaders: false, // `X-RateLimit-*` ヘッダーを無効化
   skip: skipIfTest,
-});
+})
 
 // 認証関連のレート制限（実質無制限型）
 export const authLimiter = rateLimit({
@@ -60,7 +62,7 @@ export const authLimiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: true, // 成功したリクエストはカウントしない
   skip: skipIfTest,
-});
+})
 
 // パスワードリセットのレート制限（余裕の設定）
 export const passwordResetLimiter = rateLimit({
@@ -75,7 +77,7 @@ export const passwordResetLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipIfTest,
-});
+})
 
 // アカウント作成のレート制限（開発者フレンドリー）
 export const registrationLimiter = rateLimit({
@@ -90,7 +92,7 @@ export const registrationLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipIfTest,
-});
+})
 
 // IPベースの重いレート制限（DDoS対策）
 export const strictLimiter = rateLimit({
@@ -103,34 +105,34 @@ export const strictLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipIfTest,
-});
+})
 
 // セキュリティヘッダー設定
 export const securityHeaders = (req: Request, res: Response, next: Function) => {
   // XSS対策
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('X-Frame-Options', 'DENY')
+  res.setHeader('X-XSS-Protection', '1; mode=block')
+
   // HTTPS強制（本番環境）
   if (process.env.NODE_ENV === 'production') {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
   }
-  
+
   // Content Security Policy
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self';"
-  );
-  
-  next();
-};
+  )
+
+  next()
+}
 
 // リクエストサイズ制限
 export const requestSizeLimit = {
   json: { limit: '1mb' },
   urlencoded: { limit: '1mb', extended: true },
-};
+}
 
 // OPML操作用のレート制限（企業レベル対応）
 export const opmlLimiter = rateLimit({
@@ -145,7 +147,7 @@ export const opmlLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipIfTest,
-});
+})
 
 // OPML用のタイムアウト設定ミドルウェア
 export const opmlTimeout = (req: Request, res: Response, next: Function) => {
@@ -155,11 +157,11 @@ export const opmlTimeout = (req: Request, res: Response, next: Function) => {
       res.status(408).json({
         error: 'リクエストがタイムアウトしました',
         details: 'OPML処理が完了しませんでした。ファイルサイズを確認して再試行してください。',
-      });
+      })
     }
-  });
-  next();
-};
+  })
+  next()
+}
 
 // フィード更新専用のレート制限（短期集中型）
 export const feedUpdateLimiter = rateLimit({
@@ -174,7 +176,7 @@ export const feedUpdateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipIfTest,
-});
+})
 
 // 記事操作専用のレート制限（爆速閲覧型）
 export const articleLimiter = rateLimit({
@@ -189,18 +191,18 @@ export const articleLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipIfTest,
-});
+})
 
 // API Key検証（将来の拡張用）
 export const apiKeyAuth = (req: Request, res: Response, next: Function) => {
-  const apiKey = req.headers['x-api-key'];
-  
+  const apiKey = req.headers['x-api-key']
+
   // 現在は無効化（将来の実装用）
   if (false && process.env.API_KEY && apiKey !== process.env.API_KEY) {
     return res.status(401).json({
       error: '無効なAPIキーです',
-    });
+    })
   }
-  
-  next();
-};
+
+  next()
+}

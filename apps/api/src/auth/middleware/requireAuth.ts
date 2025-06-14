@@ -1,10 +1,10 @@
-import type { Request, Response, NextFunction } from 'express';
-import { AuthService } from '../services/authService';
+import type { NextFunction, Request, Response } from 'express'
+import { AuthService } from '../services/authService'
 
 // 認証エラー応答型
 interface ErrorResponse {
-  error: string;
-  details?: string;
+  error: string
+  details?: string
 }
 
 // 認証必須ミドルウェア
@@ -15,14 +15,14 @@ export const requireAuth = async (
 ): Promise<void> => {
   try {
     // Authorizationヘッダーからトークン取得
-    const authHeader = req.headers.authorization;
+    const authHeader = req.headers.authorization
 
     if (!authHeader) {
       res.status(401).json({
         error: '認証が必要です',
         details: 'Authorizationヘッダーが見つかりません',
-      });
-      return;
+      })
+      return
     }
 
     // Bearer トークン形式の検証
@@ -30,33 +30,33 @@ export const requireAuth = async (
       res.status(401).json({
         error: '認証が必要です',
         details: '無効なAuthorizationヘッダー形式です',
-      });
-      return;
+      })
+      return
     }
 
     // トークン抽出
-    const token = authHeader.substring(7); // "Bearer " を除去
+    const token = authHeader.substring(7) // "Bearer " を除去
 
     if (!token) {
       res.status(401).json({
         error: '認証が必要です',
         details: 'トークンが見つかりません',
-      });
-      return;
+      })
+      return
     }
 
     // JWT検証
-    const payload = AuthService.verifyToken(token);
+    const payload = AuthService.verifyToken(token)
 
     // ユーザー存在確認
-    const user = await AuthService.getUserById(payload.userId);
+    const user = await AuthService.getUserById(payload.userId)
 
     if (!user) {
       res.status(401).json({
         error: '認証が必要です',
         details: 'ユーザーが見つかりません',
-      });
-      return;
+      })
+      return
     }
 
     // リクエストオブジェクトにユーザー情報を追加
@@ -64,18 +64,18 @@ export const requireAuth = async (
       id: payload.userId,
       userId: payload.userId,
       email: payload.email,
-    };
+    }
 
-    next();
+    next()
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : '認証エラーが発生しました';
+    const errorMessage = error instanceof Error ? error.message : '認証エラーが発生しました'
 
     res.status(401).json({
       error: '認証が失敗しました',
       details: errorMessage,
-    });
+    })
   }
-};
+}
 
 // オプション認証ミドルウェア（認証は必須でないが、あれば処理する）
 export const optionalAuth = async (
@@ -84,37 +84,37 @@ export const optionalAuth = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const authHeader = req.headers.authorization;
+    const authHeader = req.headers.authorization
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      next();
-      return;
+      next()
+      return
     }
 
-    const token = authHeader.substring(7);
+    const token = authHeader.substring(7)
 
     if (!token) {
-      next();
-      return;
+      next()
+      return
     }
 
     // JWT検証
-    const payload = AuthService.verifyToken(token);
+    const payload = AuthService.verifyToken(token)
 
     // ユーザー存在確認
-    const user = await AuthService.getUserById(payload.userId);
+    const user = await AuthService.getUserById(payload.userId)
 
     if (user) {
       req.user = {
         id: payload.userId,
         userId: payload.userId,
         email: payload.email,
-      };
+      }
     }
 
-    next();
+    next()
   } catch (error) {
     // オプション認証では、エラーが発生してもそのまま続行
-    next();
+    next()
   }
-};
+}

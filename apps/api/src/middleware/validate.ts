@@ -1,13 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
-import { ZodSchema, ZodError } from 'zod';
+import type { NextFunction, Request, Response } from 'express'
+import { ZodError, type ZodSchema } from 'zod'
 
 // バリデーションエラー応答型
 interface ValidationErrorResponse {
-  error: string;
+  error: string
   details: Array<{
-    field: string;
-    message: string;
-  }>;
+    field: string
+    message: string
+  }>
 }
 
 // 汎用バリデーションミドルウェア
@@ -20,29 +20,29 @@ export const validate = (schema: ZodSchema) => {
         query: req.query,
         params: req.params,
         file: req.file,
-      };
-      
-      schema.parse(dataToValidate);
-      next();
+      }
+
+      schema.parse(dataToValidate)
+      next()
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.errors.map((err) => ({
           field: err.path.join('.'),
           message: err.message,
-        }));
+        }))
 
         res.status(422).json({
           error: 'バリデーションエラーが発生しました',
           details: validationErrors,
-        });
-        return;
+        })
+        return
       }
 
       // Zodエラー以外の場合
       res.status(500).json({
         error: 'サーバーエラーが発生しました',
         details: [{ field: 'unknown', message: 'バリデーション処理でエラーが発生しました' }],
-      });
+      })
     }
-  };
-};
+  }
+}

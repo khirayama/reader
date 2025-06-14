@@ -1,6 +1,6 @@
-import type { Request, Response } from 'express';
-import { prisma } from '../../lib/prisma';
-import { FeedService } from '../../feeds/services/feedService';
+import type { Request, Response } from 'express'
+import { FeedService } from '../../feeds/services/feedService'
+import { prisma } from '../../lib/prisma'
 
 export const refreshAllFeeds = async (req: Request, res: Response) => {
   try {
@@ -16,37 +16,37 @@ export const refreshAllFeeds = async (req: Request, res: Response) => {
         url: true,
         userId: true,
       },
-    });
+    })
 
-    const totalFeeds = feeds.length;
-    let successCount = 0;
-    let errorCount = 0;
-    const errors: { feedId: string; url: string; error: string }[] = [];
+    const totalFeeds = feeds.length
+    let successCount = 0
+    let errorCount = 0
+    const errors: { feedId: string; url: string; error: string }[] = []
 
     // バッチ処理でフィードを更新
-    const batchSize = 10;
+    const batchSize = 10
     for (let i = 0; i < feeds.length; i += batchSize) {
-      const batch = feeds.slice(i, i + batchSize);
-      
+      const batch = feeds.slice(i, i + batchSize)
+
       await Promise.all(
         batch.map(async (feed: { id: string; url: string; userId: string }) => {
           try {
-            await FeedService.refreshFeed(feed.id, feed.userId);
-            successCount++;
+            await FeedService.refreshFeed(feed.id, feed.userId)
+            successCount++
           } catch (error) {
-            errorCount++;
+            errorCount++
             errors.push({
               feedId: feed.id,
               url: feed.url,
               error: error instanceof Error ? error.message : 'Unknown error',
-            });
+            })
           }
         })
-      );
+      )
 
       // レート制限を考慮して少し待機
       if (i + batchSize < feeds.length) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000))
       }
     }
 
@@ -61,7 +61,7 @@ export const refreshAllFeeds = async (req: Request, res: Response) => {
         errors: errors.length > 0 ? JSON.stringify(errors) : null,
         executedAt: new Date(),
       },
-    });
+    })
 
     res.json({
       success: true,
@@ -70,19 +70,19 @@ export const refreshAllFeeds = async (req: Request, res: Response) => {
       errorCount,
       errors: errors.slice(0, 10), // 最初の10件のエラーのみ返す
       timestamp: new Date().toISOString(),
-    });
+    })
   } catch (error) {
-    console.error('Failed to refresh all feeds:', error);
+    console.error('Failed to refresh all feeds:', error)
     res.status(500).json({
       error: 'Failed to refresh feeds',
       details: error instanceof Error ? error.message : 'Unknown error',
-    });
+    })
   }
-};
+}
 
 export const getCronLogs = async (req: Request, res: Response) => {
   try {
-    const { limit = 100, offset = 0 } = req.query;
+    const { limit = 100, offset = 0 } = req.query
 
     const logs = await prisma.cronLog.findMany({
       take: Number(limit),
@@ -90,21 +90,21 @@ export const getCronLogs = async (req: Request, res: Response) => {
       orderBy: {
         executedAt: 'desc',
       },
-    });
+    })
 
-    const total = await prisma.cronLog.count();
+    const total = await prisma.cronLog.count()
 
     res.json({
       logs,
       total,
       limit: Number(limit),
       offset: Number(offset),
-    });
+    })
   } catch (error) {
-    console.error('Failed to fetch cron logs:', error);
+    console.error('Failed to fetch cron logs:', error)
     res.status(500).json({
       error: 'Failed to fetch cron logs',
       details: error instanceof Error ? error.message : 'Unknown error',
-    });
+    })
   }
-};
+}

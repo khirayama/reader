@@ -1,110 +1,113 @@
-import type { Request, Response } from 'express';
-import { AuthService } from '../services/authService';
-import type { AuthResponse, UserResponse } from '../services/authService';
-import {
-  RegisterInput,
-  LoginInput,
-  ForgotPasswordInput,
-  ResetPasswordInput,
-  ChangePasswordInput,
+import type { Request, Response } from 'express'
+import { AuthService } from '../services/authService'
+import type { AuthResponse, UserResponse } from '../services/authService'
+import type {
   ChangeEmailInput,
-  UpdateUserSettingsInput,
+  ChangePasswordInput,
   DeleteAccountInput,
-} from '../validators/authSchemas';
+  ForgotPasswordInput,
+  LoginInput,
+  RegisterInput,
+  ResetPasswordInput,
+  UpdateUserSettingsInput,
+} from '../validators/authSchemas'
 
 // 共通エラー応答型
 interface ErrorResponse {
-  error: string;
-  details?: string;
+  error: string
+  details?: string
 }
 
 // 成功メッセージ応答型
 interface SuccessResponse {
-  message: string;
+  message: string
 }
 
 export class AuthController {
   // ユーザー登録
   static async register(
-    req: Request<{}, AuthResponse | ErrorResponse, RegisterInput>,
+    req: Request<Record<string, never>, AuthResponse | ErrorResponse, RegisterInput>,
     res: Response<AuthResponse | ErrorResponse>
   ): Promise<void> {
     try {
-      const { email, password } = req.body;
+      const { email, password } = req.body
 
-      const result = await AuthService.register(email, password);
+      const result = await AuthService.register(email, password)
 
-      res.status(201).json(result);
+      res.status(201).json(result)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '登録処理でエラーが発生しました';
+      const errorMessage = error instanceof Error ? error.message : '登録処理でエラーが発生しました'
 
       res.status(400).json({
         error: errorMessage,
-      });
+      })
     }
   }
 
   // ログイン
   static async login(
-    req: Request<{}, AuthResponse | ErrorResponse, LoginInput>,
+    req: Request<Record<string, never>, AuthResponse | ErrorResponse, LoginInput>,
     res: Response<AuthResponse | ErrorResponse>
   ): Promise<void> {
     try {
-      const { email, password } = req.body;
+      const { email, password } = req.body
 
-      const result = await AuthService.login(email, password);
+      const result = await AuthService.login(email, password)
 
-      res.status(200).json(result);
+      res.status(200).json(result)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'ログイン処理でエラーが発生しました';
+      const errorMessage =
+        error instanceof Error ? error.message : 'ログイン処理でエラーが発生しました'
 
       res.status(401).json({
         error: errorMessage,
-      });
+      })
     }
   }
 
   // パスワードリセット要求
   static async forgotPassword(
-    req: Request<{}, SuccessResponse | ErrorResponse, ForgotPasswordInput>,
+    req: Request<Record<string, never>, SuccessResponse | ErrorResponse, ForgotPasswordInput>,
     res: Response<SuccessResponse | ErrorResponse>
   ): Promise<void> {
     try {
-      const { email } = req.body;
+      const { email } = req.body
 
-      const message = await AuthService.requestPasswordReset(email);
+      const message = await AuthService.requestPasswordReset(email)
 
       res.status(200).json({
         message,
-      });
+      })
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'パスワードリセット要求でエラーが発生しました';
+      const errorMessage =
+        error instanceof Error ? error.message : 'パスワードリセット要求でエラーが発生しました'
 
       res.status(400).json({
         error: errorMessage,
-      });
+      })
     }
   }
 
   // パスワードリセット実行
   static async resetPassword(
-    req: Request<{}, SuccessResponse | ErrorResponse, ResetPasswordInput>,
+    req: Request<Record<string, never>, SuccessResponse | ErrorResponse, ResetPasswordInput>,
     res: Response<SuccessResponse | ErrorResponse>
   ): Promise<void> {
     try {
-      const { token, password } = req.body;
+      const { token, password } = req.body
 
-      const message = await AuthService.resetPassword(token, password);
+      const message = await AuthService.resetPassword(token, password)
 
       res.status(200).json({
         message,
-      });
+      })
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'パスワードリセットでエラーが発生しました';
+      const errorMessage =
+        error instanceof Error ? error.message : 'パスワードリセットでエラーが発生しました'
 
       res.status(400).json({
         error: errorMessage,
-      });
+      })
     }
   }
 
@@ -117,138 +120,147 @@ export class AuthController {
       if (!req.user?.userId) {
         res.status(401).json({
           error: '認証が必要です',
-        });
-        return;
+        })
+        return
       }
 
-      const user = await AuthService.getUserById(req.user.userId);
+      const user = await AuthService.getUserById(req.user.userId)
 
       if (!user) {
         res.status(404).json({
           error: 'ユーザーが見つかりません',
-        });
-        return;
+        })
+        return
       }
 
-      res.status(200).json(user);
+      res.status(200).json(user)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'ユーザー情報取得でエラーが発生しました';
+      const errorMessage =
+        error instanceof Error ? error.message : 'ユーザー情報取得でエラーが発生しました'
 
       res.status(500).json({
         error: errorMessage,
-      });
+      })
     }
   }
 
   // パスワード変更
   static async changePassword(
-    req: Request<{}, SuccessResponse | ErrorResponse, ChangePasswordInput>,
+    req: Request<Record<string, never>, SuccessResponse | ErrorResponse, ChangePasswordInput>,
     res: Response<SuccessResponse | ErrorResponse>
   ): Promise<void> {
     try {
       if (!req.user?.userId) {
         res.status(401).json({
           error: '認証が必要です',
-        });
-        return;
+        })
+        return
       }
 
-      const { currentPassword, newPassword } = req.body;
+      const { currentPassword, newPassword } = req.body
 
-      const message = await AuthService.changePassword(req.user.userId, currentPassword, newPassword);
+      const message = await AuthService.changePassword(
+        req.user.userId,
+        currentPassword,
+        newPassword
+      )
 
       res.status(200).json({
         message,
-      });
+      })
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'パスワード変更でエラーが発生しました';
+      const errorMessage =
+        error instanceof Error ? error.message : 'パスワード変更でエラーが発生しました'
 
       res.status(400).json({
         error: errorMessage,
-      });
+      })
     }
   }
 
   // メールアドレス変更
   static async changeEmail(
-    req: Request<{}, UserResponse | ErrorResponse, ChangeEmailInput>,
+    req: Request<Record<string, never>, UserResponse | ErrorResponse, ChangeEmailInput>,
     res: Response<UserResponse | ErrorResponse>
   ): Promise<void> {
     try {
       if (!req.user?.userId) {
         res.status(401).json({
           error: '認証が必要です',
-        });
-        return;
+        })
+        return
       }
 
-      const { email, password } = req.body;
+      const { email, password } = req.body
 
-      const user = await AuthService.changeEmail(req.user.userId, email, password);
+      const user = await AuthService.changeEmail(req.user.userId, email, password)
 
-      res.status(200).json(user);
+      res.status(200).json(user)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'メールアドレス変更でエラーが発生しました';
+      const errorMessage =
+        error instanceof Error ? error.message : 'メールアドレス変更でエラーが発生しました'
 
       res.status(400).json({
         error: errorMessage,
-      });
+      })
     }
   }
 
   // ユーザー設定更新
   static async updateSettings(
-    req: Request<{}, UserResponse | ErrorResponse, UpdateUserSettingsInput>,
+    req: Request<Record<string, never>, UserResponse | ErrorResponse, UpdateUserSettingsInput>,
     res: Response<UserResponse | ErrorResponse>
   ): Promise<void> {
     try {
       if (!req.user?.userId) {
         res.status(401).json({
           error: '認証が必要です',
-        });
-        return;
+        })
+        return
       }
 
-      const settings = req.body;
+      const settings = req.body
 
-      const user = await AuthService.updateUserSettings(req.user.userId, settings);
+      const user = await AuthService.updateUserSettings(req.user.userId, settings)
 
-      res.status(200).json(user);
+      res.status(200).json(user)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'ユーザー設定更新でエラーが発生しました';
+      const errorMessage =
+        error instanceof Error ? error.message : 'ユーザー設定更新でエラーが発生しました'
 
       res.status(400).json({
         error: errorMessage,
-      });
+      })
     }
   }
 
   // アカウント削除
   static async deleteAccount(
-    req: Request<{}, SuccessResponse | ErrorResponse, DeleteAccountInput>,
+    req: Request<Record<string, never>, SuccessResponse | ErrorResponse, DeleteAccountInput>,
     res: Response<SuccessResponse | ErrorResponse>
   ): Promise<void> {
     try {
       if (!req.user?.userId) {
         res.status(401).json({
           error: '認証が必要です',
-        });
-        return;
+        })
+        return
       }
 
-      const { password } = req.body;
+      const { password } = req.body
 
-      const message = await AuthService.deleteAccount(req.user.userId, password);
+      const message = await AuthService.deleteAccount(req.user.userId, password)
 
       res.status(200).json({
         message,
-      });
+      })
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'アカウント削除でエラーが発生しました';
+      const errorMessage =
+        error instanceof Error ? error.message : 'アカウント削除でエラーが発生しました'
 
       res.status(400).json({
         error: errorMessage,
-      });
+      })
     }
   }
 }

@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
   feedMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    flexShrink: 1,
   },
   favicon: {
     width: 16,
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: colors.gray[700],
     marginRight: spacing.xs,
-    flex: 1,
+    flexShrink: 1,
   },
   metaSeparator: {
     fontSize: fontSize.xs,

@@ -320,9 +320,9 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm }: TagCarous
                 onClick={() => handleArticleClick(article.url, article.id)}
               >
                 <div>
-                  {/* 上部行：フィード情報（左）とお気に入りボタン（右） */}
+                  {/* 上部行：フィード情報（左）と右側エリア（公開日時＋お気に入りボタン） */}
                   <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                       {article.feed?.favicon && (
                         <img
                           src={article.feed.favicon}
@@ -336,13 +336,15 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm }: TagCarous
                       <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate">
                         {article.feed?.title}
                       </span>
-                      <span className="text-xs text-neutral-300 dark:text-neutral-600">•</span>
+                    </div>
+                    
+                    {/* 右側：公開日時＋お気に入りボタン */}
+                    <div className="flex items-center gap-2">
                       <time className="text-sm text-neutral-500 dark:text-neutral-400 flex-shrink-0">
                         {formatDate(article.publishedAt)}
                       </time>
-                    </div>
-                    
-                    {/* お気に入りボタン */}
+                      
+                      {/* お気に入りボタン */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
@@ -359,6 +361,7 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm }: TagCarous
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                       </svg>
                     </button>
+                    </div>
                   </div>
                   
                   {/* 下部行：記事タイトル（全幅） */}

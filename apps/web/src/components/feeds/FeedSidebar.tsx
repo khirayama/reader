@@ -192,9 +192,10 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
         </div>
       </div>
 
-      {/* すべてのフィード（Sticky） */}
+      {/* すべてのフィード・お気に入り（Sticky） */}
       <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-neutral-200 dark:border-neutral-700">
-        <div className="p-2">
+        <div className="p-2 space-y-1">
+          {/* すべてのフィード */}
           <div
             className={`group relative py-2 px-2 cursor-pointer transition-colors duration-200 ${
               !selectedFeedId
@@ -212,6 +213,31 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
                       すべてのフィード
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* お気に入り記事 */}
+          <div
+            className={`group relative py-2 px-2 cursor-pointer transition-colors duration-200 ${
+              selectedFeedId === 'bookmarks'
+                ? 'bg-primary-50 dark:bg-primary-900/20 border-l-2 border-primary-500'
+                : 'hover:bg-neutral-50 dark:hover:bg-neutral-800/50'
+            }`}
+            onClick={() => onFeedSelect('bookmarks')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 flex-1 min-w-0">
+                <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-yellow-400 to-yellow-500 rounded text-white text-xs">
+                  ⭐
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
+                      お気に入り記事
                     </span>
                   </div>
                 </div>

@@ -68,11 +68,11 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
         limit: 20,
       };
 
-      if (selectedFeedId) {
+      if (selectedFeedId && selectedFeedId !== 'bookmarks') {
         params.feedId = selectedFeedId;
       }
 
-      if (groupId !== '__all__') {
+      if (groupId !== '__all__' && groupId !== '__bookmarks__') {
         params.tagId = groupId;
       }
 
@@ -80,9 +80,12 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
         params.search = searchTerm;
       }
 
-      console.log('[useTaggedArticles] API呼び出しパラメータ:', params);
-      const response = await sdk.articles.getAll(params);
-      console.log('[useTaggedArticles] API呼び出し完了:', response.articles.length, '件取得');
+      console.log('[useTaggedArticles] API呼び出しパラメータ:', params, 'selectedFeedId:', selectedFeedId);
+      // selectedFeedIdが'bookmarks'の場合は、ブックマーク記事を取得
+      const response = selectedFeedId === 'bookmarks' 
+        ? await sdk.articles.getBookmarks({ page, limit: 20 })
+        : await sdk.articles.getAll(params);
+      console.log('[useTaggedArticles] API呼び出し完了:', response, 'articles数:', response?.articles?.length);
 
       setArticleGroups(prev => 
         prev.map(group => {
@@ -99,7 +102,14 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
         })
       );
     } catch (error) {
-      console.error('記事読み込みエラー:', error);
+      console.error('[useTaggedArticles] 記事読み込みエラー:', error);
+      console.error('[useTaggedArticles] エラー詳細:', {
+        groupId,
+        selectedFeedId,
+        page,
+        reset,
+        error: error instanceof Error ? error.message : String(error)
+      });
       setArticleGroups(prev => 
         prev.map(group => 
           group.id === groupId 
@@ -112,6 +122,21 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
 
   // 記事グループの初期化
   const initializeArticleGroups = useCallback(async () => {
+    // ブックマークが選択されている場合は専用グループのみ作成
+    if (selectedFeedId === 'bookmarks') {
+      const bookmarksGroup: TaggedArticleGroup = {
+        id: '__bookmarks__',
+        name: 'お気に入り記事',
+        articles: [],
+        loading: false,
+        hasMore: true,
+        page: 1
+      };
+      setArticleGroups([bookmarksGroup]);
+      await loadArticlesForGroup('__bookmarks__', 1, true);
+      return;
+    }
+
     // 「全ての記事」グループを最初に追加
     const allGroup: TaggedArticleGroup = {
       id: '__all__',
@@ -150,7 +175,7 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
         console.log('[useTaggedArticles] 一部のタグの事前読み込みに失敗');
       });
     }
-  }, [tags, loadArticlesForGroup]);
+  }, [tags, loadArticlesForGroup, selectedFeedId]);
 
   // タグの読み込み
   useEffect(() => {

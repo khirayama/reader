@@ -175,16 +175,26 @@ export function TagArticleList({
   }
 
   if (group.articles.length === 0) {
+    // ブックマーク専用のメッセージ処理
+    const isBookmarks = group.id === '__bookmarks__' || group.name === 'お気に入り記事';
+    
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyIcon}>📰</Text>
+        <Text style={styles.emptyIcon}>{isBookmarks ? '⭐' : '📰'}</Text>
         <Text style={styles.emptyTitle}>
-          {group.id === '__all__' ? '記事がありません' : `「${group.name}」の記事がありません`}
+          {isBookmarks 
+            ? 'お気に入り記事がありません'
+            : group.id === '__all__' 
+              ? '記事がありません' 
+              : `「${group.name}」の記事がありません`
+          }
         </Text>
         <Text style={styles.emptySubtitle}>
-          {group.id === '__all__' 
-            ? 'フィードを追加して記事を読み始めましょう'
-            : 'このタグの記事が更新されるまでお待ちください'
+          {isBookmarks
+            ? '記事をブックマークするとここに表示されます'
+            : group.id === '__all__' 
+              ? 'フィードを追加して記事を読み始めましょう'
+              : 'このタグの記事が更新されるまでお待ちください'
           }
         </Text>
       </View>

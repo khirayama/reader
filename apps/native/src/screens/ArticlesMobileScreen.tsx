@@ -22,7 +22,9 @@ export function ArticlesMobileScreen({
   // フィード情報を取得
   useEffect(() => {
     const fetchFeedInfo = async () => {
-      if (selectedFeedId) {
+      if (selectedFeedId === 'bookmarks') {
+        setCurrentFeedName('お気に入り記事');
+      } else if (selectedFeedId) {
         try {
           const feed = await sdk.feeds.getFeed(selectedFeedId);
           setCurrentFeedName(feed.title);

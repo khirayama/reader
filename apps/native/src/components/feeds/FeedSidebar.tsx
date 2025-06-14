@@ -189,8 +189,9 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
         </View>
       </View>
 
-      {/* すべてのフィード（Sticky） */}
+      {/* すべてのフィード・お気に入り（Sticky） */}
       <View style={styles.stickyAllFeeds}>
+        {/* すべてのフィード */}
         <TouchableOpacity
           style={[styles.feedItem, styles.allFeedsItem, !selectedFeedId && styles.feedItemActive]}
           onPress={() => onFeedSelect(null)}
@@ -203,6 +204,23 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
           <View style={styles.feedContent}>
             <Text style={[styles.feedTitle, !selectedFeedId && styles.feedTitleActive]}>
               すべてのフィード
+            </Text>
+          </View>
+        </TouchableOpacity>
+        
+        {/* お気に入り記事 */}
+        <TouchableOpacity
+          style={[styles.feedItem, styles.allFeedsItem, selectedFeedId === 'bookmarks' && styles.feedItemActive]}
+          onPress={() => onFeedSelect('bookmarks')}
+        >
+          <View style={styles.feedIcon}>
+            <View style={[styles.defaultIcon, styles.bookmarksIcon]}>
+              <Text style={styles.bookmarksIconText}>⭐</Text>
+            </View>
+          </View>
+          <View style={styles.feedContent}>
+            <Text style={[styles.feedTitle, selectedFeedId === 'bookmarks' && styles.feedTitleActive]}>
+              お気に入り記事
             </Text>
           </View>
         </TouchableOpacity>
@@ -497,5 +515,12 @@ const styles = StyleSheet.create({
   },
   refreshIcon: {
     fontSize: 16,
+  },
+  bookmarksIcon: {
+    backgroundColor: '#F59E0B',
+  },
+  bookmarksIconText: {
+    fontSize: 10,
+    color: colors.white,
   },
 });

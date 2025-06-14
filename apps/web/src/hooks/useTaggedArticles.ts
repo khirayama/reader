@@ -62,11 +62,11 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
         limit: 20,
       }
 
-      if (selectedFeedId) {
+      if (selectedFeedId && selectedFeedId !== 'bookmarks') {
         params.feedId = selectedFeedId
       }
 
-      if (groupId !== '__all__') {
+      if (groupId !== '__all__' && groupId !== '__bookmarks__') {
         params.tagId = groupId
       }
 
@@ -74,15 +74,22 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
         params.search = searchTerm
       }
 
-      const response = await sdk.articles.getAll(params)
+      // selectedFeedIdが'bookmarks'の場合は、ブックマーク記事を取得
+      const response = selectedFeedId === 'bookmarks' 
+        ? await sdk.articles.getBookmarks({ page, limit: 20 })
+        : await sdk.articles.getAll(params)
+      
+      // レスポンスの形式を確認（data プロパティがある場合とない場合に対応）
+      const articles = (response as any).data?.articles || (response as any).articles || []
+      const pagination = (response as any).data?.pagination || (response as any).pagination || { hasNext: false }
 
       setArticleGroups(prev => 
         prev.map(group => {
           if (group.id === groupId) {
             return {
               ...group,
-              articles: reset ? response.articles : [...group.articles, ...response.articles],
-              hasMore: response.pagination.hasNext,
+              articles: reset ? articles : [...group.articles, ...articles],
+              hasMore: pagination.hasNext,
               page: reset ? 2 : page + 1,
               loading: false
             }
@@ -104,6 +111,21 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
 
   // 記事グループの初期化
   const initializeArticleGroups = useCallback(async () => {
+    // ブックマークが選択されている場合は専用グループのみ作成
+    if (selectedFeedId === 'bookmarks') {
+      const bookmarksGroup: TaggedArticleGroup = {
+        id: '__bookmarks__',
+        name: 'お気に入り記事',
+        articles: [],
+        loading: false,
+        hasMore: true,
+        page: 1
+      }
+      setArticleGroups([bookmarksGroup])
+      await loadArticlesForGroup('__bookmarks__', 1, true)
+      return
+    }
+
     // 「全ての記事」グループを最初に追加
     const allGroup: TaggedArticleGroup = {
       id: '__all__',
@@ -132,7 +154,7 @@ export function useTaggedArticles({ searchTerm, selectedFeedId }: UseTaggedArtic
     if (groups.length > 0) {
       await loadArticlesForGroup(groups[0].id, 1, true)
     }
-  }, [tags, loadArticlesForGroup])
+  }, [tags, loadArticlesForGroup, selectedFeedId])
 
   // タグの読み込み
   useEffect(() => {

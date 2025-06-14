@@ -337,7 +337,7 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArt
             {filteredArticles.map((article) => (
               <article 
                 key={article.id} 
-                className={`px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors duration-200 group cursor-pointer ${
+                className={`px-3 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors duration-200 group cursor-pointer ${
                   article.isRead ? 'opacity-50' : ''
                 }`}
                 onClick={() => handleArticleClick(article.url, article.id)}
@@ -356,10 +356,10 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArt
                           }}
                         />
                       )}
-                      <span className={`text-sm font-medium truncate ${
+                      <span className={`text-xs font-normal truncate ${
                         article.isRead
                           ? 'text-neutral-400 dark:text-neutral-600'
-                          : 'text-neutral-700 dark:text-neutral-300'
+                          : 'text-neutral-500 dark:text-neutral-400'
                       }`}>
                         {article.feed?.title}
                       </span>
@@ -367,10 +367,10 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArt
                     
                     {/* 右側：公開日時＋お気に入りボタン */}
                     <div className="flex items-center gap-2">
-                      <time className={`text-sm flex-shrink-0 ${
+                      <time className={`text-xs flex-shrink-0 ${
                         article.isRead
                           ? 'text-neutral-400 dark:text-neutral-600'
-                          : 'text-neutral-500 dark:text-neutral-400'
+                          : 'text-neutral-400 dark:text-neutral-500'
                       }`}>
                         {formatDate(article.publishedAt)}
                       </time>
@@ -381,14 +381,14 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArt
                         e.stopPropagation()
                         toggleBookmark(article.id, !!article.isBookmarked)
                       }}
-                      className={`p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors flex-shrink-0 ${
+                      className={`p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors flex-shrink-0 ${
                         article.isBookmarked
                           ? 'text-warning-600 dark:text-warning-400'
                           : 'text-neutral-400 dark:text-neutral-500'
                       }`}
                       title={article.isBookmarked ? 'ブックマーク解除' : 'ブックマーク'}
                     >
-                      <svg className="w-5 h-5" fill={article.isBookmarked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill={article.isBookmarked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                       </svg>
                     </button>
@@ -396,7 +396,7 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArt
                   </div>
                   
                   {/* 下部行：記事タイトル（全幅） */}
-                  <h4 className={`text-sm font-medium leading-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200 mb-1 ${
+                  <h4 className={`text-sm font-semibold leading-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200 mb-0.5 ${
                     article.isRead
                       ? 'text-neutral-400 dark:text-neutral-600'
                       : 'text-neutral-900 dark:text-neutral-100'

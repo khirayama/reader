@@ -9,6 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { useResponsive } from '../hooks/useResponsive';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
@@ -27,6 +28,7 @@ interface ProfileScreenProps {
 
 export function ProfileScreen({ navigation }: ProfileScreenProps) {
   const { user, updateSettings: updateUserSettings, changeEmail: changeUserEmail, logout } = useAuth();
+  const { isTablet } = useResponsive();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -191,13 +193,15 @@ export function ProfileScreen({ navigation }: ProfileScreenProps) {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View style={styles.headerLeft}>
-            {/* ドロワーオープンボタン */}
-            <TouchableOpacity
-              style={styles.drawerButton}
-              onPress={() => navigation?.openDrawer()}
-            >
-              <Text style={styles.drawerButtonText}>☰</Text>
-            </TouchableOpacity>
+            {/* ドロワーオープンボタン（モバイル時のみ表示） */}
+            {!isTablet && (
+              <TouchableOpacity
+                style={styles.drawerButton}
+                onPress={() => navigation?.openDrawer()}
+              >
+                <Text style={styles.drawerButtonText}>☰</Text>
+              </TouchableOpacity>
+            )}
             <Text style={styles.headerTitle}>設定</Text>
           </View>
         </View>

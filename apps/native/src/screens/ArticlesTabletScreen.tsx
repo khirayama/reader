@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { TaggedArticleCarousel } from '../components/feeds/TaggedArticleCarousel';
+import { useResponsive } from '../hooks/useResponsive';
 import { colors, shadows } from '../constants/colors';
 import { spacing, fontSize } from '../constants/spacing';
 import { sdk } from '../lib/sdk';
@@ -19,6 +20,7 @@ interface ArticlesTabletScreenProps {
 }
 
 export function ArticlesTabletScreen({ selectedFeedId, refreshKey, navigation }: ArticlesTabletScreenProps) {
+  const { isTablet } = useResponsive();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentFeedName, setCurrentFeedName] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -49,13 +51,15 @@ export function ArticlesTabletScreen({ selectedFeedId, refreshKey, navigation }:
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View style={styles.headerLeft}>
-            {/* ドロワーオープンボタン */}
-            <TouchableOpacity
-              style={styles.drawerButton}
-              onPress={() => navigation?.openDrawer()}
-            >
-              <Text style={styles.drawerButtonText}>☰</Text>
-            </TouchableOpacity>
+            {/* ドロワーオープンボタン（モバイル時のみ表示） */}
+            {!isTablet && (
+              <TouchableOpacity
+                style={styles.drawerButton}
+                onPress={() => navigation?.openDrawer()}
+              >
+                <Text style={styles.drawerButtonText}>☰</Text>
+              </TouchableOpacity>
+            )}
             <Text style={styles.headerTitle}>
               {selectedFeedId ? currentFeedName : 'すべての記事'}
             </Text>

@@ -9,6 +9,10 @@
     "build": {
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
+    "setup": {
+      "cache": false,
+      "outputs": [".env", ".env.local"]
+    },
     "lint": {},
     "type-check": {},
     "test": {

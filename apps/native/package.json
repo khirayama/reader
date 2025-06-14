@@ -11,6 +11,7 @@
     "web": "expo start --web",
     "build": "expo export",
     "dev": "expo start",
+    "setup": "echo 'Native app: No setup required (using localhost:3001 for development)'",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "type-check": "tsc --noEmit",

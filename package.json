@@ -12,6 +12,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "setup": "turbo run setup",
     "lint": "turbo run lint",
     "format": "turbo run format",
     "test": "turbo run test",

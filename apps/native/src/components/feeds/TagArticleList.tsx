@@ -83,7 +83,7 @@ export function TagArticleList({
   const renderBookmarkIcon = (isBookmarked: boolean) => (
     <Feather
       name="bookmark"
-      size={18}
+      size={16}
       color={isBookmarked ? colors.yellow[500] : colors.gray[400]}
       style={[
         styles.icon,
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
   articleItem: {
     backgroundColor: colors.white,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   topRow: {
     flexDirection: 'row',
@@ -365,9 +365,9 @@ const styles = StyleSheet.create({
     marginRight: spacing.xs,
   },
   feedTitle: {
-    fontSize: fontSize.sm,
-    fontWeight: '500',
-    color: colors.gray[700],
+    fontSize: fontSize.xs,
+    fontWeight: '400',
+    color: colors.gray[500],
     marginRight: spacing.xs,
     flexShrink: 1,
   },
@@ -377,12 +377,12 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.xs,
   },
   publishedAt: {
-    fontSize: fontSize.sm,
-    color: colors.gray[500],
+    fontSize: fontSize.xs,
+    color: colors.gray[400],
   },
   articleTitle: {
     fontSize: fontSize.sm,
-    fontWeight: '500',
+    fontWeight: '600',
     lineHeight: fontSize.sm * 1.4,
     marginBottom: spacing.xs,
   },
@@ -401,8 +401,8 @@ const styles = StyleSheet.create({
     lineHeight: fontSize.xs * 1.4,
   },
   actionButton: {
-    padding: spacing.xs,
-    borderRadius: 16,
+    padding: spacing.xs / 2,
+    borderRadius: 8,
   },
   icon: {
     opacity: 0.7,

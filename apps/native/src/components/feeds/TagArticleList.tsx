@@ -115,11 +115,6 @@ export function TagArticleList({
           {article.title}
         </Text>
 
-        {article.description && (
-          <Text style={styles.articleDescription} numberOfLines={1}>
-            {article.description}
-          </Text>
-        )}
       </View>
 
       <View style={styles.actionButtons}>

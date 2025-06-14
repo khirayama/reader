@@ -160,11 +160,6 @@ export function TagArticleList({
                     {article.title}
                   </h4>
 
-                  {article.description && (
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1 mt-1">
-                      {article.description}
-                    </p>
-                  )}
                 </div>
 
                 <div className="flex items-center gap-2 ml-4">

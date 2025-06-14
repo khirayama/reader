@@ -384,13 +384,14 @@ class ArticlesService {
     return await this.client.delete(`/api/articles/${articleId}/bookmark`);
   }
 
-  async getBookmarks(query?: { page?: number; limit?: number }) {
+  async getBookmarks(query?: { page?: number; limit?: number }): Promise<{ articles: Article[], pagination: Pagination }> {
     const params = new URLSearchParams();
     if (query?.page) params.append('page', query.page.toString());
     if (query?.limit) params.append('limit', query.limit.toString());
     
     const path = `/api/articles/bookmarks/list${params.toString() ? '?' + params.toString() : ''}`;
-    return await this.client.get(path);
+    const response = await this.client.get<{ success: boolean; data: { articles: Article[], pagination: Pagination } }>(path);
+    return response.data;
   }
 
   // 互換性のためのエイリアス

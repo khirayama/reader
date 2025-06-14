@@ -1,6 +1,6 @@
 # RSS Reader API
 
-RSS Readerアプリケーションのバックエンド API サーバーです。
+Node.js/Express/PostgreSQL/Prisma を使用したRSS Reader APIサーバー
 
 ## 技術スタック
 
@@ -8,64 +8,73 @@ RSS Readerアプリケーションのバックエンド API サーバーです�
 - **Framework**: Express
 - **言語**: TypeScript
 - **ORM**: Prisma
-- **データベース**: PostgreSQL
+- **データベース**: PostgreSQL (Docker)
 - **バリデーション**: Zod
 - **認証**: JWT + bcryptjs
 - **Linting/Formatting**: Biome
-- **テスト**: Vitest
+- **テスト**: Vitest + SQLite
 - **開発**: tsx (TypeScript実行)
+
+## 🚀 クイックスタート
+
+```bash
+# 依存関係のインストール
+npm install
+
+# 開発サーバー起動（PostgreSQL + API）
+npm run dev
+```
+
+**`npm run dev`で自動的に実行される処理:**
+1. PostgreSQLコンテナの起動
+2. データベースの初期化・マイグレーション
+3. APIサーバーの起動
 
 ## 主要機能
 
 - ユーザー認証（登録/ログイン/パスワードリセット）
 - フィード管理（CRUD操作）
 - RSS フィード取得・パース
-- 記事データ管理
-- 検索機能
+- 記事データ管理（既読/未読、ブックマーク）
+- 記事検索機能
 - OPML インポート/エクスポート
+- タグ機能（フィード分類）
+- 自動フィード更新（Cron Job）
 
-## セットアップ
+## 📋 利用可能なコマンド
 
-### 依存関係のインストール
-
+### 開発用コマンド
 ```bash
-# ルートディレクトリから
-npm install
+npm run dev              # PostgreSQL + APIサーバー起動（推奨）
+npm run dev:server       # APIサーバーのみ起動
 ```
 
-### 環境変数の設定
-
+### データベース管理
 ```bash
-cp .env.example .env
+npm run db:setup         # データベース初期化・マイグレーション
+npm run db:start         # PostgreSQLコンテナ起動
+npm run db:stop          # PostgreSQLコンテナ停止
+npm run db:reset         # データベース完全リセット
+npm run db:logs          # PostgreSQLログ表示
 ```
 
-`.env` ファイルを編集して必要な環境変数を設定してください：
+## 🐳 Docker Compose構成
+
+- **PostgreSQL 15**: ポート5432
+- **永続化**: Dockerボリューム使用
+- **初期データベース**: `rss_reader`
+- **認証**: `postgres:password`
+
+## 🔧 環境変数設定
+
+`.env`ファイルで以下を設定（Docker用に自動調整済み）:
 
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/rss_reader"
-JWT_SECRET="your-jwt-secret"
+DATABASE_URL="postgresql://postgres:password@localhost:5432/rss_reader?schema=public"
+JWT_SECRET="your-super-secret-jwt-key"
 PORT=3001
+NODE_ENV="development"
 ```
-
-### データベースのセットアップ
-
-```bash
-# Prisma マイグレーション
-npx prisma migrate dev
-
-# シードデータの投入（オプション）
-npx prisma db seed
-```
-
-## 開発
-
-### 開発サーバーの起動
-
-```bash
-npm run dev
-```
-
-サーバーは `http://localhost:3001` で起動します。
 
 ### その他のコマンド
 

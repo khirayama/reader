@@ -6,16 +6,29 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum Theme {
+  SYSTEM
+  LIGHT
+  DARK
+}
+
+enum Language {
+  JA
+  EN
+  ZH
+  ES
 }
 
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
-  theme     String   @default("SYSTEM")
-  language  String   @default("JA")
+  theme     Theme    @default(SYSTEM)
+  language  Language @default(JA)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

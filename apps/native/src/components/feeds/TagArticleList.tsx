@@ -64,13 +64,6 @@ export function TagArticleList({
     </Text>
   );
 
-  const renderCheckIcon = () => (
-    <Text style={[styles.icon, { color: colors.success[600] }]}>✓</Text>
-  );
-
-  const renderExternalIcon = () => (
-    <Text style={[styles.icon, { color: colors.primary[600] }]}>↗</Text>
-  );
 
   const renderArticleItem = ({ item: article }: { item: any }) => (
     <TouchableOpacity
@@ -126,28 +119,6 @@ export function TagArticleList({
           }}
         >
           {renderBookmarkIcon(!!article.isBookmarked)}
-        </TouchableOpacity>
-
-        {!article.isRead && (
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={(e) => {
-              e.stopPropagation();
-              onMarkAsRead(article.id);
-            }}
-          >
-            {renderCheckIcon()}
-          </TouchableOpacity>
-        )}
-
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            onArticlePress(article.url, article.id);
-          }}
-        >
-          {renderExternalIcon()}
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

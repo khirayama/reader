@@ -372,32 +372,6 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm }: TagCarous
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                       </svg>
                     </button>
-                    {!article.isRead && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          markArticleAsRead(article.id)
-                        }}
-                        className="p-1.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors text-success-600 dark:text-success-400"
-                        title="既読にする"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </button>
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        window.open(article.url, '_blank')
-                      }}
-                      className="p-1.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors text-primary-600 dark:text-primary-400"
-                      title="記事を開く"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </button>
                   </div>
                 </div>
               </article>

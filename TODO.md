@@ -7,6 +7,9 @@
 - 翻訳機能
 - Readability(https://github.com/mozilla/readability)を使った本文読み上げ
   - https://note.com/npaka/n/n051044f421f7
+- フィード登録のリッチ化
+  - URLから推測
+  - すでに登録済みフィードから検索
 
 ```
 かつて実装していた記事一覧をタグごとのカルーセルUIにしてください。

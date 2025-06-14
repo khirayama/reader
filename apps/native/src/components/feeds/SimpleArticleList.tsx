@@ -10,6 +10,7 @@ import {
   Linking,
   RefreshControl,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { spacing, fontSize } from '../../constants/spacing';
 import { sdk } from '../../lib/sdk';
@@ -198,9 +199,15 @@ export function SimpleArticleList({
           style={styles.bookmarkButton}
           onPress={() => toggleBookmark(article.id, !!article.isBookmarked)}
         >
-          <Text style={[styles.bookmarkIcon, article.isBookmarked && styles.bookmarkIconActive]}>
-            {article.isBookmarked ? '★' : '☆'}
-          </Text>
+          <Feather
+            name="bookmark"
+            size={18}
+            color={article.isBookmarked ? colors.yellow[500] : colors.gray[400]}
+            style={[
+              styles.bookmarkIcon,
+              article.isBookmarked && { opacity: 1 }
+            ]}
+          />
         </TouchableOpacity>
       </View>
 
@@ -377,11 +384,7 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
   },
   bookmarkIcon: {
-    fontSize: 18,
-    color: colors.gray[400],
-  },
-  bookmarkIconActive: {
-    color: colors.yellow[500],
+    opacity: 0.7,
   },
   articleTitle: {
     fontSize: fontSize.base,

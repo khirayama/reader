@@ -231,8 +231,10 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 flex-1 min-w-0">
-                <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-yellow-400 to-yellow-500 rounded text-white text-xs">
-                  ⭐
+                <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-200 dark:to-yellow-300 rounded">
+                  <svg className="w-3 h-3 text-yellow-600 dark:text-yellow-500" fill="currentColor" stroke="none" viewBox="0 0 24 24">
+                    <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                  </svg>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">

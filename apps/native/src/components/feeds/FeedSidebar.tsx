@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Image,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { sdk } from '../../lib/sdk';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -215,7 +216,12 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
         >
           <View style={styles.feedIcon}>
             <View style={[styles.defaultIcon, styles.bookmarksIcon]}>
-              <Text style={styles.bookmarksIconText}>⭐</Text>
+              <Feather
+                name="bookmark"
+                size={16}
+                color={colors.yellow[500]}
+                style={styles.bookmarkIconStyle}
+              />
             </View>
           </View>
           <View style={styles.feedContent}>
@@ -517,10 +523,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   bookmarksIcon: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: colors.yellow[100],
   },
-  bookmarksIconText: {
-    fontSize: 10,
-    color: colors.white,
+  bookmarkIconStyle: {
+    textAlign: 'center',
   },
 });

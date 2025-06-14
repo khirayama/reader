@@ -8,6 +8,7 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import type { TaggedArticleGroup } from '../../hooks/useTaggedArticles';
 import { Button } from '../ui/Button';
 import { colors } from '../../constants/colors';
@@ -73,12 +74,15 @@ export function TagArticleList({
   };
 
   const renderBookmarkIcon = (isBookmarked: boolean) => (
-    <Text style={[
-      styles.icon,
-      { color: isBookmarked ? colors.warning[600] : colors.gray[400] }
-    ]}>
-      {isBookmarked ? '★' : '☆'}
-    </Text>
+    <Feather
+      name="bookmark"
+      size={18}
+      color={isBookmarked ? colors.yellow[500] : colors.gray[400]}
+      style={[
+        styles.icon,
+        isBookmarked && { opacity: 1 }
+      ]}
+    />
   );
 
 
@@ -402,7 +406,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   icon: {
-    fontSize: 18,
+    opacity: 0.7,
   },
   separator: {
     height: 1,

@@ -19,12 +19,14 @@ interface TaggedArticleCarouselProps {
   selectedFeedId?: string | null;
   searchTerm?: string;
   onCurrentTagChange?: (tagName: string) => void;
+  hideReadArticles?: boolean;
 }
 
 export function TaggedArticleCarousel({
   selectedFeedId,
   searchTerm,
   onCurrentTagChange,
+  hideReadArticles = false,
 }: TaggedArticleCarouselProps) {
   const {
     articleGroups,
@@ -239,6 +241,7 @@ export function TaggedArticleCarousel({
               onMarkAsRead={markArticleAsRead}
               onToggleBookmark={toggleBookmark}
               onArticlePress={handleArticlePress}
+              hideReadArticles={hideReadArticles}
             />
           )
         ) : (
@@ -267,6 +270,7 @@ export function TaggedArticleCarousel({
                   onMarkAsRead={markArticleAsRead}
                   onToggleBookmark={toggleBookmark}
                   onArticlePress={handleArticlePress}
+                  hideReadArticles={hideReadArticles}
                 />
               </View>
             ))}

@@ -92,6 +92,7 @@
   },
   "articles": {
     "articles": "文章",
+    "allArticles": "所有文章",
     "searchArticles": "搜索文章...",
     "readMore": "阅读更多",
     "markAsRead": "标记为已读",
@@ -149,6 +150,7 @@
     "dashboard": "主页",
     "feeds": "订阅源",
     "articles": "文章",
+    "allArticles": "所有文章",
     "profile": "个人中心"
   }
 }

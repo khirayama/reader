@@ -25,6 +25,7 @@ export function ArticlesMobileScreen({
   const [currentFeedName, setCurrentFeedName] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [hideReadArticles, setHideReadArticles] = useState(false);
+  const [currentTagName, setCurrentTagName] = useState('すべて');
 
   // フィード情報を取得
   useEffect(() => {
@@ -63,7 +64,11 @@ export function ArticlesMobileScreen({
               </TouchableOpacity>
             )}
             <Text style={styles.headerTitle}>
-              {selectedFeedId ? currentFeedName : 'すべての記事'}
+              {selectedFeedId 
+                ? `${currentFeedName} - ${currentTagName}` 
+                : currentTagName === 'すべて' 
+                  ? 'すべての記事' 
+                  : currentTagName}
             </Text>
           </View>
           
@@ -119,6 +124,7 @@ export function ArticlesMobileScreen({
           selectedFeedId={selectedFeedId} 
           searchTerm={searchQuery}
           hideReadArticles={hideReadArticles}
+          onCurrentTagChange={setCurrentTagName}
         />
       </View>
     </View>

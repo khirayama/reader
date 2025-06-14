@@ -92,6 +92,7 @@
   },
   "articles": {
     "articles": "記事",
+    "allArticles": "すべての記事",
     "searchArticles": "記事を検索...",
     "readMore": "続きを読む",
     "markAsRead": "既読にする",

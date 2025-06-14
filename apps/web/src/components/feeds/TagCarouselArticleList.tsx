@@ -4,10 +4,13 @@ import React, { useState, useEffect, useRef } from 'react'
 import { sdk } from '@/lib/sdk'
 import type { Article, Tag, Pagination } from '@/lib/rss-sdk'
 import { Button } from '@/components/ui/Button'
+import { useTranslation } from 'react-i18next'
 
 interface TagCarouselArticleListProps {
   selectedFeedId?: string | null
   searchTerm?: string
+  hideReadArticles?: boolean
+  onTagChange?: (tagName: string) => void
 }
 
 interface TagWithArticles {
@@ -18,7 +21,8 @@ interface TagWithArticles {
   hasLoadedOnce: boolean
 }
 
-export function TagCarouselArticleList({ selectedFeedId, searchTerm }: TagCarouselArticleListProps) {
+export function TagCarouselArticleList({ selectedFeedId, searchTerm, hideReadArticles = false, onTagChange }: TagCarouselArticleListProps) {
+  const { t } = useTranslation()
   const [tags, setTags] = useState<Tag[]>([])
   const [tagArticles, setTagArticles] = useState<Map<string, TagWithArticles>>(new Map())
   const [allArticles, setAllArticles] = useState<Article[]>([])
@@ -177,6 +181,17 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm }: TagCarous
       })
     }
     setCurrentTagIndex(index)
+    
+    // タグ変更を親コンポーネントに通知
+    if (onTagChange) {
+      const tagOptions = [
+        { id: 'all', name: t('common.all'), color: undefined },
+        ...tags.map(tag => ({ id: tag.id, name: tag.name, color: tag.color }))
+      ]
+      if (tagOptions[index]) {
+        onTagChange(tagOptions[index].name)
+      }
+    }
   }
 
   // 記事操作関数
@@ -285,6 +300,10 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm }: TagCarous
     pagination: Pagination | null
     onLoadMore: () => void
   }) => {
+    // 既読記事をフィルタリング
+    const filteredArticles = hideReadArticles 
+      ? articles.filter(article => !article.isRead)
+      : articles
     if (isLoading && articles.length === 0) {
       return (
         <div className="flex-1 flex items-center justify-center h-full">
@@ -293,7 +312,7 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm }: TagCarous
       )
     }
 
-    if (articles.length === 0) {
+    if (filteredArticles.length === 0) {
       return (
         <div className="flex-1 flex items-center justify-center h-full">
           <div className="text-center">
@@ -302,7 +321,9 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm }: TagCarous
               記事がありません
             </div>
             <div className="text-gray-400 dark:text-gray-500 text-sm">
-              このタグに記事がないか、フィルター条件を見直してください
+              {hideReadArticles && articles.length > 0
+                ? 'すべての記事が既読です'
+                : 'このタグに記事がないか、フィルター条件を見直してください'}
             </div>
           </div>
         </div>
@@ -313,7 +334,7 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm }: TagCarous
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         <div className="flex-1 overflow-y-auto">
           <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
-            {articles.map((article) => (
+            {filteredArticles.map((article) => (
               <article 
                 key={article.id} 
                 className={`px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors duration-200 group cursor-pointer ${
@@ -426,7 +447,7 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm }: TagCarous
   }
 
   const tagOptions = [
-    { id: 'all', name: 'すべて', color: undefined },
+    { id: 'all', name: t('common.all'), color: undefined },
     ...tags.map(tag => ({ id: tag.id, name: tag.name, color: tag.color }))
   ]
 
@@ -472,6 +493,17 @@ export function TagCarouselArticleList({ selectedFeedId, searchTerm }: TagCarous
           const index = Math.round(scrollLeft / itemWidth)
           if (index !== currentTagIndex) {
             setCurrentTagIndex(index)
+            
+            // タグ変更を親コンポーネントに通知
+            if (onTagChange) {
+              const tagOptions = [
+                { id: 'all', name: t('common.all'), color: undefined },
+                ...tags.map(tag => ({ id: tag.id, name: tag.name, color: tag.color }))
+              ]
+              if (tagOptions[index]) {
+                onTagChange(tagOptions[index].name)
+              }
+            }
           }
         }}
       >

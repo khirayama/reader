@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { AuthGuard } from '@/components/auth/AuthGuard'
 import { Button } from '@/components/ui/Button'
 import { FeedSidebar } from '@/components/feeds/FeedSidebar'
-import { TaggedArticleCarousel } from '@/components/feeds/TaggedArticleCarousel'
+import { ArticleList } from '@/components/feeds/ArticleList'
 
 export default function DashboardPage() {
   const [selectedFeedId, setSelectedFeedId] = useState<string | null>(null)
@@ -24,23 +24,6 @@ export default function DashboardPage() {
   return (
     <AuthGuard>
       <div className="h-screen flex overflow-hidden surface">
-        {/* モバイル用ハンバーガーメニュー */}
-        <button
-          type="button"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="md:hidden fixed top-4 left-4 z-40 p-1.5 text-neutral-600 dark:text-neutral-300 bg-white dark:bg-gray-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded shadow-lg touch-target focus-visible transition-all duration-200"
-          aria-label={sidebarOpen ? "メニューを閉じる" : "メニューを開く"}
-          aria-expanded={sidebarOpen}
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            {sidebarOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            )}
-          </svg>
-        </button>
-
         {/* サイドバー */}
         <div className={`${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -71,9 +54,10 @@ export default function DashboardPage() {
 
         {/* 記事一覧 */}
         <div className="flex-1 overflow-hidden">
-          <TaggedArticleCarousel
+          <ArticleList
             key={`${selectedFeedId}-${refreshKey}`}
             selectedFeedId={selectedFeedId}
+            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           />
         </div>
       </div>

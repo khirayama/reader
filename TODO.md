@@ -1,7 +1,8 @@
-- 既読の非表示機能
+- 視認性改善
 - 各種設定値が正しく動いているか確認
 - キーボードショートカットの追加
 - OPMLインポート時にタグの追加
+- Expo Router導入
 
 - 翻訳機能
 - Readability(https://github.com/mozilla/readability)を使った本文読み上げ

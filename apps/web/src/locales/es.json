@@ -92,6 +92,7 @@
   },
   "articles": {
     "articles": "Artículos",
+    "allArticles": "Todos los Artículos",
     "searchArticles": "Buscar artículos...",
     "readMore": "Leer más",
     "markAsRead": "Marcar como leído",

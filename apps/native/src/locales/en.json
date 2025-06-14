@@ -92,6 +92,7 @@
   },
   "articles": {
     "articles": "Articles",
+    "allArticles": "All Articles",
     "searchArticles": "Search articles...",
     "readMore": "Read more",
     "markAsRead": "Mark as read",
@@ -149,6 +150,7 @@
     "dashboard": "Home",
     "feeds": "Feeds",
     "articles": "Articles",
+    "allArticles": "All Articles",
     "profile": "Profile"
   }
 }

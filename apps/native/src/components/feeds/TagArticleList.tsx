@@ -20,6 +20,7 @@ interface TagArticleListProps {
   onMarkAsRead: (articleId: string) => void;
   onToggleBookmark: (articleId: string, isBookmarked: boolean) => void;
   onArticlePress: (articleUrl: string, articleId: string) => void;
+  hideReadArticles?: boolean;
 }
 
 export function TagArticleList({
@@ -27,8 +28,14 @@ export function TagArticleList({
   onLoadMore,
   onMarkAsRead,
   onToggleBookmark,
-  onArticlePress
+  onArticlePress,
+  hideReadArticles = false
 }: TagArticleListProps) {
+  // 既読記事をフィルタリング
+  const filteredArticles = hideReadArticles 
+    ? group.articles.filter(article => !article.isRead)
+    : group.articles;
+
   const lastLoadTimeRef = useRef<number>(0);
   const isLoadingRef = useRef<boolean>(false);
   const DEBOUNCE_DELAY = 200; // 200msのデバウンス（短縮）
@@ -273,7 +280,7 @@ export function TagArticleList({
     );
   }
 
-  if (group.articles.length === 0) {
+  if (filteredArticles.length === 0) {
     // ブックマーク専用のメッセージ処理
     const isBookmarks = group.id === '__bookmarks__' || group.name === 'お気に入り記事';
     
@@ -281,19 +288,23 @@ export function TagArticleList({
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyIcon}>{isBookmarks ? '⭐' : '📰'}</Text>
         <Text style={styles.emptyTitle}>
-          {isBookmarks 
-            ? 'お気に入り記事がありません'
-            : group.id === '__all__' 
-              ? '記事がありません' 
-              : `「${group.name}」の記事がありません`
+          {hideReadArticles && group.articles.length > 0
+            ? 'すべての記事が既読です'
+            : isBookmarks 
+              ? 'お気に入り記事がありません'
+              : group.id === '__all__' 
+                ? '記事がありません' 
+                : `「${group.name}」の記事がありません`
           }
         </Text>
         <Text style={styles.emptySubtitle}>
-          {isBookmarks
-            ? '記事をブックマークするとここに表示されます'
-            : group.id === '__all__' 
-              ? 'フィードを追加して記事を読み始めましょう'
-              : 'このタグの記事が更新されるまでお待ちください'
+          {hideReadArticles && group.articles.length > 0
+            ? '未読の記事はありません'
+            : isBookmarks
+              ? '記事をブックマークするとここに表示されます'
+              : group.id === '__all__' 
+                ? 'フィードを追加して記事を読み始めましょう'
+                : 'このタグの記事が更新されるまでお待ちください'
           }
         </Text>
       </View>
@@ -303,7 +314,7 @@ export function TagArticleList({
   return (
     <View style={styles.container}>
       <FlatList
-        data={group.articles}
+        data={filteredArticles}
         renderItem={renderArticleItem}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => <View style={styles.separator} />}

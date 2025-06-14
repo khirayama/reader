@@ -71,46 +71,28 @@ export function TagArticleList({
       onPress={() => onArticlePress(article.url, article.id)}
       activeOpacity={0.7}
     >
-      <View style={styles.articleContent}>
-        <View style={styles.articleMeta}>
-          <View style={styles.articleMetaLeft}>
-            {article.feed?.favicon && (
-              <Image
-                source={{ uri: article.feed.favicon }}
-                style={styles.favicon}
-                onError={() => {
-                  // ファビコン読み込みエラー時は非表示にする
-                }}
-              />
-            )}
-            <Text style={styles.feedTitle} numberOfLines={1}>
-              {article.feed?.title}
-            </Text>
-            <Text style={styles.metaSeparator}>•</Text>
-            <Text style={styles.publishedAt}>
-              {formatDate(article.publishedAt)}
-            </Text>
-          </View>
-          {article.isRead && (
-            <View style={styles.readBadge}>
-              <Text style={styles.readBadgeText}>読了済み</Text>
-            </View>
+      {/* 上部行：フィード情報（左）とお気に入りボタン（右） */}
+      <View style={styles.topRow}>
+        <View style={styles.feedMetaRow}>
+          {article.feed?.favicon && (
+            <Image
+              source={{ uri: article.feed.favicon }}
+              style={styles.favicon}
+              onError={() => {
+                // ファビコン読み込みエラー時は非表示にする
+              }}
+            />
           )}
+          <Text style={styles.feedTitle} numberOfLines={1}>
+            {article.feed?.title}
+          </Text>
+          <Text style={styles.metaSeparator}>•</Text>
+          <Text style={styles.publishedAt}>
+            {formatDate(article.publishedAt)}
+          </Text>
         </View>
 
-        <Text 
-          style={[
-            styles.articleTitle,
-            article.isRead ? styles.readTitle : styles.unreadTitle
-          ]}
-          numberOfLines={2}
-        >
-          {article.title}
-        </Text>
-
-      </View>
-
-      <View style={styles.actionButtons}>
+        {/* お気に入りボタン */}
         <TouchableOpacity
           style={styles.actionButton}
           onPress={(e) => {
@@ -121,6 +103,24 @@ export function TagArticleList({
           {renderBookmarkIcon(!!article.isBookmarked)}
         </TouchableOpacity>
       </View>
+
+      {/* 下部行：記事タイトル（全幅） */}
+      <Text 
+        style={[
+          styles.articleTitle,
+          article.isRead ? styles.readTitle : styles.unreadTitle
+        ]}
+        numberOfLines={2}
+      >
+        {article.title}
+      </Text>
+
+      {/* 既読バッジ */}
+      {article.isRead && (
+        <View style={styles.readBadge}>
+          <Text style={styles.readBadgeText}>読了済み</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 
@@ -295,23 +295,17 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   articleItem: {
-    flexDirection: 'row',
     backgroundColor: colors.white,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    alignItems: 'flex-start',
   },
-  articleContent: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  articleMeta: {
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.xs,
   },
-  articleMetaLeft: {
+  feedMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
@@ -323,8 +317,9 @@ const styles = StyleSheet.create({
     marginRight: spacing.xs,
   },
   feedTitle: {
-    fontSize: fontSize.xs,
-    color: colors.gray[500],
+    fontSize: fontSize.sm,
+    fontWeight: '500',
+    color: colors.gray[700],
     marginRight: spacing.xs,
     flex: 1,
   },
@@ -334,7 +329,7 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.xs,
   },
   publishedAt: {
-    fontSize: fontSize.xs,
+    fontSize: fontSize.sm,
     color: colors.gray[500],
   },
   readBadge: {
@@ -342,6 +337,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
     paddingVertical: 2,
     borderRadius: 4,
+    alignSelf: 'flex-start',
   },
   readBadgeText: {
     fontSize: fontSize.xs,
@@ -364,17 +360,12 @@ const styles = StyleSheet.create({
     color: colors.gray[500],
     lineHeight: fontSize.xs * 1.4,
   },
-  actionButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
   actionButton: {
     padding: spacing.xs,
-    borderRadius: 4,
+    borderRadius: 16,
   },
   icon: {
-    fontSize: 16,
+    fontSize: 18,
   },
   separator: {
     height: 1,

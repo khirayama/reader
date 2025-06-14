@@ -88,7 +88,10 @@ export function TagArticleList({
 
   const renderArticleItem = ({ item: article }: { item: any }) => (
     <TouchableOpacity
-      style={styles.articleItem}
+      style={[
+        styles.articleItem,
+        article.isRead && styles.readArticleItem
+      ]}
       onPress={() => onArticlePress(article.url, article.id)}
       activeOpacity={0.7}
     >
@@ -135,13 +138,6 @@ export function TagArticleList({
       >
         {article.title}
       </Text>
-
-      {/* 既読バッジ */}
-      {article.isRead && (
-        <View style={styles.readBadge}>
-          <Text style={styles.readBadgeText}>読了済み</Text>
-        </View>
-      )}
     </TouchableOpacity>
   );
 
@@ -373,17 +369,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.gray[500],
   },
-  readBadge: {
-    backgroundColor: colors.gray[100],
-    paddingHorizontal: spacing.xs,
-    paddingVertical: 2,
-    borderRadius: 4,
-    alignSelf: 'flex-start',
-  },
-  readBadgeText: {
-    fontSize: fontSize.xs,
-    color: colors.gray[600],
-  },
   articleTitle: {
     fontSize: fontSize.sm,
     fontWeight: '500',
@@ -391,10 +376,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   readTitle: {
-    color: colors.gray[600],
+    color: colors.gray[400],
   },
   unreadTitle: {
     color: colors.gray[900],
+  },
+  readArticleItem: {
+    opacity: 0.5,
   },
   articleDescription: {
     fontSize: fontSize.xs,

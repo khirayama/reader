@@ -157,7 +157,9 @@ export function SimpleArticleList({ selectedFeedId, searchTerm }: SimpleArticleL
           {articles.map((article) => (
             <article 
               key={article.id} 
-              className="px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors duration-200 group cursor-pointer"
+              className={`px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors duration-200 group cursor-pointer ${
+                article.isRead ? 'opacity-50' : ''
+              }`}
               onClick={() => handleArticleClick(article.url, article.id)}
             >
               <div>
@@ -174,11 +176,19 @@ export function SimpleArticleList({ selectedFeedId, searchTerm }: SimpleArticleL
                         }}
                       />
                     )}
-                    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate">
+                    <span className={`text-sm font-medium truncate ${
+                      article.isRead
+                        ? 'text-neutral-400 dark:text-neutral-600'
+                        : 'text-neutral-700 dark:text-neutral-300'
+                    }`}>
                       {article.feed?.title}
                     </span>
                     <span className="text-xs text-neutral-300 dark:text-neutral-600">•</span>
-                    <time className="text-sm text-neutral-500 dark:text-neutral-400 flex-shrink-0">
+                    <time className={`text-sm flex-shrink-0 ${
+                      article.isRead
+                        ? 'text-neutral-400 dark:text-neutral-600'
+                        : 'text-neutral-500 dark:text-neutral-400'
+                    }`}>
                       {formatDate(article.publishedAt)}
                     </time>
                   </div>
@@ -205,18 +215,11 @@ export function SimpleArticleList({ selectedFeedId, searchTerm }: SimpleArticleL
                 {/* 下部行：記事タイトル（全幅） */}
                 <h4 className={`text-sm font-medium leading-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200 mb-1 ${
                   article.isRead
-                    ? 'text-neutral-600 dark:text-neutral-400'
+                    ? 'text-neutral-400 dark:text-neutral-600'
                     : 'text-neutral-900 dark:text-neutral-100'
                 }`}>
                   {article.title}
                 </h4>
-                
-                {/* 既読バッジ */}
-                {article.isRead && (
-                  <span className="inline-block text-xs px-1.5 py-0.5 bg-neutral-100 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300 rounded">
-                    読了済み
-                  </span>
-                )}
               </div>
             </article>
           ))}

@@ -58,11 +58,9 @@ export function TagCarousel({
     onTagSelect(tagId);
   };
 
-  const totalFeedCount = tags.reduce((total, tag) => total + (tag.feedCount || 0), 0);
-
   // 「全て」タグを含むデータ配列を作成
   const allTags = [
-    { id: '__all__', name: t('tags.all'), feedCount: totalFeedCount, isAll: true },
+    { id: '__all__', name: t('tags.all'), isAll: true },
     ...tags.map((tag) => ({ ...tag, isAll: false })),
   ];
 
@@ -84,9 +82,6 @@ export function TagCarousel({
       >
         <Text style={[styles.tagText, isSelected && styles.selectedTagText]}>
           {item.name}
-          {item.feedCount !== undefined && item.feedCount > 0 && (
-            <Text style={styles.countText}> ({item.feedCount})</Text>
-          )}
         </Text>
       </TouchableOpacity>
     );
@@ -177,10 +172,6 @@ const styles = StyleSheet.create({
   },
   selectedTagText: {
     color: '#FFFFFF',
-  },
-  countText: {
-    fontSize: 14,
-    fontWeight: 'normal',
   },
 });
 

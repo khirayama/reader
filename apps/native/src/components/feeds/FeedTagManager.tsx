@@ -265,9 +265,6 @@ export function FeedTagManager({
                           ]}
                         />
                         <Text style={styles.tagName}>{tag.name}</Text>
-                        {tag.feedCount !== undefined && (
-                          <Text style={styles.tagCount}>({tag.feedCount})</Text>
-                        )}
                       </View>
                       {isAssigned && (
                         <Text style={styles.checkmark}>✓</Text>
@@ -430,11 +427,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#1F2937',
     flex: 1,
-  },
-  tagCount: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginLeft: 8,
   },
   checkmark: {
     fontSize: 16,

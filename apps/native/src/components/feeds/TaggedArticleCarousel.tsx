@@ -214,16 +214,6 @@ export function TaggedArticleCarousel({
                 >
                   {group.name}
                 </Text>
-                {group.articles.length > 0 && (
-                  <Text
-                    style={[
-                      styles.tabCount,
-                      currentGroupIndex === index ? styles.activeTabCount : styles.inactiveTabCount,
-                    ]}
-                  >
-                    ({group.articles.length})
-                  </Text>
-                )}
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -339,16 +329,6 @@ const styles = StyleSheet.create({
   },
   inactiveTabText: {
     color: colors.gray[700],
-  },
-  tabCount: {
-    fontSize: fontSize.xs,
-    marginLeft: spacing.xs,
-  },
-  activeTabCount: {
-    color: colors.white,
-  },
-  inactiveTabCount: {
-    color: colors.gray[500],
   },
   contentContainer: {
     flex: 1,

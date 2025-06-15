@@ -46,7 +46,6 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
           </View>
           <View style={styles.appInfo}>
             <Text style={styles.appTitle}>RSS Reader</Text>
-            <Text style={styles.userEmail}>{user?.email}</Text>
           </View>
         </View>
       </View>
@@ -163,11 +162,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     color: colors.gray[900],
-    marginBottom: 2,
-  },
-  userEmail: {
-    fontSize: 14,
-    color: colors.gray[600],
   },
   feedSection: {
     flex: 1,

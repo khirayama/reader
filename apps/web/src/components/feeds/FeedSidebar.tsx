@@ -170,9 +170,6 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
             </svg>
           </button>
         </div>
-        <div className="text-sm text-neutral-600 dark:text-neutral-400 truncate">
-          {user?.email}
-        </div>
       </div>
 
       {/* フィード管理セクション */}

@@ -153,12 +153,6 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
 
       {/* フィード管理セクション */}
       <div className="p-4 border-b divider">
-        <h2 className="text-lg font-semibold mb-3 flex items-center gap-2 text-neutral-900 dark:text-neutral-100">
-          <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z" />
-          </svg>
-          フィード管理
-        </h2>
 
         {/* フィード追加フォーム */}
         <form onSubmit={handleAddFeed} className="space-y-2 mb-3">

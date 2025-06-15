@@ -151,12 +151,6 @@ export function FeedSidebar({ selectedFeedId, onFeedSelect, onFeedRefresh }: Fee
     <View style={styles.container}>
       {/* ヘッダーセクション */}
       <View style={styles.header}>
-        <View style={styles.headerTitle}>
-          <View style={styles.headerIconContainer}>
-            <Text style={styles.headerIcon}>📡</Text>
-          </View>
-          <Text style={styles.headerText}>フィード管理</Text>
-        </View>
 
         {/* フィード追加フォーム */}
         <View style={styles.addForm}>
@@ -300,27 +294,6 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.gray[200],
-  },
-  headerTitle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  headerIconContainer: {
-    width: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.sm,
-  },
-  headerIcon: {
-    fontSize: 18,
-    color: colors.primary[600],
-  },
-  headerText: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.gray[900],
   },
   addForm: {
     marginBottom: spacing.md,

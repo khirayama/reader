@@ -104,9 +104,9 @@ export function TagArticleList({
       onPress={() => onArticlePress(article.url, article.id)}
       activeOpacity={0.7}
     >
-      {/* 上部行：フィード情報（左）とお気に入りボタン（右） */}
+      {/* 上部行：フィード情報（左）と公開日時・お気に入りボタン（右） */}
       <View style={styles.topRow}>
-        <View style={styles.feedMetaRow}>
+        <View style={styles.feedInfoRow}>
           {article.feed?.favicon && (
             <Image
               source={{ uri: article.feed.favicon }}
@@ -119,22 +119,23 @@ export function TagArticleList({
           <Text style={styles.feedTitle} numberOfLines={1}>
             {article.feed?.title}
           </Text>
-          <Text style={styles.metaSeparator}>•</Text>
+        </View>
+
+        {/* 右側：公開日時とお気に入りボタン */}
+        <View style={styles.rightMetaRow}>
           <Text style={styles.publishedAt}>
             {formatDate(article.publishedAt)}
           </Text>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={(e) => {
+              e.stopPropagation();
+              onToggleBookmark(article.id, !!article.isBookmarked);
+            }}
+          >
+            {renderBookmarkIcon(!!article.isBookmarked)}
+          </TouchableOpacity>
         </View>
-
-        {/* お気に入りボタン */}
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            onToggleBookmark(article.id, !!article.isBookmarked);
-          }}
-        >
-          {renderBookmarkIcon(!!article.isBookmarked)}
-        </TouchableOpacity>
       </View>
 
       {/* 下部行：記事タイトル（全幅） */}
@@ -355,10 +356,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.xs,
   },
-  feedMetaRow: {
+  feedInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     flexShrink: 1,
+  },
+  rightMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   favicon: {
     width: 16,
@@ -373,14 +379,10 @@ const styles = StyleSheet.create({
     marginRight: spacing.xs,
     flexShrink: 1,
   },
-  metaSeparator: {
-    fontSize: fontSize.xs,
-    color: colors.gray[300],
-    marginHorizontal: spacing.xs,
-  },
   publishedAt: {
     fontSize: fontSize.xs,
     color: colors.gray[400],
+    fontWeight: '400',
   },
   articleTitle: {
     fontSize: fontSize.sm,
